@@ -222,7 +222,11 @@ function renderResults(d, req) {
     </div>
     ${cards.length ? `<div class="cards-top">${cards.join("")}</div>` : ""}
     <div class="panel tbl-wrap"><table class="lc"><thead>${headRow()}</thead><tbody>${rows || `<tr><td colspan="6" class="none">None of the pasted lines matched a fund in our Cala data.</td></tr>`}</tbody></table></div>
-    ${d.unmatched.length ? `<div class="unmatched"><b>Not in our Cala data yet:</b> ${d.unmatched.map((u) => `<span class="mono">${esc(u)}</span>`).join(" · ")}</div>` : ""}`;
+    ${geminiNote(d.read_by_gemini)}
+    ${d.lookup_candidates?.length ? lookupPanel(d.lookup_candidates) : ""}
+    ${d.unmatched.length ? `<div class="unmatched"><b>Not recognised:</b> ${d.unmatched.map((u) => `<span class="mono">${esc(u)}</span>`).join(" · ")}</div>` : ""}`;
+  const ask = $("#ask-live");
+  if (ask) ask.onclick = () => startLookup(d.lookup_candidates);
   $("#sort").onclick = () => { state.sortByVerdict = !state.sortByVerdict; renderResults(d, req); };
   $("#print").onclick = () => window.print();
   $("#csv").onclick = () => copyCsv(sorted);
@@ -232,6 +236,47 @@ function renderResults(d, req) {
   });
   out.querySelectorAll("[data-rid]").forEach((a) => a.addEventListener("click", openRecord));
   out.scrollIntoView({behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start"});
+}
+
+function geminiNote(g) {
+  if (!g) return "";
+  if (g.error) return `<div class="unmatched"><b>Some lines were not recognised.</b> ${esc(g.error)}.</div>`;
+  return `<div class="ai-note"><span class="pill pill-ai">Read by Gemini</span> ${plural(g.lines, "line", "lines")} our parser could not match went to ${esc(g.model)} (${(g.ms / 1000).toFixed(1)} s). It found ${g.funds.length ? g.funds.map((f) => `<b>${esc(f)}</b>`).join(", ") : "no fund names"}. Gemini only reads the list; every verdict below is counted.</div>`;
+}
+
+function lookupPanel(names) {
+  return `<div class="live panel" id="live">
+    <div class="live-head"><div><h3>Not in our Cala snapshot yet</h3><p class="muted">${names.map((n) => `<span class="mono">${esc(n)}</span>`).join(" · ")}</p></div>
+    <button class="btn btn-primary" type="button" id="ask-live">Ask Cala live about ${plural(names.length, "fund", "funds")}</button></div>
+    <ol class="ledger hidden" id="ledger" role="status" aria-live="polite"></ol></div>`;
+}
+
+async function startLookup(names) {
+  const btn = $("#ask-live");
+  btn.disabled = true; btn.textContent = "Asking Cala";
+  let job;
+  try { job = await api("/api/lookup", {method: "POST", body: JSON.stringify({names})}); }
+  catch (err) { btn.textContent = err.message; return; }
+  const ledger = $("#ledger");
+  ledger.classList.remove("hidden");
+  const label = {queued: "queued", asking: "asking Cala /v1/knowledge/query", done: "rounds landed", empty: "Cala has no rounds for this fund", error: "Cala did not answer", budget: "live lookups used up"};
+  const paint = (j) => {
+    ledger.innerHTML = j.items.map((i) => `<li class="led-${esc(i.status)}"><span class="dot" aria-hidden="true"></span><b>${esc(i.name)}</b><span class="mono">${esc(label[i.status] || i.status)}${i.status === "done" ? ` · ${i.rows} rounds` : ""}${i.seconds != null ? ` · ${i.seconds} s` : ""}</span></li>`).join("");
+  };
+  paint(job);
+  const t0 = Date.now();
+  while (!job.done && Date.now() - t0 < 6 * 60 * 1000) {
+    await new Promise((r) => setTimeout(r, 2500));
+    try { job = await api(`/api/lookup/${encodeURIComponent(job.id)}`); paint(job); } catch { break; }
+  }
+  btn.textContent = "Done";
+  if (job.items.some((i) => i.status === "done")) {
+    const extra = job.items.filter((i) => i.status === "done").map((i) => i.name).join("\n");
+    const box = $("#funds");
+    if (!box.value.includes(extra)) box.value = box.value.trim() + "\n" + extra;
+    lineCount();
+    run();
+  }
 }
 
 function rowHtml(r, i) {
@@ -252,7 +297,7 @@ function rowHtml(r, i) {
     ? `<div class="cell-sub">Tie: your investor <b>${esc(r.tie.investor)}</b> sat with them in <a href="#" data-rid="${r.tie.round.id}">${esc(r.tie.round.company)}</a>'s ${r.tie.round.n_investors}-investor ${esc(r.tie.round.stage.toLowerCase())}, ${esc(r.tie.round.date.split(" ")[1])}</div>`
     : "";
   return `<tr class="main enter" data-i="${i}" tabindex="0" aria-expanded="false">
-    <td data-l="Fund"><div class="fund-name">${esc(r.name)}</div><div class="fund-sub">${esc(r.pasted !== r.name ? r.pasted : "")}</div><div class="cell-sub"><span class="pill pill-q" title="Rounds come from Cala /v1/knowledge/query">${r.queried ? "asked Cala about this fund" : "seen in company rounds"}</span></div></td>
+    <td data-l="Fund"><div class="fund-name">${esc(r.name)}</div><div class="fund-sub">${esc(r.pasted !== r.name ? r.pasted : "")}</div><div class="cell-sub"><span class="pill pill-q" title="Rounds come from Cala /v1/knowledge/query">${r.queried ? "asked Cala about this fund" : "seen in company rounds"}</span>${r.via === "gemini" ? ` <span class="pill pill-ai">name read by Gemini</span>` : ""}</div></td>
     <td data-l="Verdict"><span class="verdict ${vClass}"><span class="v-icon" aria-hidden="true"></span>${esc(r.verdict_label)}</span></td>
     <td data-l="Leads">${leads}</td>
     <td data-l="Round size it leads">${size}</td>

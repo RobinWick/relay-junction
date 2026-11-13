@@ -13,26 +13,40 @@ from typing import Optional
 
 from pydantic import BaseModel, Field
 
+import threading
+
 import auth
+import gemini
+import live
 from engine import STAGE_LABEL, STAGES, Snapshot, competitor_coverage, conflicts, fund_profile, lead_comes_back, record, tie, timing
+from merge import Builder, canon
 from parse import parse_list
 
 HERE = Path(__file__).parent
 STATIC = HERE / "static"
 app = FastAPI(title="Lead Check", docs_url=None, redoc_url=None, openapi_url=None)
-SNAP: Snapshot | None = None
+SNAP: Optional[Snapshot] = None
+SNAP_DICT: Optional[dict] = None
+_merge_lock = threading.Lock()
+
+
+def _db():
+    import psycopg
+    return psycopg.connect(os.environ["RELAY_DATABASE_URL"], connect_timeout=20)
 
 
 def load_snapshot() -> Snapshot:
+    global SNAP_DICT
     path = os.environ.get("RELAY_SNAPSHOT_PATH")
     if path and Path(path).exists():
-        return Snapshot.from_dict(json.loads(Path(path).read_text()))
-    import psycopg
-    with psycopg.connect(os.environ["RELAY_DATABASE_URL"], connect_timeout=20) as conn:
-        row = conn.execute("select data from snapshot order by created_at desc limit 1").fetchone()
-    if not row:
-        raise RuntimeError("no snapshot in the database")
-    return Snapshot.from_dict(row[0])
+        SNAP_DICT = json.loads(Path(path).read_text())
+    else:
+        with _db() as conn:
+            row = conn.execute("select data from snapshot order by created_at desc limit 1").fetchone()
+        if not row:
+            raise RuntimeError("no snapshot in the database")
+        SNAP_DICT = row[0]
+    return Snapshot.from_dict(SNAP_DICT)
 
 
 def snap() -> Snapshot:
@@ -40,6 +54,30 @@ def snap() -> Snapshot:
     if SNAP is None:
         SNAP = load_snapshot()
     return SNAP
+
+
+def merge_live(record_: dict) -> None:
+    """Fold a live Cala answer into the snapshot, persist the raw rows and the new snapshot in Aiven."""
+    global SNAP, SNAP_DICT
+    with _merge_lock:
+        snap()
+        b = Builder.from_snapshot(SNAP_DICT)
+        b.add_fund_record(record_)
+        new = b.snapshot(set(SNAP_DICT.get("fund_keys", [])) | {canon(record_["name"])})
+        SNAP_DICT, SNAP = new, Snapshot.from_dict(new)
+    if os.environ.get("RELAY_SNAPSHOT_PATH"):
+        return  # local development: keep live answers in memory only
+    try:
+        from psycopg.types.json import Jsonb
+        with _db() as conn:
+            conn.execute("create table if not exists live_funds (id bigserial primary key, fund text not null, "
+                         "data jsonb not null, created_at timestamptz default now())")
+            conn.execute("insert into live_funds(fund, data) values (%s, %s)", (record_["name"], Jsonb(record_)))
+            conn.execute("insert into snapshot(version, data) values (%s, %s) on conflict (version) do nothing",
+                         (new["version"], Jsonb(new)))
+            conn.commit()
+    except Exception as err:  # the in-memory merge already succeeded; log and keep serving
+        print(f"persist live result failed: {type(err).__name__}: {err}")
 
 
 OPEN_PATHS = {"/login", "/api/login", "/static/styles.css", "/static/login.js", "/static/favicon.svg"}
@@ -126,17 +164,42 @@ def check(body: Check):
     s = snap()
     stage = body.stage if body.stage in STAGES else "seed"
     parsed = parse_list(s, body.funds_text)
+    read_by_gemini = None
+    lookup_candidates: list[str] = []
+    if parsed["unmatched"]:
+        g = gemini.extract_funds(parsed["unmatched"])
+        if "funds" in g:
+            seen = {m["key"] for m in parsed["matched"]}
+            found = []
+            for name in g["funds"]:
+                key = s.match_fund(name)
+                if key and key not in seen:
+                    seen.add(key)
+                    parsed["matched"].append({"key": key, "pasted": name, "via": "gemini"})
+                    found.append(name)
+                elif not key and canon(name) and name not in lookup_candidates:
+                    lookup_candidates.append(name)
+            read_by_gemini = {"lines": len(parsed["unmatched"]), "funds": g["funds"], "matched": found,
+                              "model": g["model"], "ms": g["ms"]}
+            parsed["unmatched"] = []
+        else:
+            read_by_gemini = {"error": g["error"]}
+            lookup_candidates = [u for u in parsed["unmatched"] if len(u) <= 60][:12]
     my_inv = [k for k in (s.match_fund(x) for x in body.investors if x.strip()) if k]
     comps = [c.strip()[:80] for c in body.competitors if c.strip()][:3]
     rows = []
     for m in parsed["matched"]:
         prof = fund_profile(s, m["key"], stage, body.target_eur_m)
-        rows.append({"pasted": m["pasted"], **prof,
+        rows.append({"pasted": m["pasted"], "via": m.get("via", "parser"), **prof,
                      "conflicts": conflicts(s, m["key"], comps) if comps else [],
                      "tie": tie(s, m["key"], my_inv, body.company)})
     counts = {}
     for r in rows:
         counts[r["verdict"]] = counts.get(r["verdict"], 0) + 1
+        # thin data on a fund we never asked Cala about directly: offer a live investor-first query
+        if not r["queried"] and r["known"] < 3 and r["verdict"] != "public" and r["name"] not in lookup_candidates:
+            lookup_candidates.append(r["name"])
+    lookup_candidates = lookup_candidates[:12]
     lead_key = s.match_fund(body.lead) if body.lead else None
     return {
         "stage": STAGE_LABEL.get(stage, stage), "rows": rows, "unmatched": parsed["unmatched"], "counts": counts,
@@ -145,7 +208,36 @@ def check(body: Check):
         "my_investors": [s.name(k) for k in my_inv],
         "lead_back": lead_comes_back(s, lead_key) if lead_key else None,
         "timing": timing(s, stage),
+        "read_by_gemini": read_by_gemini,
+        "lookup_candidates": lookup_candidates,
     }
+
+
+class Lookup(BaseModel):
+    names: list[str] = Field(max_length=12)
+
+
+def _session(request: Request) -> str:
+    return (request.cookies.get(auth.COOKIE) or "anon")[-16:]
+
+
+@app.post("/api/lookup")
+def lookup_start(body: Lookup, request: Request):
+    names = [re.sub(r"\s+", " ", n).strip()[:80] for n in body.names if n and n.strip()]
+    if not names:
+        raise HTTPException(400, "No fund names to look up.")
+    sess = _session(request)
+    if live.budget(sess)["global_left"] < 1:
+        raise HTTPException(429, "Live Cala lookups for this demo are used up.")
+    return {**live.start(names, sess, merge_live), "budget": live.budget(sess)}
+
+
+@app.get("/api/lookup/{job_id}")
+def lookup_status(job_id: str, request: Request):
+    v = live.view(job_id[:20])
+    if not v:
+        raise HTTPException(404, "No such lookup.")
+    return {**v, "budget": live.budget(_session(request))}
 
 
 @app.get("/api/record/{rid}")

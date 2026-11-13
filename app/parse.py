@@ -8,6 +8,8 @@ from engine import Snapshot
 SPLIT_LINES = re.compile(r"[\n;]+|(?<=\S)\s*[•·▪●]\s*")
 NOISE = re.compile(
     r"(\b\d{1,2}[:.]\d{2}\b(\s*[-–]\s*\d{1,2}[:.]\d{2})?|\b(mon|tue|wed|thu|fri|sat|sun)[a-z]*\b|\b\d{1,2}\s*(am|pm)\b|"
+    r"\b\d{1,2}(st|nd|rd|th)?\.?\s*(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\b|"
+    r"\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s*\d{1,2}(st|nd|rd|th)?\b|\b\d{1,2}[./]\d{1,2}\.?\b|"
     r"\S+@\S+|https?://\S+|\b(table|booth|room|stage|meeting|slush|zoom|teams)\s*#?\s*\w*\b)", re.I)
 SEGMENT_SPLIT = re.compile(r"\s+[-–|/]\s+|\s+@\s+|\s+at\s+|\(|\)|,|:")
 

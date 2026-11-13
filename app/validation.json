@@ -1,0 +1,85 @@
+{
+ "version": "20261113234852",
+ "rows": [
+  {
+   "test": "In a round with a named lead, the investor with the stronger earlier lead record is the real lead",
+   "result": "51% vs 37% for a random pick from the same cap table (95% CI 47% to 55%)",
+   "n": 600
+  },
+  {
+   "test": "Predicting the next round's new lead from earlier rounds (top 5)",
+   "result": "1.4%, the same as chance. So Lead Check reports what funds did, not odds.",
+   "n": 140
+  },
+  {
+   "test": "Seed rounds where Cala names the lead",
+   "result": "71%",
+   "n": 743
+  },
+  {
+   "test": "Series A rounds where Cala names the lead",
+   "result": "75%",
+   "n": 459
+  },
+  {
+   "test": "The lead of a round comes back in the company's next round",
+   "result": "54% came back, 15% led again",
+   "n": 984
+  }
+ ],
+ "within_round": {
+  "n": 600,
+  "hit": 0.5111111111111112,
+  "random": 0.3725473068598069,
+  "ci_low": 0.4711693444097723,
+  "ci_high": 0.5509115015162677
+ },
+ "coverage": {
+  "pre-seed": {
+   "with_lead": 156,
+   "total": 205
+  },
+  "seed": {
+   "with_lead": 524,
+   "total": 743
+  },
+  "series a": {
+   "with_lead": 343,
+   "total": 459
+  },
+  "series b": {
+   "with_lead": 200,
+   "total": 263
+  },
+  "series c": {
+   "with_lead": 97,
+   "total": 121
+  },
+  "series d": {
+   "with_lead": 45,
+   "total": 57
+  },
+  "unlabelled": {
+   "with_lead": 118,
+   "total": 312
+  },
+  "growth": {
+   "with_lead": 49,
+   "total": 79
+  },
+  "series e": {
+   "with_lead": 13,
+   "total": 14
+  },
+  "series f": {
+   "with_lead": 4,
+   "total": 5
+  }
+ },
+ "lead_comes_back": {
+  "cases": 984,
+  "came_back": 530,
+  "led_again": 143
+ },
+ "note": "The prediction test ran on the first 289 companies before the investor-first crawl. All other rows are recomputed on every snapshot."
+}

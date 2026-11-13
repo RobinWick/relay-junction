@@ -15,6 +15,8 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from difflib import get_close_matches
 
+from merge import canon
+
 STAGES = ["pre-seed", "seed", "series a", "series b", "series c", "series d", "series e", "series f", "growth"]
 STAGE_LABEL = {"pre-seed": "Pre-seed", "seed": "Seed", "series a": "Series A", "series b": "Series B",
                "series c": "Series C", "series d": "Series D", "series e": "Series E", "series f": "Series F",
@@ -32,11 +34,8 @@ WINDOW_YEARS = 4.0
 
 
 def norm(s: str) -> str:
-    s = re.sub(r"\(.*?\)", " ", s.lower())
-    s = re.sub(r"[^a-z0-9 ]", " ", s)
-    s = re.sub(r"\b(ab|oy|oyj|ltd|limited|llc|llp|lp|gmbh|inc|sa|sas|bv|nv|as|asa|ag|plc|co)\b", " ", s)
-    s = re.sub(r"\b(ventures?|venture partners|capital|vc|partners|management)\b", " ", s)
-    return re.sub(r"\s+", " ", s).strip()
+    """Same canonical key the merge step uses, so typed names and stored keys always agree."""
+    return canon(s)
 
 
 @dataclass

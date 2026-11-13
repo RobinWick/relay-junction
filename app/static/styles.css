@@ -174,6 +174,20 @@ tr.detail td{background:var(--panel);padding:0;border-bottom:1px solid var(--lin
 .more{border:0;background:transparent;color:var(--accent);cursor:pointer;padding:4px 0;font-size:12.5px}
 .tie-box{grid-column:1/-1;border-top:1px solid var(--line);padding-top:12px;font-size:13px;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
 
+.pill-ai{border-style:dashed;border-color:var(--prior);color:var(--prior);background:transparent}
+.ai-note{margin-top:12px;font-size:13px;color:var(--ink-soft);display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.live{margin-top:14px;padding:14px 16px}
+.live-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}
+.live-head p{margin:4px 0 0}
+.ledger{list-style:none;margin:12px 0 0;padding:0;border-top:1px solid var(--line)}
+.ledger li{display:flex;gap:10px;align-items:center;padding:7px 0;border-bottom:1px dashed var(--line);font-size:13px}
+.ledger li .mono{color:var(--muted);margin-left:auto}
+.ledger .dot{width:8px;height:8px;border-radius:50%;background:var(--line-strong);flex:none}
+.ledger .led-asking .dot{background:var(--accent);animation:pulse 1.2s ease-in-out infinite}
+.ledger .led-done .dot{background:var(--accent)}
+.ledger .led-empty .dot,.ledger .led-budget .dot{background:var(--thin)}
+.ledger .led-error .dot{background:var(--conflict)}
+@keyframes pulse{50%{opacity:.35}}
 .unmatched{margin-top:14px;padding:12px 14px;border:1px dashed var(--line-strong);border-radius:var(--radius-panel);font-size:13px;color:var(--muted)}
 
 /* skeleton */
