@@ -11,3 +11,5 @@ dist/
 /cache/
 *.log
 .modal.toml
+pipeline/data/
+pipeline/cache/
