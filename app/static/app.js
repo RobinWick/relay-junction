@@ -181,7 +181,36 @@ function headRow() {
 
 const VERDICT_ORDER = {leads: 0, mixed: 1, stale: 2, follows: 3, few: 4, public: 5};
 
+const REGION_LABEL = {nordics: "the Nordics", baltics: "the Baltics", dach: "DACH", "uk-ie": "the UK and Ireland",
+  "france-benelux": "France and Benelux", south: "Southern Europe", cee: "Central and Eastern Europe", "": "Europe"};
+
+async function runFind() {
+  const out = $("#results");
+  out.classList.remove("hidden");
+  out.setAttribute("aria-busy", "true");
+  out.innerHTML = `<div class="panel tbl-wrap">${skeleton()}</div>`;
+  const t = parseFloat(($("#target").value || "").replace(",", "."));
+  const req = {stage: state.stage, target_eur_m: isFinite(t) ? t : null, region: $("#region").value || null,
+               investors: state.investors, competitors: state.competitors};
+  try {
+    const d = await api("/api/discover", {method: "POST", body: JSON.stringify(req)});
+    const counts = {};
+    d.funds.forEach((f) => { counts[f.verdict] = (counts[f.verdict] || 0) + 1; });
+    const sz = d.filters.size ? ` of EUR ${fmtM(d.filters.size[0])} to ${fmtM(d.filters.size[1])}m` : "";
+    const view = {mode: "discover", stage: d.filters.stage, rows: d.funds, counts, unmatched: [], competitors: {},
+      conflict_count: d.funds.filter((f) => f.conflicts.some((c) => c.level === "led")).length,
+      headline: d.funds.length
+        ? `In <b>${d.rounds_matched}</b> ${esc(d.filters.stage)} rounds${sz} in ${esc(REGION_LABEL[req.region || ""])} over the last 30 months, these <b>${d.funds.length}</b> funds led most often.`
+        : `No ${esc(d.filters.stage)} rounds${sz} in ${esc(REGION_LABEL[req.region || ""])} over the last 30 months in our data. Widen the region or clear the target raise.`};
+    state.last = null;
+    renderResults(view, req);
+  } catch (err) {
+    if (err.message !== "auth") out.innerHTML = `<div class="note note-thin" role="alert"><h3>Could not search</h3>${esc(err.message)}.</div>`;
+  } finally { out.setAttribute("aria-busy", "false"); }
+}
+
 function summaryLine(d, target) {
+  if (d.headline) return d.headline + (d.conflict_count ? ` <b class="conf-led">${d.conflict_count}</b> already led a competitor.` : "");
   const c = d.counts, n = d.rows.length;
   const parts = [];
   const fits = d.rows.filter((r) => r.verdict === "leads" && r.size?.fit === "fits").length;
@@ -298,7 +327,7 @@ function rowHtml(r, i) {
     ? `<div class="cell-sub">Tie: your investor <b>${esc(r.tie.investor)}</b> sat with them in <a href="#" data-rid="${r.tie.round.id}">${esc(r.tie.round.company)}</a>'s ${r.tie.round.n_investors}-investor ${esc(r.tie.round.stage.toLowerCase())}, ${esc(r.tie.round.date.split(" ")[1])}</div>`
     : "";
   return `<tr class="main enter" data-i="${i}" tabindex="0" aria-expanded="false">
-    <td data-l="Fund"><div class="fund-name">${esc(r.name)}</div><div class="fund-sub">${esc(r.pasted !== r.name ? r.pasted : "")}</div><div class="cell-sub"><span class="pill pill-q" title="Rounds come from Cala /v1/knowledge/query">${r.queried ? "asked Cala about this fund" : "seen in company rounds"}</span>${r.via === "gemini" ? ` <span class="pill pill-ai">name read by Gemini</span>` : ""}</div></td>
+    <td data-l="Fund"><div class="fund-name">${esc(r.name)}</div><div class="fund-sub">${esc(r.pasted !== r.name ? r.pasted : "")}</div>${r.like_you ? `<div class="like-you">Led <b>${r.like_you.length}</b> ${r.like_you.length === 1 ? "round" : "rounds"} like yours: ${r.like_you.slice(0, 3).map((x) => `<a href="#" data-rid="${x.id}">${esc(x.company)}</a>`).join(", ")}${r.like_you.length > 3 ? " …" : ""}</div>` : ""}<div class="cell-sub"><span class="pill pill-q" title="Rounds come from Cala /v1/knowledge/query">${r.queried ? "asked Cala about this fund" : "seen in company rounds"}</span>${r.via === "gemini" ? ` <span class="pill pill-ai">name read by Gemini</span>` : ""}</div></td>
     <td data-l="Verdict"><span class="verdict ${vClass}"><span class="v-icon" aria-hidden="true"></span>${esc(r.verdict_label)}</span></td>
     <td data-l="Leads">${leads}</td>
     <td data-l="Round size it leads">${size}</td>
@@ -441,6 +470,13 @@ document.addEventListener("DOMContentLoaded", () => {
     run();
   });
   $("#check-form").addEventListener("submit", (e) => { e.preventDefault(); run(); });
+  $("#find").addEventListener("click", runFind);
+  const tabs = [$("#tab-list"), $("#tab-find")];
+  tabs.forEach((tab) => tab.addEventListener("click", () => {
+    tabs.forEach((x) => x.setAttribute("aria-selected", x === tab));
+    $("#pane-list").classList.toggle("hidden", tab.id !== "tab-list");
+    $("#pane-find").classList.toggle("hidden", tab.id !== "tab-find");
+  }));
   document.addEventListener("keydown", (e) => { if ((e.metaKey || e.ctrlKey) && e.key === "Enter") run(); });
   init();
 });

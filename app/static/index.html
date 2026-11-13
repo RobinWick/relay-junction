@@ -61,16 +61,41 @@
       </div>
     </section>
 
-    <section class="panel form-col" aria-labelledby="h-list">
-      <h2 id="h-list"><span>Funds you are meeting</span><span class="faint mono" id="line-count"></span></h2>
-      <div class="field">
-        <label for="funds" class="sr">Paste your meeting list</label>
-        <textarea class="textarea" id="funds" maxlength="8000" placeholder="Paste your Slush meetings in any format, one per line.&#10;&#10;Tue 10:30  Maki.vc  Table 12&#10;Creandum, Partner: …&#10;Lifeline Ventures"></textarea>
+    <section class="panel form-col" aria-label="What to check">
+      <div class="tabs" role="tablist" aria-label="Mode">
+        <button type="button" role="tab" id="tab-list" aria-selected="true" aria-controls="pane-list">Check my meeting list</button>
+        <button type="button" role="tab" id="tab-find" aria-selected="false" aria-controls="pane-find">Find funds that lead rounds like mine</button>
       </div>
-      <div class="actions">
-        <button class="btn btn-primary" type="submit" id="go">Check funds</button>
-        <button class="btn" type="button" id="sample">Try a sample Nordic list</button>
-        <span class="faint">Press <span class="kbd">⌘</span> <span class="kbd">Enter</span></span>
+      <div id="pane-list" role="tabpanel" aria-labelledby="tab-list">
+        <div class="field">
+          <label for="funds" class="label">Funds you are meeting <span class="hint" id="line-count"></span></label>
+          <textarea class="textarea" id="funds" maxlength="8000" placeholder="Paste your Slush meetings in any format, one per line.&#10;&#10;Tue 10:30  Maki.vc  Table 12&#10;Creandum, Partner: …&#10;Lifeline Ventures"></textarea>
+        </div>
+        <div class="actions">
+          <button class="btn btn-primary" type="submit" id="go">Check funds</button>
+          <button class="btn" type="button" id="sample">Try a sample Nordic list</button>
+          <span class="faint">Press <span class="kbd">⌘</span> <span class="kbd">Enter</span></span>
+        </div>
+      </div>
+      <div id="pane-find" role="tabpanel" aria-labelledby="tab-find" class="hidden">
+        <p class="muted find-intro">No list yet? We look at every round in Cala's data at your stage, close to your target size and in your region over the last 30 months, and show the funds that led them.</p>
+        <div class="field">
+          <label for="region" class="label">Region</label>
+          <select class="select" id="region">
+            <option value="nordics">Nordics</option>
+            <option value="baltics">Baltics</option>
+            <option value="dach">DACH</option>
+            <option value="uk-ie">UK and Ireland</option>
+            <option value="france-benelux">France and Benelux</option>
+            <option value="south">Southern Europe</option>
+            <option value="cee">Central and Eastern Europe</option>
+            <option value="">All of Europe</option>
+          </select>
+        </div>
+        <div class="actions">
+          <button class="btn btn-primary" type="button" id="find">Find funds</button>
+          <span class="faint">Uses your stage and target raise.</span>
+        </div>
       </div>
     </section>
   </form>

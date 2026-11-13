@@ -258,6 +258,50 @@ def timing(snap: Snapshot, stage: str) -> dict | None:
             "p25": gaps[len(gaps) // 4], "p75": gaps[(3 * len(gaps)) // 4], "n": len(gaps)}
 
 
+REGIONS = {
+    "nordics": {"sweden", "finland", "norway", "denmark", "iceland"},
+    "baltics": {"estonia", "latvia", "lithuania"},
+    "dach": {"germany", "austria", "switzerland"},
+    "uk-ie": {"united kingdom", "uk", "ireland", "england", "scotland"},
+    "france-benelux": {"france", "netherlands", "belgium", "luxembourg"},
+    "south": {"spain", "portugal", "italy"},
+    "cee": {"poland", "czech republic", "czechia", "hungary", "romania", "estonia", "lithuania", "latvia"},
+}
+
+
+def _country_ok(country, region: str | None) -> bool:
+    if not region or region not in REGIONS:
+        return True
+    c = str(country or "").lower()
+    return any(name in c for name in REGIONS[region])
+
+
+def discover(snap: Snapshot, stage: str, target_m: float | None, region: str | None, limit: int = 15) -> dict:
+    """Funds that led rounds like the founder's (same stage, similar size, same region, last 30 months)."""
+    since = snap.now_t - 2.5
+    lo, hi = (target_m / 2, target_m * 2) if target_m else (None, None)
+    matches = []
+    for r in snap.rounds:
+        if r["stage"] != stage or r["t"] < since or not r["leads"] or not _country_ok(r.get("country"), region):
+            continue
+        if lo is not None and (not r.get("amount_eur_m") or not lo <= r["amount_eur_m"] <= hi):
+            continue
+        matches.append(r)
+    counts: dict[str, list[dict]] = defaultdict(list)
+    for r in matches:
+        for k in r["leads"]:
+            if not snap.is_hub(k) and not snap.is_crossover(k):
+                counts[k].append(r)
+    ranked = sorted(counts.items(), key=lambda kv: (-len(kv[1]), -max(x["t"] for x in kv[1])))[:limit]
+    funds = []
+    for k, rs in ranked:
+        prof = fund_profile(snap, k, stage, target_m)
+        prof["like_you"] = [round_brief(snap, x) for x in sorted(rs, key=lambda x: -x["t"])]
+        funds.append(prof)
+    return {"rounds_matched": len(matches), "funds": funds,
+            "filters": {"stage": STAGE_LABEL.get(stage, stage), "size": [lo, hi] if lo else None, "region": region}}
+
+
 def record(snap: Snapshot, rid: int) -> dict | None:
     if not 0 <= rid < len(snap.rounds):
         return None

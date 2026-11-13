@@ -18,7 +18,8 @@ import threading
 import auth
 import gemini
 import live
-from engine import STAGE_LABEL, STAGES, Snapshot, competitor_coverage, conflicts, fund_profile, lead_comes_back, record, tie, timing
+from engine import (STAGE_LABEL, STAGES, Snapshot, competitor_coverage, conflicts, discover, fund_profile, lead_comes_back,
+                    record, tie, timing)
 from merge import Builder, canon
 from parse import parse_list
 
@@ -211,6 +212,28 @@ def check(body: Check):
         "read_by_gemini": read_by_gemini,
         "lookup_candidates": lookup_candidates,
     }
+
+
+class Discover(BaseModel):
+    stage: str = "seed"
+    target_eur_m: Optional[float] = Field(default=None, ge=0, le=5000)
+    region: Optional[str] = Field(default=None, max_length=20)
+    investors: list[str] = Field(default_factory=list, max_length=12)
+    competitors: list[str] = Field(default_factory=list, max_length=3)
+
+
+@app.post("/api/discover")
+def discover_funds(body: Discover):
+    s = snap()
+    stage = body.stage if body.stage in STAGES else "seed"
+    out = discover(s, stage, body.target_eur_m, body.region)
+    my_inv = [k for k in (s.match_fund(x) for x in body.investors if x.strip()) if k]
+    comps = [c.strip()[:80] for c in body.competitors if c.strip()][:3]
+    for f in out["funds"]:
+        f["conflicts"] = conflicts(s, f["key"], comps) if comps else []
+        f["tie"] = tie(s, f["key"], my_inv, None)
+        f["pasted"] = f["name"]
+    return out
 
 
 class Lookup(BaseModel):
