@@ -1,0 +1,399 @@
+"use strict";
+/* Lead Check front end. Plain JS, no build step. Everything rendered from API data goes through esc(). */
+
+const $ = (s, el = document) => el.querySelector(s);
+const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
+const fmtM = (m) => m == null ? "" : (m >= 100 ? Math.round(m) : m >= 10 ? m.toFixed(0) : m.toFixed(1).replace(/\.0$/, ""));
+const plural = (n, a, b) => `${n} ${n === 1 ? a : b}`;
+
+const state = {stage: "seed", investors: [], lead: null, competitors: [], meta: null, last: null};
+
+const SAMPLE = [
+  "Tue 17 Nov  10:30  Maki.vc  (Table 12)",
+  "Lifeline Ventures",
+  "Creandum - partner meeting",
+  "Inventure",
+  "Speedinvest",
+  "Northzone",
+  "Icebreaker.vc",
+  "byFounders",
+  "Seedcamp",
+  "Point Nine",
+  "Business Finland",
+  "Superhero Capital",
+].join("\n");
+
+async function api(path, opts = {}) {
+  const res = await fetch(path, {headers: {"Content-Type": "application/json"}, ...opts});
+  if (res.status === 401) { location.href = "/login"; throw new Error("auth"); }
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(body.detail || body.error || `Request failed (${res.status})`);
+  return body;
+}
+
+/* ---------------- routing ---------------- */
+function route() {
+  const isMethod = location.pathname === "/method";
+  $("#view-check").classList.toggle("hidden", isMethod);
+  $("#view-method").classList.toggle("hidden", !isMethod);
+  $("#nav-check").toggleAttribute("aria-current", !isMethod);
+  $("#nav-method").toggleAttribute("aria-current", isMethod);
+  if (isMethod) $("#nav-method").setAttribute("aria-current", "page"); else $("#nav-check").setAttribute("aria-current", "page");
+  if (isMethod) renderMethod();
+}
+document.addEventListener("click", (e) => {
+  const a = e.target.closest("a[href^='/']");
+  if (!a || a.target || e.metaKey || e.ctrlKey) return;
+  if (a.getAttribute("href") === "/" || a.getAttribute("href") === "/method") {
+    e.preventDefault(); history.pushState({}, "", a.getAttribute("href")); route(); window.scrollTo(0, 0);
+  }
+});
+window.addEventListener("popstate", route);
+
+/* ---------------- meta + form ---------------- */
+async function init() {
+  try {
+    state.meta = await api("/api/meta");
+    const m = state.meta;
+    $("#data-chip").textContent = `Cala round data · ${m.funds_queried} funds asked · ${m.companies.toLocaleString("en")} companies · ${m.rounds.toLocaleString("en")} rounds · ${m.retrieved}`;
+    $("#foot-version").textContent = `snapshot ${m.version}`;
+    const seg = $("#stage-seg");
+    seg.innerHTML = m.stages.slice(0, 6).map((s) => `<button type="button" data-stage="${esc(s.key)}" aria-pressed="${s.key === state.stage}">${esc(s.label)}</button>`).join("");
+    seg.addEventListener("click", (e) => {
+      const b = e.target.closest("button[data-stage]"); if (!b) return;
+      state.stage = b.dataset.stage;
+      seg.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", x === b));
+      if (state.last) run();
+    });
+  } catch (err) {
+    if (err.message !== "auth") $("#data-chip").textContent = "Could not load data. Reload the page.";
+  }
+  route();
+}
+
+function renderChips(kind) {
+  const box = kind === "investors" ? $("#inv-chips") : $("#comp-chips");
+  box.querySelectorAll(".tag").forEach((t) => t.remove());
+  const input = box.querySelector("input");
+  const items = kind === "investors" ? state.investors : state.competitors;
+  items.forEach((name, i) => {
+    const tag = document.createElement("span");
+    const isLead = kind === "investors" && state.lead === name;
+    tag.className = "tag" + (isLead ? " is-lead" : "");
+    tag.innerHTML = `${esc(name)}${kind === "investors" ? `<button type="button" class="lead-toggle" data-lead="${i}" aria-pressed="${isLead}" title="Mark as your current lead">${isLead ? "lead" : "set lead"}</button>` : ""}<button type="button" data-rm="${i}" aria-label="Remove ${esc(name)}">×</button>`;
+    box.insertBefore(tag, input);
+  });
+}
+
+function setupChips(kind) {
+  const box = kind === "investors" ? $("#inv-chips") : $("#comp-chips");
+  const input = box.querySelector("input");
+  const list = kind === "investors" ? state.investors : state.competitors;
+  const max = kind === "investors" ? 12 : 3;
+  const sug = $("#inv-suggest");
+  let active = -1, items = [], timer;
+
+  const add = (name) => {
+    name = name.trim();
+    if (!name || list.length >= max || list.some((x) => x.toLowerCase() === name.toLowerCase())) return;
+    list.push(name);
+    if (kind === "investors" && list.length === 1 && !state.lead) state.lead = name;
+    input.value = ""; hide(); renderChips(kind);
+  };
+  const hide = () => { if (sug && kind === "investors") { sug.classList.add("hidden"); input.setAttribute("aria-expanded", "false"); } active = -1; };
+  const show = (rows) => {
+    items = rows;
+    if (!rows.length) return hide();
+    sug.innerHTML = rows.map((r, i) => `<button type="button" role="option" data-i="${i}" aria-selected="${i === active}"><span>${esc(r.name)}</span><span class="faint mono">${r.rounds} rounds</span></button>`).join("");
+    sug.classList.remove("hidden"); input.setAttribute("aria-expanded", "true");
+  };
+
+  box.addEventListener("click", (e) => {
+    const rm = e.target.closest("[data-rm]");
+    if (rm) { const name = list[+rm.dataset.rm]; list.splice(+rm.dataset.rm, 1); if (state.lead === name) state.lead = null; renderChips(kind); return; }
+    const ld = e.target.closest("[data-lead]");
+    if (ld) { const name = list[+ld.dataset.lead]; state.lead = state.lead === name ? null : name; renderChips(kind); return; }
+    const opt = e.target.closest("[data-i]");
+    if (opt) { add(items[+opt.dataset.i].name); input.focus(); return; }
+    input.focus();
+  });
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || (e.key === "," && kind === "competitors")) {
+      e.preventDefault();
+      if (kind === "investors" && active >= 0 && items[active]) add(items[active].name); else add(input.value);
+    } else if (e.key === "Backspace" && !input.value && list.length) {
+      const name = list.pop(); if (state.lead === name) state.lead = null; renderChips(kind);
+    } else if (kind === "investors" && (e.key === "ArrowDown" || e.key === "ArrowUp") && items.length) {
+      e.preventDefault(); active = (active + (e.key === "ArrowDown" ? 1 : -1) + items.length) % items.length; show(items);
+    } else if (e.key === "Escape") hide();
+  });
+  if (kind === "investors") {
+    input.addEventListener("input", () => {
+      clearTimeout(timer);
+      const q = input.value.trim();
+      if (q.length < 2) return hide();
+      timer = setTimeout(async () => { try { active = -1; show(await api(`/api/suggest?q=${encodeURIComponent(q)}`)); } catch { hide(); } }, 120);
+    });
+    input.addEventListener("blur", () => setTimeout(hide, 150));
+  }
+}
+
+/* ---------------- check ---------------- */
+function lineCount() {
+  const n = $("#funds").value.split(/\n|;/).filter((l) => l.trim().length > 1).length;
+  $("#line-count").textContent = n ? plural(n, "line", "lines") : "";
+  $("#go").textContent = n ? `Check ${plural(n, "fund", "funds")}` : "Check funds";
+}
+
+async function run() {
+  const text = $("#funds").value;
+  if (!text.trim()) { $("#funds").focus(); return; }
+  const out = $("#results");
+  out.classList.remove("hidden");
+  out.setAttribute("aria-busy", "true");
+  out.innerHTML = `<div class="panel tbl-wrap">${skeleton()}</div>`;
+  $("#go").disabled = true;
+  try {
+    const t = parseFloat(($("#target").value || "").replace(",", "."));
+    const body = {
+      funds_text: text, stage: state.stage, target_eur_m: isFinite(t) ? t : null,
+      investors: state.investors, lead: state.lead, company: $("#company").value.trim() || null,
+      competitors: state.competitors,
+    };
+    const data = await api("/api/check", {method: "POST", body: JSON.stringify(body)});
+    state.last = data;
+    renderResults(data, body);
+  } catch (err) {
+    if (err.message !== "auth") out.innerHTML = `<div class="note note-thin" role="alert"><h3>Could not check the list</h3>${esc(err.message)}. Try again in a moment.</div>`;
+  } finally {
+    $("#go").disabled = false;
+    out.setAttribute("aria-busy", "false");
+  }
+}
+
+function skeleton() {
+  const row = `<tr>${Array.from({length: 6}, () => `<td><div class="skel"></div></td>`).join("")}</tr>`;
+  return `<table class="lc"><thead>${headRow()}</thead><tbody>${row.repeat(6)}</tbody></table>`;
+}
+function headRow() {
+  return `<tr><th scope="col">Fund</th><th scope="col">Verdict</th><th scope="col">Leads</th><th scope="col">Round size it leads</th><th scope="col">Last lead</th><th scope="col">Conflict and tie</th></tr>`;
+}
+
+const VERDICT_ORDER = {leads: 0, mixed: 1, stale: 2, follows: 3, few: 4, public: 5};
+
+function summaryLine(d, target) {
+  const c = d.counts, n = d.rows.length;
+  const parts = [];
+  parts.push(`<b>${c.leads || 0} of your ${n}</b> ${n === 1 ? "fund" : "funds"} led ${d.stage} rounds${target ? " of your size" : ""} in Cala's data`);
+  if (c.follows) parts.push(`<b>${c.follows}</b> mostly ${c.follows === 1 ? "follows" : "follow"}`);
+  if (c.stale) parts.push(`<b>${c.stale}</b> ${c.stale === 1 ? "has" : "have"} not led for two years`);
+  if (d.conflict_count) parts.push(`<b class="conf-led">${d.conflict_count}</b> already led a competitor`);
+  return parts.join(". ") + ".";
+}
+
+function renderResults(d, req) {
+  const out = $("#results");
+  const sorted = [...d.rows];
+  if (state.sortByVerdict) sorted.sort((a, b) => VERDICT_ORDER[a.verdict] - VERDICT_ORDER[b.verdict]);
+  const cards = [];
+  if (d.lead_back) {
+    const l = d.lead_back;
+    cards.push(`<div class="note note-accent"><h3>Will your lead come back?</h3>In Cala's data, <b>${esc(l.lead)}</b> led ${plural(l.cases, "round", "rounds")} whose company raised again. It came back in the next round in <b>${l.came_back} of ${l.cases}</b> and led it in <b>${l.led_again}</b>. This is what your next investors will see in your cap table.</div>`);
+  }
+  if (d.timing) {
+    const t = d.timing;
+    cards.push(`<div class="note"><h3>Timing, from peers</h3>Companies in the data raised their ${esc(t.to)} a median <b>${t.median} months</b> after their ${esc(t.from)} (middle half ${t.p25} to ${t.p75}, n=${t.n}).</div>`);
+  }
+  if (Object.keys(d.competitors || {}).length) {
+    const miss = Object.entries(d.competitors).filter(([, n]) => !n).map(([c]) => c);
+    if (miss.length) cards.push(`<div class="note note-thin"><h3>Competitor not in our data</h3>${miss.map(esc).join(", ")}: no rounds found in our Cala snapshot, so no conflict can be shown for ${miss.length === 1 ? "it" : "them"}.</div>`);
+  }
+  const rows = sorted.map((r, i) => rowHtml(r, i)).join("");
+  out.innerHTML = `
+    <div class="print-head"><b>Lead Check</b> · ${esc(d.stage)}${req.target_eur_m ? ` · target EUR ${esc(req.target_eur_m)}m` : ""} · data: Cala, retrieved ${esc(state.meta?.retrieved || "")}</div>
+    <div class="summary">
+      <div><p>${summaryLine(d, req.target_eur_m)}</p>
+      <span class="counting">Counting, not AI. Every verdict is a count of Cala round records you can open.</span></div>
+      <div class="actions">
+        <button class="btn" type="button" id="sort">${state.sortByVerdict ? "Your order" : "Sort by verdict"}</button>
+        <button class="btn" type="button" id="print">Print my Slush sheet</button>
+        <button class="btn btn-ghost" type="button" id="csv">Copy as CSV</button>
+      </div>
+    </div>
+    ${cards.length ? `<div class="cards-top">${cards.join("")}</div>` : ""}
+    <div class="panel tbl-wrap"><table class="lc"><thead>${headRow()}</thead><tbody>${rows || `<tr><td colspan="6" class="none">None of the pasted lines matched a fund in our Cala data.</td></tr>`}</tbody></table></div>
+    ${d.unmatched.length ? `<div class="unmatched"><b>Not in our Cala data yet:</b> ${d.unmatched.map((u) => `<span class="mono">${esc(u)}</span>`).join(" · ")}</div>` : ""}`;
+  $("#sort").onclick = () => { state.sortByVerdict = !state.sortByVerdict; renderResults(d, req); };
+  $("#print").onclick = () => window.print();
+  $("#csv").onclick = () => copyCsv(sorted);
+  out.querySelectorAll("tr.main").forEach((tr) => {
+    tr.addEventListener("click", (e) => { if (!e.target.closest("a,button")) toggleRow(tr, sorted[+tr.dataset.i]); });
+    tr.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.target.closest("a,button")) toggleRow(tr, sorted[+tr.dataset.i]); });
+  });
+  out.querySelectorAll("[data-rid]").forEach((a) => a.addEventListener("click", openRecord));
+  out.scrollIntoView({behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start"});
+}
+
+function rowHtml(r, i) {
+  const vClass = `v-${r.verdict}`;
+  const leads = r.known
+    ? `<div><span class="big">Led ${r.led}</span> <span class="muted">of ${r.known}</span></div><div class="cell-sub">${r.led_at_stage} at your stage${r.unknown ? ` · lead unknown in ${r.unknown}` : ""}</div>`
+    : `<div class="none">No rounds with a known lead at this stage</div>`;
+  const size = r.size
+    ? `<div class="num">EUR ${fmtM(r.size.lo)}${r.size.hi !== r.size.lo ? `–${fmtM(r.size.hi)}` : ""}m${r.size.fit ? ` <span class="fit fit-${r.size.fit}">${r.size.fit === "fits" ? "fits" : r.size.fit === "larger" ? "you are larger" : "you are smaller"}</span>` : ""}</div><div class="cell-sub">from ${plural(r.size.n, "led round", "led rounds")}</div>`
+    : `<span class="none">No sizes</span>`;
+  const last = r.last_lead
+    ? `<a href="#" data-rid="${r.last_lead.id}">${esc(r.last_lead.company)}</a><div class="cell-sub">${esc(r.last_lead.stage)} · ${esc(r.last_lead.date)}</div>`
+    : `<span class="none">Never led in our data</span>`;
+  const conf = r.conflicts.length
+    ? r.conflicts.slice(0, 2).map((c) => `<div class="conf conf-${c.level}"><span class="tri" aria-hidden="true"></span><span>${c.level === "led" ? "Led" : "Joined"} <a href="#" data-rid="${c.round.id}">${esc(c.competitor)}</a> ${esc(c.round.stage)} · ${esc(c.round.date.split(" ")[1])}</span></div>`).join("")
+    : (state.competitors.length ? `<div class="none">No conflict found</div>` : "");
+  const tie = r.tie
+    ? `<div class="cell-sub">Tie: your investor <b>${esc(r.tie.investor)}</b> sat with them in <a href="#" data-rid="${r.tie.round.id}">${esc(r.tie.round.company)}</a>'s ${r.tie.round.n_investors}-investor ${esc(r.tie.round.stage.toLowerCase())}, ${esc(r.tie.round.date.split(" ")[1])}</div>`
+    : "";
+  return `<tr class="main enter" data-i="${i}" tabindex="0" aria-expanded="false">
+    <td data-l="Fund"><div class="fund-name">${esc(r.name)}</div><div class="fund-sub">${esc(r.pasted !== r.name ? r.pasted : "")}</div><div class="cell-sub"><span class="pill pill-q" title="Rounds come from Cala /v1/knowledge/query">${r.queried ? "asked Cala about this fund" : "seen in company rounds"}</span></div></td>
+    <td data-l="Verdict"><span class="verdict ${vClass}"><span class="v-icon" aria-hidden="true"></span>${esc(r.verdict_label)}</span></td>
+    <td data-l="Leads">${leads}</td>
+    <td data-l="Round size it leads">${size}</td>
+    <td data-l="Last lead">${last}</td>
+    <td data-l="Conflict and tie">${conf}${tie}${!conf && !tie ? `<span class="none">None found</span>` : ""}</td>
+  </tr>`;
+}
+
+function roundList(rounds, empty, limit = 6) {
+  if (!rounds.length) return `<p class="none">${empty}</p>`;
+  const li = (r) => `<li><a href="#" data-rid="${r.id}">${esc(r.company)}</a><span class="when">${esc(r.stage)} · ${esc(r.date)}${r.amount_eur_m ? ` · ${fmtM(r.amount_eur_m)}m` : ""}</span></li>`;
+  const head = rounds.slice(0, limit).map(li).join("");
+  const rest = rounds.slice(limit);
+  return `<ul class="rlist">${head}${rest.length ? `<li class="rest hidden-rest"></li>` : ""}</ul>${rest.length ? `<button type="button" class="more" data-more>Show ${rest.length} more</button><ul class="rlist hidden" data-rest>${rest.map(li).join("")}</ul>` : ""}`;
+}
+
+function toggleRow(tr, r) {
+  const open = tr.getAttribute("aria-expanded") === "true";
+  const next = tr.nextElementSibling;
+  if (open) { tr.setAttribute("aria-expanded", "false"); if (next?.classList.contains("detail")) next.remove(); return; }
+  tr.setAttribute("aria-expanded", "true");
+  const det = document.createElement("tr");
+  det.className = "detail";
+  det.innerHTML = `<td colspan="6"><div class="detail-in">
+    <div><h3>Led <span class="faint mono">${r.rounds_led.length}</span></h3>${roundList(r.rounds_led, "No led rounds at this stage in the last four years.")}</div>
+    <div><h3>Joined, did not lead <span class="faint mono">${r.rounds_joined.length}</span></h3>${roundList(r.rounds_joined, "None.")}</div>
+    <div><h3>Lead not named <span class="faint mono">${r.rounds_unknown.length}</span></h3>${roundList(r.rounds_unknown, "None.")}</div>
+    ${r.tie ? `<div class="tie-box"><span class="pill">tie</span><span>Your investor <b>${esc(r.tie.investor)}</b> and ${esc(r.name)} were both in <a href="#" data-rid="${r.tie.round.id}">${esc(r.tie.round.company)}</a> (${esc(r.tie.round.stage)}, ${esc(r.tie.round.date)}, ${r.tie.round.n_investors} investors). Fund-level tie: ask your investor which partner was on that deal.</span></div>` : ""}
+    <div class="tie-box faint">Window: last four years, your stage and the stages next to it. ${r.total_rounds} rounds in total for this fund in our Cala data.</div>
+  </div></td>`;
+  tr.after(det);
+  det.querySelectorAll("[data-rid]").forEach((a) => a.addEventListener("click", openRecord));
+  det.querySelectorAll("[data-more]").forEach((b) => b.addEventListener("click", () => { b.nextElementSibling.classList.remove("hidden"); b.remove(); }));
+}
+
+function copyCsv(rows) {
+  const q = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+  const lines = [["Fund", "Verdict", "Led", "Known rounds", "Lead unknown", "Size it leads (EUR m)", "Last lead", "Conflict"].map(q).join(",")];
+  rows.forEach((r) => lines.push([r.name, r.verdict_label, r.led, r.known, r.unknown,
+    r.size ? `${fmtM(r.size.lo)}-${fmtM(r.size.hi)}` : "", r.last_lead ? `${r.last_lead.company} ${r.last_lead.date}` : "",
+    r.conflicts.map((c) => `${c.level} ${c.competitor}`).join("; ")].map(q).join(",")));
+  navigator.clipboard?.writeText(lines.join("\n")).then(() => { $("#csv").textContent = "Copied"; setTimeout(() => ($("#csv").textContent = "Copy as CSV"), 1500); });
+}
+
+/* ---------------- record sheet ---------------- */
+async function openRecord(e) {
+  e.preventDefault();
+  const rid = e.currentTarget.dataset.rid;
+  const root = $("#sheet-root");
+  const prev = document.activeElement;
+  root.innerHTML = `<div class="sheet-backdrop" data-close></div><aside class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-h"><header><div><div class="eyebrow">Cala round record</div><h2 id="sheet-h">Loading</h2></div><button class="x" data-close aria-label="Close">×</button></header><div class="body"><div class="skel"></div></div></aside>`;
+  const close = () => { root.innerHTML = ""; document.removeEventListener("keydown", onKey); prev?.focus(); };
+  const onKey = (ev) => { if (ev.key === "Escape") close(); };
+  document.addEventListener("keydown", onKey);
+  root.querySelectorAll("[data-close]").forEach((x) => x.addEventListener("click", close));
+  $(".sheet .x").focus();
+  try {
+    const r = await api(`/api/record/${encodeURIComponent(rid)}`);
+    $("#sheet-h").textContent = `${r.company} · ${r.stage}`;
+    $(".sheet .body").innerHTML = `
+      <dl class="kv">
+        <dt>Date</dt><dd>${esc(r.date)}</dd>
+        <dt>Round</dt><dd>${esc(r.type || r.stage)}</dd>
+        <dt>Amount</dt><dd class="num">${r.amount_raw ? esc(r.amount_raw) : "not stated"}${r.amount_eur_m ? ` <span class="faint">≈ EUR ${fmtM(r.amount_eur_m)}m</span>` : ""}</dd>
+        <dt>Lead</dt><dd>${r.leads.length ? r.leads.map(esc).join(", ") : `<span class="none">not named</span>`}</dd>
+        <dt>Participants</dt><dd>${r.participants.length ? r.participants.map(esc).join(", ") : `<span class="none">none named</span>`}</dd>
+        <dt>Found via</dt><dd>${r.path === "both" ? "Both query paths agree on this round" : r.path === "investor_first" ? "Investor-first query" : "Company-first query"}</dd>
+      </dl>
+      <h3>Provenance</h3>
+      ${r.sources.map((s) => `<div class="prov"><span class="pill pill-q">POST /v1/knowledge/query</span> <span class="pill">${esc(s.path.replace("_", "-"))}</span><div class="q">"${esc(s.query)}"</div><details class="raw"><summary>Raw Cala row</summary><pre>${esc(JSON.stringify(s.row, null, 2))}</pre></details></div>`).join("")}
+      <p class="faint">Cala query row; no source document is attached to this row. Lead Check only counts and merges these rows.</p>`;
+  } catch (err) {
+    if (err.message !== "auth") $(".sheet .body").innerHTML = `<p role="alert">Could not load this record: ${esc(err.message)}</p>`;
+  }
+}
+
+/* ---------------- method ---------------- */
+function renderMethod() {
+  const m = state.meta || {};
+  const v = m.validation;
+  $("#view-method").innerHTML = `
+  <div class="hero"><div><h1>Method and limits</h1><p class="lede">How Lead Check turns Cala round records into a verdict per fund, what we tested, and where it can be wrong.</p></div></div>
+  <div class="method">
+    <div>
+      <section class="panel ai-box"><h2>Where AI is used, and where it is not</h2>
+        <p>Verdicts, counts, ties and conflicts are plain counting over Cala round records. The same input always gives the same table, and every number opens the rounds behind it. No language model ranks or judges a fund.</p>
+        <p>Cala answers our questions about funds and companies. Lead Check stores those answers in Postgres, merges rounds seen from both sides, and counts.</p>
+      </section>
+      <section class="panel"><h2>Verdict rules</h2>
+        <p class="muted">Counted over the last four years, at your stage and the stages next to it. A round counts as "known" when Cala names its lead.</p>
+        <ul class="rules">
+          <li><span class="verdict v-leads"><span class="v-icon"></span>Leads at your stage</span><span>Led 2 or more rounds at your stage, and led at least 30% of the known rounds it joined.</span></li>
+          <li><span class="verdict v-follows"><span class="v-icon"></span>Mostly follows</span><span>5 or more known rounds, and led fewer than 15% of them.</span></li>
+          <li><span class="verdict v-stale"><span class="v-icon"></span>No lead since …</span><span>Has led before, but not in the last 24 months.</span></li>
+          <li><span class="verdict v-mixed"><span class="v-icon"></span>Mixed</span><span>Everything in between.</span></li>
+          <li><span class="verdict v-few"><span class="v-icon"></span>Too few rounds</span><span>Fewer than 3 known rounds in the window. We show the rounds, not a verdict.</span></li>
+          <li><span class="verdict v-public"><span class="v-icon"></span>Public body or programme</span><span>Grant bodies, public funds and accelerators. Shown, never judged as a lead.</span></li>
+        </ul>
+      </section>
+      <section class="panel"><h2>What we tested</h2>
+        ${v ? `<table class="simple"><thead><tr><th>Test</th><th>Result</th><th>n</th></tr></thead><tbody>${v.rows.map((r) => `<tr><td>${esc(r.test)}</td><td>${esc(r.result)}</td><td class="num">${esc(r.n)}</td></tr>`).join("")}</tbody></table><p class="muted">${esc(v.note || "")}</p>` : `<p class="muted">Validation numbers are being recomputed on the full data.</p>`}
+      </section>
+      <section class="panel"><h2>Limits</h2>
+        <ul>
+          <li>Fund level, not partner level. A tie means two funds sat in the same round; ask which partner was on it.</li>
+          <li>About a quarter of seed rounds name no lead. That pushes some funds toward "Mostly follows"; we show the unknown count on every row.</li>
+          <li>Coverage is what Cala returned to our queries: European venture rounds, mostly 2021 to 2026. A fund missing here is missing from our snapshot, not necessarily from Cala.</li>
+          <li>Company discovery started from startups that raised over EUR 2m, so very small rounds are under-represented.</li>
+          <li>Two query paths can label the same round differently. The record view shows both rows when that happens.</li>
+        </ul>
+      </section>
+    </div>
+    <aside>
+      <section class="panel"><h2>Coverage</h2>
+        <dl class="kv">
+          <dt>Funds asked</dt><dd class="num">${esc(m.funds_queried ?? "")}</dd>
+          <dt>Companies</dt><dd class="num">${esc(m.companies ?? "")}</dd>
+          <dt>Rounds</dt><dd class="num">${esc(m.rounds ?? "")}</dd>
+          <dt>Investors</dt><dd class="num">${esc(m.investors ?? "")}</dd>
+          <dt>Retrieved</dt><dd class="num">${esc(m.retrieved ?? "")}</dd>
+        </dl>
+        <p class="muted">Endpoints: <span class="pill pill-q">/v1/knowledge/query</span> investor-first and company-first.</p>
+      </section>
+      <section class="panel"><h2>Stack</h2>
+        <p class="muted">Cala for the data. Aiven Postgres stores every Cala row, the merged rounds and the snapshot. Modal runs the crawl and serves this app.</p>
+      </section>
+    </aside>
+  </div>`;
+}
+
+/* ---------------- boot ---------------- */
+document.addEventListener("DOMContentLoaded", () => {
+  setupChips("investors"); setupChips("competitors");
+  $("#funds").addEventListener("input", lineCount);
+  $("#sample").addEventListener("click", () => {
+    $("#funds").value = SAMPLE; lineCount();
+    if (!state.investors.length) { state.investors.push("Lifeline Ventures"); state.lead = "Lifeline Ventures"; renderChips("investors"); }
+    if (!$("#target").value) $("#target").value = "3";
+    run();
+  });
+  $("#check-form").addEventListener("submit", (e) => { e.preventDefault(); run(); });
+  document.addEventListener("keydown", (e) => { if ((e.metaKey || e.ctrlKey) && e.key === "Enter") run(); });
+  init();
+});

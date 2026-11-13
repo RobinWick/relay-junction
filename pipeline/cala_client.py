@@ -19,6 +19,7 @@ CACHE = Path(__file__).parent / "cache" / "api"
 MIN_INTERVAL_S = 6.2  # 10 req/min with margin; spacing between request STARTS
 _last_call = 0.0
 _lock = threading.Lock()
+live_calls = 0  # paid (non-cached) requests made by this process
 
 
 def _reserve_slot() -> None:
@@ -50,8 +51,11 @@ def post(path: str, body: dict, retries: int = 4) -> dict:
     if cached.exists():
         return json.loads(cached.read_text())["response"]
 
+    global live_calls
     for attempt in range(retries):
         _reserve_slot()
+        with _lock:
+            live_calls += 1
         resp = requests.post(
             f"{API}{path}",
             headers={"X-API-KEY": _key(), "Content-Type": "application/json"},

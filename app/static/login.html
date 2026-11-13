@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lead Check</title>
+<link rel="stylesheet" href="/static/styles.css">
+<script src="/static/login.js" defer></script>
+</head>
+<body>
+<main class="login">
+  <div class="panel">
+    <span class="mark"><span class="mark-glyph" aria-hidden="true"></span>Lead Check</span>
+    <h1>Private demo for Junction 2026 judges</h1>
+    <p class="muted">Enter the passcode you were given.</p>
+    <form id="login">
+      <label for="pc" class="sr">Passcode</label>
+      <input class="input" id="pc" type="password" autocomplete="current-password" required autofocus>
+      <button class="btn btn-primary" type="submit">Open Lead Check</button>
+      <div class="err" id="err" role="alert"></div>
+    </form>
+  </div>
+</main>
+</body>
+</html>

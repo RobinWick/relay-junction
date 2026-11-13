@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lead Check</title>
+<meta name="description" content="Paste the funds you are meeting at Slush. See which ones actually lead rounds like yours, from Cala round data.">
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/static/styles.css">
+<script src="/static/app.js" defer></script>
+</head>
+<body>
+<header class="top">
+  <div class="top-in">
+    <a class="mark" href="/" aria-label="Lead Check home"><span class="mark-glyph" aria-hidden="true"></span>Lead Check</a>
+    <span class="chip chip-data" id="data-chip">Cala round data · loading</span>
+    <nav class="top-nav" aria-label="Main">
+      <a href="/" id="nav-check">Check my list</a>
+      <a href="/method" id="nav-method">Method and limits</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap" id="view-check">
+  <div class="hero">
+    <div>
+      <h1>Paste the funds you are meeting. See which ones <em>actually lead.</em></h1>
+      <p class="lede">Funds say they lead. Cala shows whether they did. Every number below is counted from Cala round records and opens the record behind it.</p>
+    </div>
+  </div>
+
+  <form class="grid-form" id="check-form" autocomplete="off" novalidate>
+    <section class="panel form-col" aria-labelledby="h-round">
+      <h2 id="h-round">Your round</h2>
+      <div class="field">
+        <span class="label" id="l-stage">Stage you are raising</span>
+        <div class="seg" role="group" aria-labelledby="l-stage" id="stage-seg"></div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label for="target">Target raise <span class="hint">EUR m</span></label>
+          <input class="input mono" id="target" inputmode="decimal" placeholder="3">
+        </div>
+        <div class="field">
+          <label for="company">Your company <span class="hint">optional</span></label>
+          <input class="input" id="company" maxlength="120" placeholder="Acme Oy">
+        </div>
+      </div>
+      <div class="field">
+        <span class="label" id="l-inv">Your current investors <span class="hint">mark your lead</span></span>
+        <div class="chips" id="inv-chips" data-kind="investors">
+          <input id="inv-input" aria-labelledby="l-inv" placeholder="Type a fund name" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="inv-suggest">
+          <div class="suggest hidden" id="inv-suggest" role="listbox"></div>
+        </div>
+      </div>
+      <div class="field">
+        <span class="label" id="l-comp">Competitors to check <span class="hint">up to 3</span></span>
+        <div class="chips" id="comp-chips" data-kind="competitors">
+          <input id="comp-input" aria-labelledby="l-comp" placeholder="Company name, Enter to add">
+        </div>
+      </div>
+    </section>
+
+    <section class="panel form-col" aria-labelledby="h-list">
+      <h2 id="h-list"><span>Funds you are meeting</span><span class="faint mono" id="line-count"></span></h2>
+      <div class="field">
+        <label for="funds" class="sr">Paste your meeting list</label>
+        <textarea class="textarea" id="funds" maxlength="8000" placeholder="Paste your Slush meetings in any format, one per line.&#10;&#10;Tue 10:30  Maki.vc  Table 12&#10;Creandum, Partner: …&#10;Lifeline Ventures"></textarea>
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary" type="submit" id="go">Check funds</button>
+        <button class="btn" type="button" id="sample">Try a sample Nordic list</button>
+        <span class="faint">Press <span class="kbd">⌘</span> <span class="kbd">Enter</span></span>
+      </div>
+    </section>
+  </form>
+
+  <section class="results hidden" id="results" aria-live="polite" aria-busy="false"></section>
+</main>
+
+<main class="wrap hidden" id="view-method"></main>
+
+<footer class="foot">
+  <span>Lead Check · built at Junction 2026 on Cala data · Modal · Aiven</span>
+  <span id="foot-version" class="mono"></span>
+</footer>
+
+<div id="sheet-root"></div>
+</body>
+</html>
