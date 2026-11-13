@@ -15,7 +15,7 @@ const SAMPLE = [
   "Inventure",
   "Speedinvest",
   "Northzone",
-  "Icebreaker.vc",
+  "Fly Ventures",
   "byFounders",
   "Seedcamp",
   "Point Nine",
@@ -184,7 +184,8 @@ const VERDICT_ORDER = {leads: 0, mixed: 1, stale: 2, follows: 3, few: 4, public:
 function summaryLine(d, target) {
   const c = d.counts, n = d.rows.length;
   const parts = [];
-  parts.push(`<b>${c.leads || 0} of your ${n}</b> ${n === 1 ? "fund" : "funds"} led ${d.stage} rounds${target ? " of your size" : ""} in Cala's data`);
+  const fits = d.rows.filter((r) => r.verdict === "leads" && r.size?.fit === "fits").length;
+  parts.push(`<b>${c.leads || 0} of your ${n}</b> ${n === 1 ? "fund" : "funds"} lead ${esc(d.stage)} rounds in Cala's data${target ? `, and <b>${fits}</b> of those lead rounds your size` : ""}`);
   if (c.follows) parts.push(`<b>${c.follows}</b> mostly ${c.follows === 1 ? "follows" : "follow"}`);
   if (c.stale) parts.push(`<b>${c.stale}</b> ${c.stale === 1 ? "has" : "have"} not led for two years`);
   if (d.conflict_count) parts.push(`<b class="conf-led">${d.conflict_count}</b> already led a competitor`);
@@ -434,7 +435,8 @@ document.addEventListener("DOMContentLoaded", () => {
   $("#funds").addEventListener("input", lineCount);
   $("#sample").addEventListener("click", () => {
     $("#funds").value = SAMPLE; lineCount();
-    if (!state.investors.length) { state.investors.push("Lifeline Ventures"); state.lead = "Lifeline Ventures"; renderChips("investors"); }
+    if (!state.investors.length) { state.investors.push("Antler", "Icebreaker.vc"); state.lead = "Antler"; renderChips("investors"); }
+    if (!state.competitors.length) { state.competitors.push("Reduciner"); renderChips("competitors"); }
     if (!$("#target").value) $("#target").value = "3";
     run();
   });

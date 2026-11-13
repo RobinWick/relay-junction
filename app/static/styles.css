@@ -242,7 +242,13 @@ footer.foot{max-width:1180px;margin:0 auto;padding:0 24px 40px;color:var(--faint
 }
 @media (max-width:700px){
   .wrap{padding:18px 16px 60px}
-  .top-in{padding:10px 16px}
+  .top-in{padding:10px 16px;gap:10px}
+  .mark{white-space:nowrap;font-size:14px}
+  .top-nav a{white-space:nowrap;padding:5px 8px;font-size:12.5px}
+  .summary{flex-direction:column}
+  .summary .actions{margin-top:4px}
+  #nav-method{font-size:0}
+  #nav-method::after{content:"Method";font-size:12.5px}
   table.lc thead{display:none}
   table.lc,table.lc tbody,table.lc tr,table.lc td{display:block;width:100%}
   table.lc tr.main{border:1px solid var(--line);border-radius:var(--radius-panel);margin:0 0 10px;background:var(--panel);padding:4px 0}
