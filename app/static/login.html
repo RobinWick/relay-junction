@@ -3,22 +3,26 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Lead Check</title>
-<link rel="stylesheet" href="/static/styles.css">
-<script src="/static/login.js" defer></script>
+<title>Cala fund check</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/static/styles.css?v=4">
+<script src="/static/brand.js?v=4" defer></script>
+<script src="/static/login.js?v=4" defer></script>
 </head>
 <body>
 <main class="login">
-  <div class="panel">
-    <span class="mark"><span class="mark-glyph" aria-hidden="true"></span>Lead Check</span>
-    <h1>Private demo for Junction 2026 judges</h1>
-    <p class="muted">Enter the passcode you were given.</p>
-    <form id="login">
-      <label for="pc" class="sr">Passcode</label>
-      <input class="input" id="pc" type="password" autocomplete="current-password" required autofocus>
-      <button class="btn btn-primary" type="submit">Open Lead Check</button>
-      <div class="err" id="err" role="alert"></div>
-    </form>
+  <div class="login-in">
+    <span class="mark"><span class="mark-glyph" aria-hidden="true"></span><span data-app-name></span></span>
+    <h1>Private demo for Junction 2026 judges.</h1>
+    <div class="card login-card">
+      <form id="login">
+        <label for="pc" class="label">Passcode</label>
+        <input class="input" id="pc" type="password" autocomplete="current-password" required autofocus>
+        <button class="btn btn-primary" type="submit">Open the demo</button>
+        <div class="err" id="err" role="alert"></div>
+      </form>
+    </div>
   </div>
 </main>
 </body>

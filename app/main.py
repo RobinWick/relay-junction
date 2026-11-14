@@ -84,7 +84,8 @@ def merge_live(record_: dict) -> None:
         print(f"persist live result failed: {type(err).__name__}: {err}")
 
 
-OPEN_PATHS = {"/login", "/api/login", "/static/styles.css", "/static/login.js", "/static/favicon.svg"}
+OPEN_PATHS = {"/login", "/api/login", "/static/styles.css", "/static/login.js", "/static/brand.js",
+              "/static/favicon.svg"}
 
 
 MAX_BODY = 64 * 1024
