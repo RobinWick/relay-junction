@@ -521,7 +521,7 @@
     const extra = v === "companies" ? labBlock(lc) + whereBlock(top || []) : "";
     const list = body ? `<p class="overline cov-head">FILTER COVERAGE</p><ul class="cov-list">${body}</ul>`
       : v === "companies" ? "" : `<ul class="cov-list"><li class="muted">No filter set.</li></ul>`;
-    return `<div class="panel panel--cov">
+    return `<div class="panel panel--cov${v === "companies" ? " panel--rank" : ""}">
       <div class="panel__head"><h2 class="panel__title">${v === "companies" ? "Ranking" : "Coverage"}</h2></div>
       <div class="panel__body">${head}${extra}${list}</div></div>`;
   }

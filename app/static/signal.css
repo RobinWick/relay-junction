@@ -805,3 +805,4 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
 .rk-st__bar{height:6px;border-radius:var(--r-pill);background:var(--sunken);overflow:hidden}
 .rk-st__bar i{display:block;height:100%;width:0;border-radius:inherit;background:var(--accent);transition:width var(--d-bar) var(--ease)}
 .rk-st__n{font:550 12px var(--mono);color:var(--ink);text-align:right}
+@media (width>=720px){.hero>.panel--rank{height:388px;max-height:none}}
