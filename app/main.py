@@ -10,7 +10,7 @@ import os
 import re
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -24,6 +24,9 @@ import time
 import auth
 import gemini
 import live
+import receipt_exits
+import receipt_intro
+import receipt_pace
 from engine import (REGIONS, STAGE_LABEL, STAGES, Snapshot, competitor_coverage, conflicts, discover, fund_portfolio,
                     fund_profile, lead_comes_back, record, tie, timing)
 from dispute import dispute
@@ -339,7 +342,7 @@ def check(body: Check, request: Request):
     rows = []
     for m in parsed["matched"]:
         prof = fund_profile(s, m["key"], stage, body.target_eur_m)
-        rows.append({"pasted": m["pasted"], "via": m.get("via", "parser"), **prof,
+        rows.append({"pasted": m["pasted"], "via": m.get("via", "parser"), **prof, "exit_receipts": _exit_count(m["key"]),
                      "conflicts": conflicts(s, m["key"], comps) if comps else [],
                      "tie": tie(s, m["key"], my_inv, body.company),
                      "portfolio": fund_portfolio(s, m["key"])})
@@ -391,6 +394,7 @@ def discover_funds(body: Discover, request: Request):
         f["tie"] = tie(s, f["key"], my_inv, None)
         f["pasted"] = f["name"]
         f["portfolio"] = fund_portfolio(s, f["key"])
+        f["exit_receipts"] = _exit_count(f["key"])
     return out
 
 
@@ -518,6 +522,88 @@ def get_fund(key: str, stage: str = "seed", target: Optional[float] = None):
     if k not in s.by_investor:
         raise HTTPException(404, "Fund not in our Cala data.")
     return fund_profile(s, k, stage if stage in STAGES else "seed", target)
+
+
+EXITS = receipt_exits.load()  # built offline from cached Cala answers (pipeline/fetch_exits.py); 0 calls at runtime
+
+
+def _exit_count(key: str) -> int:
+    """How many acquisition receipts we hold for a fund: the list's one marker. 0 also for funds never fetched."""
+    f = receipt_exits.for_fund(EXITS, key)
+    return len(f["receipts"]) + len(f["undisclosed"]) if f else 0
+
+
+BRIEF = ("id", "company", "date", "stage", "amount_eur_m")
+
+
+def _pace(s: Snapshot, k: str, stage: str) -> dict:
+    """Lead pace per year at the founder's stage band, trimmed to what the strip and its round list show."""
+    p = receipt_pace.lead_pace(s, k, stage, include_context=False)
+    return {"stage_label": p["stage_label"], "band_label": p["band_label"],
+            "years": [{x: y[x] for x in ("year", "led", "joined", "lead_unknown", "follow_on")} for y in p["years"]],
+            "summary": p["summary"], "summary_basis": p["summary_basis"], "summary_withheld": p["summary_withheld"],
+            "last_lead_at_stage": p["last_lead_at_stage"], "caveat": p["caveat"],
+            "rounds": {rid: {x: b.get(x) for x in BRIEF} for rid, b in p["rounds"].items()}}
+
+
+def _exits(k: str) -> Optional[dict]:
+    f = receipt_exits.for_fund(EXITS, k)
+    if not f or not (f["receipts"] or f["undisclosed"]):
+        return None  # never fetched, or nothing found: the UI hides the section, never says "no exits"
+    keep = ("company", "date", "year", "acquirers", "value", "description", "vintage", "sources")
+    return {"receipts": [{x: r.get(x) for x in keep} for r in f["receipts"]],
+            "undisclosed": [{x: r.get(x) for x in keep} for r in f["undisclosed"]],
+            "caveat": f["caveat"], "value_label": receipt_exits.VALUE_LABEL}
+
+
+SHARED_KEEP = ("rid", "echo_rids", "company", "date", "stage", "amount_eur_m", "n_investors", "with", "fund_led",
+               "confirmation")
+
+
+def _shared(entry: dict) -> dict:
+    lr = entry["lead_record"]
+    return {"key": entry["key"], "name": entry["name"],
+            "lead_record": {x: lr.get(x) for x in ("stage", "verdict", "verdict_label", "led_at_stage", "led",
+                                                   "known", "unknown")}
+                           | {"last_lead": {x: lr["last_lead"].get(x) for x in BRIEF} if lr.get("last_lead") else None},
+            "shared_rounds": [{x: r.get(x) for x in SHARED_KEEP} for r in entry["shared_rounds"]]}
+
+
+def _intro(s: Snapshot, k: str, stage: str, investors: list[str], lead: Optional[str], company: Optional[str]) -> Optional[dict]:
+    """This fund's small shared rounds with the founder's investors, plus other funds that lead the next stage and
+    have one. None when the founder added no investors or is already at the last stage."""
+    names = [x.strip()[:120] for x in investors if x.strip()][:12]
+    if lead and lead.strip():
+        names = [lead.strip()[:120]] + names
+    nxt = receipt_intro.next_stage_of(stage)
+    if not names or not nxt:
+        return None
+    mine, _ = receipt_intro.resolve_funds(s, names)
+    if not mine:
+        return None
+    paths = receipt_intro.intro_paths(s, names, nxt, None, company, None, limit=50)
+    this = None if k in mine else _shared(receipt_intro.pasted_fund_receipts(s, [k], names, nxt, None, company)["funds"][0])
+    rest = [e for e in paths["suggestions"] if e["key"] != k]
+    return {"next_stage": paths["next_stage"], "investors": [i["name"] for i in paths["investors"] if not i["excluded"]],
+            "own_investor": k in mine, "fund": this, "others": [_shared(e) for e in rest[:5]],
+            "more": max(0, len(rest) - 5) + paths["more"],
+            "footnote": paths["footnote"], "rules": paths["rules"]}
+
+
+@app.get("/api/fund/{key}/receipts")
+def get_fund_receipts(key: str, stage: str = "seed", inv: list[str] = Query(default=[]),
+                      lead: Optional[str] = None, company: Optional[str] = None):
+    """Three receipt sections for one fund's evidence pane: lead pace, acquisitions, shared-round intro paths.
+
+    All local (snapshot plus the cached exits file), 0 Cala calls. Every round id opens with GET /api/record/{rid}.
+    """
+    s = snap()
+    k = re.sub(r"[^a-z0-9 ]", "", key.lower())[:80]
+    if k not in s.by_investor:
+        raise HTTPException(404, "Fund not in our Cala data.")
+    st = stage if stage in STAGES else "seed"
+    return {"key": k, "pace": _pace(s, k, st), "exits": _exits(k),
+            "intro": _intro(s, k, st, inv[:12], lead, (company or "")[:120] or None)}
 
 
 VALIDATION = json.loads((HERE / "validation.json").read_text()) if (HERE / "validation.json").exists() else None

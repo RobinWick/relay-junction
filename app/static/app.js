@@ -510,6 +510,7 @@ const ICON = {
   link: `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6.5 9.5 9.5 6.5M7 4.5l1-1a2.5 2.5 0 0 1 3.5 3.5l-1 1M9 11.5l-1 1A2.5 2.5 0 0 1 4.5 9l1-1"/></svg>`,
   flag: `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 14V2.5M3.5 3h8l-1.5 3 1.5 3h-8"/></svg>`,
   x: `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 4 8 8M12 4l-8 8"/></svg>`,
+  exit: `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8.5 2.5h-5a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1v-5M10 2.5h3.5V6M13.5 2.5 7.5 8.5"/></svg>`,
 };
 
 function verdictText(r) {
@@ -750,13 +751,15 @@ function conflictFlag(r) {
 
 function rowHtml(r, i, showWay) {
   return `<li class="row" data-i="${i}" data-k="${esc(r.key || r.name)}">
-    <div class="cell c-fund"><span class="fund-l1"><button type="button" class="nm" data-open="${i}" aria-haspopup="dialog">${esc(r.name)}</button>${conflictFlag(r)}</span>${verdictLine(r)}</div>
+    <div class="cell c-fund"><span class="fund-l1"><button type="button" class="nm" data-open="${i}" aria-haspopup="dialog">${esc(r.name)}</button>${exitMark(r)}${conflictFlag(r)}</span>${verdictLine(r)}</div>
     <div class="cell c-led"><span class="lbl">Lead record</span>${ledCell(r)}</div>
     <div class="cell c-size"><span class="lbl">Round size it leads</span>${sizeCell(r, state.req?.target_eur_m)}</div>
     <div class="cell c-last"><span class="lbl">Last lead</span>${lastCell(r)}</div>
     ${showWay ? `<div class="cell c-way"><span class="lbl">Way in</span>${wayCell(r)}</div>` : ""}
   </li>`;
 }
+/* The list's one receipt marker: Cala has acquisitions of companies this fund backed. The pane lists them. */
+const exitMark = (r) => r.exit_receipts ? `<span class="exm" role="img" aria-label="${plural(r.exit_receipts, "acquisition", "acquisitions")} on file" title="${plural(r.exit_receipts, "acquisition", "acquisitions")} of companies it backed, in the fund's pane">${ICON.exit}</span>` : "";
 /* Verdict as one quiet line under the fund name: the group heading already says the rest. */
 const verdictLine = (r) => `<span class="vline v-${esc(r.verdict)}"><span class="g" aria-hidden="true"></span>${esc(verdictText(r))}</span>`;
 
@@ -1131,6 +1134,7 @@ function showFund(i) {
       <div class="stat"><div class="k">Last lead</div>${s3}</div>
     </div>
     <div class="sec"><h3 class="sech">How to get in</h3>${waysHtml(r)}</div>
+    <div id="rcpt"><div class="skel"></div></div>
     ${comps.length ? `<div class="sec"><h3 class="sech">Competitors</h3>${conflicts || `<div class="okline">No round with ${esc(comps.join(" or "))} in the data.</div>`}</div>` : ""}
     ${r.like_you?.length ? `<div class="sec"><h3 class="sech">Rounds like yours it led <span class="n">${r.like_you.length}</span></h3>${roundTable(r.like_you, 5)}</div>` : ""}
     <div class="sec"><h3 class="sech">Rounds it led <span class="n">${r.rounds_led.length}, newest first</span></h3>${roundTable(r.rounds_led) || `<div class="okline">No led rounds near your stage in the last four years.</div>`}</div>
@@ -1139,6 +1143,107 @@ function showFund(i) {
     ${r.rounds_disputed?.length ? `<details class="fold"><summary>Disputed by the source, not counted (${r.rounds_disputed.length})</summary>${roundTable(r.rounds_disputed)}</details>` : ""}
     <p class="pnote">Counted over the last four years, at your stage and the stages next to it. ${esc(counts)}. Click any company to see the Cala record behind it.</p>`;
   $(".pane .x").focus();
+  loadReceipts(r);
+}
+
+/* ---------------- receipts: lead pace, who bought its companies, shared-round intro paths ----------------
+   One local call per fund (no Cala call). Every count opens the rounds behind it; nothing here is a score. */
+const receiptCache = new Map();
+async function loadReceipts(r) {
+  const req = state.req || {};
+  const q = new URLSearchParams({stage: req.stage || "seed"});
+  (req.investors || []).forEach((x) => q.append("inv", x));
+  if (req.lead) q.set("lead", req.lead);
+  if (req.company) q.set("company", req.company);
+  const url = `/api/fund/${encodeURIComponent(r.key)}/receipts?${q}`;
+  const seq = state.recSeq;
+  let d = receiptCache.get(url);
+  if (!d) {
+    try { d = await api(url); receiptCache.set(url, d); }
+    catch (err) {
+      if (seq === state.recSeq && $("#rcpt")) $("#rcpt").innerHTML = err.message === "auth" ? "" : `<p class="pnote">Could not load the receipts: ${esc(err.message)}.</p>`;
+      return;
+    }
+  }
+  if (seq !== state.recSeq || !$("#rcpt")) return;
+  $("#rcpt").innerHTML = paceHtml(d.pace) + exitsHtml(d.exits) + introHtml(d.intro, r);
+}
+
+const ROLE = {led: "Led", joined: "Joined", lead_unknown: "Lead unknown", follow_on: "Follow-on"};
+const ridLink = (id, text) => `<a href="#" data-rid="${esc(id)}">${esc(text)}</a>`;
+
+function paceStrip(years) {
+  const W = 34, H = 48, gap = 6, max = Math.max(1, ...years.map((y) => y.led.length + y.joined.length + y.lead_unknown.length));
+  const u = H / max;
+  const cols = years.map((y, i) => {
+    const x = i * (W + gap);
+    let top = H;
+    const bar = (n, cls) => { if (!n) return ""; const h = Math.max(2, n * u); top -= h; return `<rect class="${cls}" x="${x + 4}" y="${top.toFixed(1)}" width="${W - 8}" height="${(h - 1).toFixed(1)}" rx="1.5"/>`; };
+    const c = {led: y.led.length, joined: y.joined.length, unk: y.lead_unknown.length};
+    return `<g><title>${y.year}: led ${c.led}, joined ${c.joined}, lead unknown ${c.unk}</title>${bar(c.led, "pc-led")}${bar(c.joined, "pc-join")}${bar(c.unk, "pc-unk")}<text x="${x + W / 2}" y="${H + 14}" class="pc-yr">${String(y.year).slice(2)}</text>${c.led + c.joined + c.unk ? `<text x="${x + W / 2}" y="${top - 3}" class="pc-n">${c.led}/${c.led + c.joined}</text>` : ""}</g>`;
+  }).join("");
+  const label = years.map((y) => `${y.year} led ${y.led.length} of ${y.led.length + y.joined.length}, ${y.lead_unknown.length} lead unknown`).join("; ");
+  const w = years.length * (W + gap) - gap;
+  return `<svg class="pace" viewBox="0 -12 ${w} ${H + 30}" role="img" aria-label="${esc(label)}">${cols}</svg>`;
+}
+
+function paceHtml(p) {
+  if (!p) return "";
+  const ll = p.last_lead_at_stage;
+  const last = ll ? `Last lead at ${esc(ll.stage)}: ${ridLink(ll.round_id, p.rounds[ll.round_id]?.company || "the round")}, ${esc(ll.date)}${ll.months_ago != null ? `, ${plural(ll.months_ago, "month", "months")} ago` : ""}${ll.date_approx ? " (date approximate)" : ""}.` : `No lead at ${esc(p.stage_label)} in our data since 2019.`;
+  const rows = [];
+  [...p.years].reverse().forEach((y) => ["led", "joined", "lead_unknown", "follow_on"].forEach((k) => y[k].forEach((id) => {
+    const b = p.rounds[id];
+    if (b) rows.push(`<div class="rr pr"><span class="co">${ridLink(id, b.company)}</span><span class="st">${ROLE[k]}</span><span class="st">${esc(b.stage)}</span><span class="dt">${esc(b.date)}</span></div>`);
+  })));
+  const has = p.years.some((y) => y.led.length + y.joined.length + y.lead_unknown.length);
+  return `<div class="sec rc"><h3 class="sech">Lead pace <span class="n">${esc(p.band_label)}, 2019 to 2026</span></h3>
+    ${has ? `${paceStrip(p.years)}<p class="pc-key"><span><i class="k-led"></i>Led</span><span><i class="k-join"></i>Joined, another lead named</span><span><i class="k-unk"></i>Lead unknown</span><span class="muted">Label: led / lead-known rounds</span></p>` : ""}
+    <p class="rc-line">${p.summary ? esc(p.summary) : `<span class="muted">${esc(p.summary_withheld || "No summary.")}</span>`} ${last}</p>
+    ${rows.length ? `<details class="fold"><summary>The rounds behind it (${rows.length})</summary><div class="rt">${rows.join("")}</div></details>` : ""}
+    <p class="pnote">${esc(p.caveat)} Follow-on rounds in its own companies are listed, never counted as leads.</p></div>`;
+}
+
+const fmtDay = (d) => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(d || ""); return m ? `${+m[3]} ${["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][+m[2] - 1]} ${m[1]}` : esc(d || ""); };
+const safeUrl = (u) => /^https:\/\//.test(u || "") ? u : "";
+
+function exitsHtml(x) {
+  if (!x) return "";
+  const li = (e) => {
+    const src = (e.sources || []).find((s) => safeUrl(s.url));
+    const buyers = (e.acquirers || []).map((a) => a.name).join(", ") || "a buyer not named";
+    return `<li class="ex"><div class="ex1"><b>${esc(e.company)}</b> bought by ${esc(buyers)}</div>
+      <div class="ex2"><span class="val num">${esc(e.value?.display || "undisclosed")}</span><span class="lab">${esc(x.value_label)}</span><span class="muted">${fmtDay(e.date)}</span>${src ? `<a href="${esc(src.url)}" target="_blank" rel="noopener noreferrer">${ICON.link}Source</a>` : ""}</div>
+      ${e.description ? `<div class="ex3">${esc(e.description.length > 170 ? e.description.slice(0, 167).replace(/\s+\S*$/, "") + "..." : e.description)}</div>` : ""}</li>`;
+  };
+  return `<div class="sec rc"><h3 class="sech">Who bought its companies <span class="n">from Cala's M&amp;A records</span></h3>
+    <ul class="exits">${x.receipts.map(li).join("")}</ul>
+    ${x.undisclosed.length ? `<p class="sech sub">Value undisclosed</p><ul class="exits">${x.undisclosed.map(li).join("")}</ul>` : ""}
+    <p class="pnote">${esc(x.caveat)}</p></div>`;
+}
+
+const CONFIRM = {company_first: "The company's own record names both", two_sources: "Two sources name both", one_sided: "One source only"};
+function sharedLine(sr, fundName) {
+  return `<li>${ridLink(sr.rid, sr.company)} <span class="muted">${esc(sr.stage)}, ${esc(sr.date)}${sr.amount_eur_m ? `, EUR ${fmtM(sr.amount_eur_m)}m` : ""}, ${plural(sr.n_investors, "investor", "investors")}</span>, with ${esc(sr.with.join(", "))}.${sr.fund_led ? ` ${esc(shortFund(fundName))} led it.` : ""} <span class="cf-${esc(sr.confirmation)}">${esc(CONFIRM[sr.confirmation] || "")}</span></li>`;
+}
+function leadsNext(lr, next) {
+  const leads = lr.verdict === "leads" || lr.verdict === "leads_size";
+  const last = lr.last_lead ? ` Last lead: ${ridLink(lr.last_lead.id, lr.last_lead.company)}, ${esc(lr.last_lead.stage)}, ${esc(lr.last_lead.date)}.` : "";
+  return leads ? `Led ${esc(plural(lr.led_at_stage, `${next} round`, `${next} rounds`))} in four years.${last}`
+    : `Led ${lr.led} of ${lr.known} rounds with a named lead near ${esc(next)}.${last}`;
+}
+
+function introHtml(x, r) {
+  if (!x) return "";
+  const next = esc(x.next_stage), inv = esc(x.investors.join(", ") || "your investors");
+  let mine;
+  if (x.own_investor) mine = `<div class="okline">${esc(r.name)} is one of your investors.</div>`;
+  else if (x.fund?.shared_rounds.length) mine = `<div class="introcard"><div class="l1">${ICON.link}Sat in ${plural(x.fund.shared_rounds.length, "small round", "small rounds")} with ${inv}</div><ul class="shared">${x.fund.shared_rounds.map((sr) => sharedLine(sr, r.name)).join("")}</ul><p>At ${next}: ${leadsNext(x.fund.lead_record, x.next_stage)} Ask your investor for the intro.</p></div>`;
+  else mine = `<div class="okline">No small round with ${inv} in our data in the last four years.</div>`;
+  const others = x.others.map((o) => `<li><b>${esc(o.name)}</b> <span class="muted">${leadsNext(o.lead_record, x.next_stage)}</span><ul class="shared">${o.shared_rounds.map((sr) => sharedLine(sr, o.name)).join("")}</ul></li>`).join("");
+  return `<div class="sec rc"><h3 class="sech">Shared-round intro paths <span class="n">to ${next} leads</span></h3>${mine}
+    ${others ? `<p class="rc-line">Other funds that lead at ${next} and sat in a small round with ${inv}:</p><ul class="others">${others}</ul>${x.more ? `<p class="muted">And ${x.more} more.</p>` : ""}` : ""}
+    <p class="pnote">${esc(x.footnote)} ${esc(x.rules)}</p></div>`;
 }
 
 async function openRound(rid) {
@@ -1985,6 +2090,10 @@ function renderMethod() {
     <section><h2>Your network</h2>
       <p>Your LinkedIn connections file is read in your browser. Only first name, last name, company and position are kept, in memory, for this page; URLs and emails are never read, and nothing is uploaded or stored. Each connection's company is matched by name to the companies a fund led or joined in our data. Very short or generic company names are skipped. Names of 5 letters or fewer and ordinary words (Junction, Bolt, Garage) are shown as "same name" only, never as founder level, because a stranger's employer can share them. A title counts as founder level only when it starts with founder, co-founder, CEO, CTO, managing director or general or managing partner; assistants and associates do not count. A match is a person at a company, not a promise they know the partner.</p>
       <p>The Map draws the same ways in as lines from you, through the person, to each fund, with the funds in the list's groups and order. A thick solid line is someone at a company the fund led, a dashed line someone at a company it only joined, a dotted line your investor in a small round with it, the same order the list ranks by. "No way in found" means no path yet, not a bad fund.</p></section>
+    <section><h2>Receipts in a fund's pane</h2>
+      <p><b>Lead pace</b> counts, per year since 2019, the rounds the fund led, joined under another named lead, or joined with the lead unknown, at your stage and the stages next to it, after merging duplicate rounds; a one-line summary shows only with 5 or more lead-known rounds, and every bar opens its rounds.</p>
+      <p><b>Who bought its companies</b> lists completed acquisitions in Cala's M&amp;A records of companies the fund invested in at least 6 years before the deal, with buyer, date and source; the value is the deal value, not the fund's return, and no acquisition found in Cala does not mean no exit.</p>
+      <p><b>Shared-round intro paths</b> shows, once you add your investors, funds that lead at your next stage and sat with them in a small equity round (2 to 6 investors, at most EUR 50m, last 4 years, precise date, not disputed), confirmed first when the company's own record or two sources name both; a shared round is not a relationship.</p></section>
     <section><h2>What we tested</h2>
       ${v ? `<table class="simple"><thead><tr><th>Test</th><th>Result</th><th>n</th></tr></thead><tbody>${v.rows.map((r) => `<tr><td>${esc(r.test)}</td><td>${esc(r.result)}</td><td class="num">${esc(r.n)}</td></tr>`).join("")}</tbody></table><p class="muted">${esc(v.note || "")}</p>` : `<p class="muted">Validation numbers are being recomputed on the full data.</p>`}
       ${v?.accuracy?.length ? `<details class="fold-raw"><summary>Every hand check, with its source (${v.accuracy.length})</summary><table class="simple"><thead><tr><th>Round</th><th>Lead in Cala</th><th>Check</th></tr></thead><tbody>${v.accuracy.map((a) => `<tr><td>${esc(a.company)} <span class="muted">${esc(a.date)} ${esc(a.stage || "")}</span></td><td>${esc((a.cala_leads || []).join(", "))}</td><td>${esc(a.verdict)}${a.source_url && /^https:\/\//.test(a.source_url) ? `, <a href="${esc(a.source_url)}" target="_blank" rel="noopener noreferrer">source</a>` : ""}</td></tr>`).join("")}</tbody></table></details>` : ""}
