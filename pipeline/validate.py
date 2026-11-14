@@ -145,12 +145,21 @@ def main() -> None:
         rnd = [a for a in accuracy if a["group"] == "random_30"]
         smp = [a for a in accuracy if a["group"] == "sample_list"]
         cnt = lambda xs, v: sum(1 for a in xs if a["verdict"] == v)
-        sourced = len(rnd) - cnt(rnd, "unverifiable")
-        rows.insert(1, {"test": "Cala's named lead matches a public source (random rounds, checked by hand on 14 Nov)",
-                        "result": f"{cnt(rnd, 'correct')} of {sourced} rounds where a source names the lead; "
-                                  f"{cnt(rnd, 'partly')} partly right, {cnt(rnd, 'wrong')} wrong (one was our parsing, now fixed); "
-                                  f"{cnt(rnd, 'unverifiable')} had no public source naming a lead",
-                        "n": len(rnd)})
+        pct = lambda a, b: round(100 * a / b) if b else 0
+        # pool the first draw with the two later draws (random.seed(1401)), copied next to accuracy.md
+        later = Path(__file__).resolve().parents[1] / "research" / "accuracy"
+        pooled = list(rnd)
+        for name, key in (("accuracy-2a.json", "rounds"), ("accuracy-2b.json", "rows")):
+            if (later / name).exists():
+                pooled += json.loads((later / name).read_text())[key]
+        sourced = len(pooled) - cnt(pooled, "unverifiable")
+        right_fund = cnt(pooled, "correct") + cnt(pooled, "partly")
+        rows.insert(1, {"test": "Cala's named lead matches a public source (random 2022+ rounds in three draws, checked by hand on 14 Nov)",
+                        "result": f"lead exactly right in {cnt(pooled, 'correct')} of {sourced} rounds where a source names "
+                                  f"the lead ({pct(cnt(pooled, 'correct'), sourced)}%); right lead fund named in {right_fund} "
+                                  f"of {sourced} ({pct(right_fund, sourced)}%); {cnt(pooled, 'wrong')} wrong; "
+                                  f"{cnt(pooled, 'unverifiable')} had no public source naming a lead",
+                        "n": len(pooled)})
         rows.insert(2, {"test": "Most recent led round of each sample Nordic fund, checked by hand",
                         "result": f"{cnt(smp, 'correct')} of {len(smp)} correct; {cnt(smp, 'partly')} right fund but a co-lead missing",
                         "n": len(smp)})

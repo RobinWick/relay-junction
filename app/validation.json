@@ -1,10 +1,10 @@
 {
- "version": "20261114102039",
+ "version": "20261114133847",
  "rows": [
   {
    "test": "In a round with a named lead, the investor with the stronger earlier lead record is the real lead",
-   "result": "50% vs 36% for a random pick from the same cap table (95% CI 47% to 52%)",
-   "n": 1599
+   "result": "48% vs 36% for a random pick from the same cap table (95% CI 46% to 51%)",
+   "n": 1584
   },
   {
    "test": "Cala's entity graph (FundingRound entities with is_lead) checked against our merged lead, random rounds with a named lead",
@@ -12,9 +12,9 @@
    "n": 60
   },
   {
-   "test": "Cala's named lead matches a public source (random rounds, checked by hand on 14 Nov)",
-   "result": "22 of 26 rounds where a source names the lead; 2 partly right, 2 wrong (one was our parsing, now fixed); 4 had no public source naming a lead",
-   "n": 30
+   "test": "Cala's named lead matches a public source (random 2022+ rounds in three draws, checked by hand on 14 Nov)",
+   "result": "lead exactly right in 55 of 74 rounds where a source names the lead (74%); right lead fund named in 66 of 74 (89%); 8 wrong; 6 had no public source naming a lead",
+   "n": 80
   },
   {
    "test": "Most recent led round of each sample Nordic fund, checked by hand",
@@ -34,17 +34,17 @@
   {
    "test": "Seed rounds where Cala names the lead",
    "result": "68%",
-   "n": 1418
+   "n": 1401
   },
   {
    "test": "Series A rounds where Cala names the lead",
    "result": "70%",
-   "n": 1083
+   "n": 1073
   },
   {
    "test": "The lead of a round comes back in the company's next round",
-   "result": "60% came back, 17% led again",
-   "n": 1489
+   "result": "60% came back, 15% led again",
+   "n": 1405
   }
  ],
  "graph_check": {
@@ -55,44 +55,44 @@
   "differs": []
  },
  "within_round": {
-  "n": 1599,
-  "hit": 0.4958307275380447,
-  "random": 0.3595632636939647,
-  "ci_low": 0.47136329625660334,
-  "ci_high": 0.5203181441718625
+  "n": 1584,
+  "hit": 0.4826388888888889,
+  "random": 0.3566806419166358,
+  "ci_low": 0.4581020644552159,
+  "ci_high": 0.5072597197429055
  },
  "coverage": {
   "pre-seed": {
-   "with_lead": 284,
-   "total": 386
+   "with_lead": 278,
+   "total": 380
   },
   "seed": {
-   "with_lead": 964,
-   "total": 1418
+   "with_lead": 947,
+   "total": 1401
   },
   "series a": {
-   "with_lead": 761,
-   "total": 1083
+   "with_lead": 750,
+   "total": 1073
   },
   "series b": {
-   "with_lead": 468,
-   "total": 706
+   "with_lead": 464,
+   "total": 698
   },
   "series c": {
-   "with_lead": 251,
-   "total": 356
+   "with_lead": 249,
+   "total": 355
   },
   "series d": {
    "with_lead": 126,
    "total": 186
   },
   "unlabelled": {
-   "with_lead": 283,
-   "total": 788
+   "with_lead": 244,
+   "total": 780
   },
   "growth": {
-   "with_lead": 90,
-   "total": 148
+   "with_lead": 87,
+   "total": 145
   },
   "series e": {
    "with_lead": 53,
@@ -100,13 +100,13 @@
   },
   "series f": {
    "with_lead": 25,
-   "total": 43
+   "total": 42
   }
  },
  "lead_comes_back": {
-  "cases": 1489,
-  "came_back": 893,
-  "led_again": 252
+  "cases": 1405,
+  "came_back": 840,
+  "led_again": 212
  },
  "accuracy": [
   {
