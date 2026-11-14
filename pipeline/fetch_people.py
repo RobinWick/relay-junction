@@ -45,7 +45,7 @@ LEDGER = RAW / "_ledger.json"
 SNAPSHOT = HERE.parents[1] / "cala" / "data" / "snapshot.json"
 OUT = HERE.parent / "app" / "people.json"
 BUDGET = 60
-WORKERS = 5
+WORKERS = 4  # 5 at once hit HTTP 429 while another lane shared the key
 TIMEOUT_S = 480
 
 # Cohorts: founders who previously worked at these employers. Supercell is reused free from the earlier probe (q02).
@@ -224,11 +224,21 @@ def exit_jobs(cap: int) -> list[tuple[str, str, dict, str]]:
     jobs, seen = [], set()
     for p in sorted(RAW.glob("person_*.json")):
         raw = json.loads(p.read_text())
-        for cid, name in pp.earlier_founded(raw["response"], skip_ids=_sample_company_ids()):
+        for cid, name in pp.earlier_founded(raw["response"], _sample_company_ids(), _sample_company_names()):
             if cid not in seen:
                 seen.add(cid)
                 jobs.append((f"exit_{cid}", f"/entities/{cid}", EXIT_BODY, name))
     return jobs[:cap]
+
+
+def _sample_company_names() -> frozenset:
+    names = set()
+    for k in COMPANIES:
+        raw = cached(f"company_{k}")
+        names.add(pp._squash(k))
+        if raw:
+            names.add(pp._squash(raw["response"].get("name") or ""))
+    return frozenset(n for n in names if n)
 
 
 def _sample_company_ids() -> set[str]:

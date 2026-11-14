@@ -95,6 +95,18 @@ def test_tenure_and_level_ups():
     assert [s["dir"] for s in rec["level_steps"]] == ["up", "up", "up"]
 
 
+def test_home_company_gives_no_tag_and_orgs_dedupe():
+    raw = _person([_job("Sana Labs", "Engineer", "2016-01-01", "2019-12-31", oid="s1"),
+                   _job("Sana Labs AB", "Engineer", oid="s2"),
+                   _job("Organización Europea para la Investigación Nuclear (CERN)", "Physicist", oid="c1"),
+                   _job("CERN", "Physicist", oid="c2"),
+                   _job("Lovable", "Co-Founder & CEO", "2023-11-01", oid="lov")])
+    rec = pp.person_record(raw, ["lovable"], {"lovable": "lov"}, {}, 1, ["lovable"])
+    assert "nordic_unicorn" not in rec["tags"]  # Lovable is the home company, not a background
+    assert rec["metrics"]["employers"] == 3  # Sana Labs, CERN, Lovable
+    assert rec["metrics"]["years_before_company"] == 7.8
+
+
 def test_per_year_needs_a_year_of_span():
     raw = _person([_job("A", "Engineer", "2020-01-01"), _job("B", "Director", "2020-06-01")])
     rec = pp.person_record(raw, [], {}, {}, 1)
@@ -121,6 +133,8 @@ def test_prior_exit_from_exit_cache():
     rec = pp.person_record(raw, ["newco"], {"newco": "newco"}, exits, 1)
     assert [e["date"] for e in rec["prior_exits"]] == ["2019-05-01"]
     assert rec["prior_exit_checked"] == ["OldCo"]
+    rec = pp.person_record(raw, ["newco"], {"newco": "newco"}, {"old": {"response": {}}}, 1)
+    assert rec["prior_exits"] == [] and any("not proof" in g for g in rec["gaps"])
 
 
 def test_cohort_splits_worked_at_from_funded_by():
@@ -171,7 +185,7 @@ def test_build_has_no_score_or_rank_and_sources_on_every_person():
     assert all(p["source"]["entity_id"] and p["source"]["fetched"] for p in out["people"])
     assert [p["name"] for p in out["people"]] == ["Other Person", "Test Person"]  # alphabetical, not by metric
     big = next(x for x in out["patterns"] if x["label"] == "Worked at: Big tech")
-    assert big["count"] == 1 and big["n"] == 2
+    assert big["count"] == 1 and big["n"] == 1  # p2 has no record outside X, so is not counted as 'no'
     assert out["companies"][0]["founder_source"] == "FOUNDED"
     assert out["companies"][0]["rounds"][0]["leads"] == ["maki"]
 

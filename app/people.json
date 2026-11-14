@@ -1,0 +1,4752 @@
+{
+ "generated": "2026-11-14",
+ "source": {
+  "provider": "Cala",
+  "graph": "Cala entity graph (api.cala.ai/v1/entities)",
+  "query": "Cala knowledge query (api.cala.ai/v1/knowledge/query), rows carry no source URLs",
+  "calls_used": 60,
+  "fetched_from": "2026-11-14",
+  "fetched_to": "2026-11-14"
+ },
+ "rules": [
+  "No score or ranking of people. Metrics are facts from dated Cala edges with neutral labels.",
+  "Every person shows its Cala entity id, fetch date and the source of each role.",
+  "Missing dates and possible name collisions are listed as gaps, never filled in.",
+  "Patterns are descriptive counts over this sample with their n, not benchmarks."
+ ],
+ "definitions": {
+  "levels": [
+   {
+    "level": 4,
+    "label": "Founder, C-level or partner",
+    "pattern": "\\b(co-?founder|founder|chief|ceo|cto|cfo|coo|cpo|cmo|cso|cco|partner|owner|president|managing director|toimitusjohtaja|vd)\\b"
+   },
+   {
+    "level": 3,
+    "label": "Director, head or VP",
+    "pattern": "\\b(director|head|vp|vice president|general manager|gm)\\b"
+   },
+   {
+    "level": 2,
+    "label": "Senior, lead or manager",
+    "pattern": "\\b(senior|sr|lead|manager|principal|staff|product owner|team lead)\\b"
+   },
+   {
+    "level": 1,
+    "label": "Associate, engineer or specialist",
+    "pattern": "\\b(associate|engineer|developer|consultant|specialist|scientist|researcher|designer|analyst ii|programmer|architect|officer|advisor|adviser)\\b"
+   },
+   {
+    "level": 0,
+    "label": "Intern, trainee or analyst",
+    "pattern": "\\b(intern|internship|trainee|student|analyst|assistant|junior|jr)\\b"
+   }
+  ],
+  "tags": {
+   "consulting": {
+    "label": "Management consulting",
+    "names": [
+     "mckinsey",
+     "boston consulting",
+     "bcg",
+     "bain",
+     "accenture",
+     "deloitte",
+     "pwc",
+     "pricewaterhouse",
+     "ernst & young",
+     "kpmg",
+     "oliver wyman",
+     "roland berger",
+     "kearney",
+     "capgemini invent",
+     "arthur d. little"
+    ],
+    "source": "Hand list: MBB (McKinsey, BCG, Bain), the Big Four audit firms and other large strategy firms. Not exhaustive."
+   },
+   "big_tech": {
+    "label": "Big tech",
+    "names": [
+     "google",
+     "alphabet",
+     "deepmind",
+     "microsoft",
+     "apple",
+     "amazon",
+     "aws",
+     "meta platforms",
+     "facebook",
+     "netflix",
+     "nvidia",
+     "intel",
+     "ibm",
+     "oracle",
+     "sap",
+     "salesforce",
+     "samsung",
+     "uber"
+    ],
+    "source": "Hand list of the largest listed technology companies by market value. Not exhaustive."
+   },
+   "nordic_unicorn": {
+    "label": "Nordic unicorn alumni",
+    "names": [
+     "supercell",
+     "rovio",
+     "wolt",
+     "spotify",
+     "klarna",
+     "skype",
+     "king.com",
+     "king digital",
+     "mojang",
+     "izettle",
+     "zettle",
+     "kahoot",
+     "northvolt",
+     "trustly",
+     "tink",
+     "aiven",
+     "oura",
+     "relex",
+     "kry",
+     "voi technology",
+     "truecaller",
+     "epidemic sound",
+     "pleo",
+     "trustpilot",
+     "zendesk",
+     "unity",
+     "smartly",
+     "iqm",
+     "lovable",
+     "einride",
+     "bolt",
+     "wise",
+     "pipedrive",
+     "veriff"
+    ],
+    "source": "Nordic and Baltic companies that reached a USD 1bn valuation, from Wikipedia's List of unicorn startup companies (https://en.wikipedia.org/wiki/List_of_unicorn_startup_companies) and company press releases. Hand list as of Nov 2026, includes companies that later exited or listed. Not verified entry by entry in this lane."
+   },
+   "nordic_incumbent": {
+    "label": "Nokia or Ericsson",
+    "names": [
+     "nokia",
+     "ericsson"
+    ],
+    "source": "The two large Nordic telecom equipment makers. Hand list."
+   },
+   "research": {
+    "label": "University or research lab",
+    "names": [
+     "university",
+     "yliopisto",
+     "universitet",
+     "institute of technology",
+     "vtt",
+     "cern",
+     "max planck",
+     "research institute",
+     "aalto",
+     "kth",
+     "dtu",
+     "ntnu",
+     "chalmers",
+     "karolinska",
+     "csc"
+    ],
+    "source": "Employer name contains a university or public research lab name. Keyword list."
+   },
+   "finance": {
+    "label": "Investment banking or investing",
+    "names": [
+     "goldman sachs",
+     "morgan stanley",
+     "j.p. morgan",
+     "jp morgan",
+     "jpmorgan",
+     "lazard",
+     "rothschild",
+     "nordea markets",
+     "carnegie",
+     "ventures",
+     "capital partners",
+     "private equity"
+    ],
+    "source": "Global investment banks and employers whose name says ventures or private equity. Keyword list."
+   }
+  },
+  "metrics": {
+   "employers": "Distinct organisations in the person's WORKS_AT and FOUNDED edges",
+   "avg_tenure_years": "Mean of (valid_until minus valid_since) over roles that have both dates",
+   "level_ups": "Times a dated role maps to a higher title level than the dated role before it",
+   "level_ups_per_year": "level_ups divided by years between first and last dated role start; only when that span is at least one year",
+   "years_before_company": "Years from the first dated role elsewhere to the first dated role at the company this person was found through",
+   "roles_outside_company": "WORKS_AT edges to organisations other than the company the person was found through (background tags only use these)"
+  }
+ },
+ "coverage": {
+  "companies_fetched": 20,
+  "companies_with_founder_edge": 11,
+  "founders_found": 33,
+  "founders_fetched": 22,
+  "founders_with_any_role": 12,
+  "founders_with_role_outside_company": 1,
+  "founders_with_dated_role": 2,
+  "cohort_rows": 38,
+  "cohort_rows_in_snapshot": 11,
+  "cohort_rows_worked_at_stated": 24,
+  "note": "In-snapshot cohort matches are by company name only and may be a different company of the same name."
+ },
+ "companies": [
+  {
+   "ckey": "verda",
+   "entity_id": "3d3edba6-f4d7-432b-80d3-d07872e11def",
+   "name": "Verda",
+   "country": "Finland",
+   "rounds": [
+    {
+     "year": 2021,
+     "month": 11,
+     "stage": "pre-seed",
+     "amount_eur_m": 0.92,
+     "leads": []
+    },
+    {
+     "year": 2024,
+     "month": 10,
+     "stage": "seed",
+     "amount_eur_m": 11.96,
+     "leads": [
+      "byfounders"
+     ]
+    },
+    {
+     "year": 2025,
+     "month": 9,
+     "stage": "series a",
+     "amount_eur_m": 58.88,
+     "leads": [
+      "byfounders",
+      "skaala",
+      "tesi",
+      "varma",
+      "varma mutual pension insurance company"
+     ]
+    },
+    {
+     "year": 2026,
+     "month": 4,
+     "stage": "series a",
+     "amount_eur_m": 107.64,
+     "leads": []
+    },
+    {
+     "year": 2026,
+     "month": 9,
+     "stage": "series b",
+     "amount_eur_m": 173.88,
+     "leads": [
+      "emergence"
+     ]
+    }
+   ],
+   "fetched": "2026-11-14",
+   "cala_name": "Verda",
+   "description": "Full-stack AI cloud provider operating its own data centres, NVIDIA GPU hardware and platform (GPU instances, InfiniBand instant clusters, serverless containers, storage, managed inference) from th...",
+   "founders": [
+    "a8f39e27-5939-48de-903f-75f867517680"
+   ],
+   "founder_names": {
+    "a8f39e27-5939-48de-903f-75f867517680": "Ruben Bryon"
+   },
+   "founder_source": "FOUNDED",
+   "exits": [],
+   "gaps": [],
+   "cohort_mentions": []
+  },
+  {
+   "ckey": "reduciner",
+   "entity_id": "7e3bbb7d-ef73-582c-b42e-d34a6a627c49",
+   "name": "Reduciner",
+   "country": "Finland",
+   "rounds": [
+    {
+     "year": 2026,
+     "month": 5,
+     "stage": "seed",
+     "amount_eur_m": 3.6,
+     "leads": [
+      "lifeline",
+      "voima"
+     ]
+    }
+   ],
+   "fetched": "2026-11-14",
+   "cala_name": "Reduciner Oy",
+   "description": "A climate-tech startup developing breakthrough technology that turns industrial CO₂ emissions into valuable products.",
+   "founders": [
+    "9d217ba5-8a96-5402-af68-f0c39d4287e6",
+    "a80ec975-2db0-5251-87df-688ebf336ec3",
+    "ff8df96c-e270-5ee0-9c2f-43a53ef277ac"
+   ],
+   "founder_names": {
+    "9d217ba5-8a96-5402-af68-f0c39d4287e6": "Eemeli Tsupari",
+    "a80ec975-2db0-5251-87df-688ebf336ec3": "Sampsa Vuori",
+    "ff8df96c-e270-5ee0-9c2f-43a53ef277ac": "Johanna Grönroos"
+   },
+   "founder_source": "FOUNDED",
+   "exits": [],
+   "gaps": [],
+   "cohort_mentions": []
+  },
+  {
+   "ckey": "haminawireless",
+   "entity_id": "4f2f147e-7128-4153-bc94-75ac26ae7da6",
+   "name": "Hamina Wireless",
+   "country": "Finland",
+   "rounds": [
+    {
+     "year": 2025,
+     "month": 7,
+     "stage": "seed",
+     "amount_eur_m": null,
+     "leads": [
+      "inventure"
+     ]
+    }
+   ],
+   "fetched": "2026-11-14",
+   "cala_name": "Hamina",
+   "description": "Engineering Wireless Networks to Perfection.",
+   "founders": [],
+   "founder_names": {},
+   "founder_source": null,
+   "exits": [],
+   "gaps": [
+    "No FOUNDED edge in Cala"
+   ],
+   "cohort_mentions": []
+  },
+  {
+   "ckey": "reorbit",
+   "entity_id": "a1f7d57d-39a4-486f-bd9b-39b8b50ab1ff",
+   "name": "ReOrbit",
+   "country": "Finland",
+   "rounds": [
+    {
+     "year": 2023,
+     "month": 8,
+     "stage": "seed",
+     "amount_eur_m": 6.808,
+     "leads": [
+      "inventure"
+     ]
+    },
+    {
+     "year": 2025,
+     "month": 9,
+     "stage": "series a",
+     "amount_eur_m": 48.76,
+     "leads": []
+    }
+   ],
+   "fetched": "2026-11-14",
+   "cala_name": "ReOrbit",
+   "description": "A Finnish growth technology company.",
+   "founders": [],
+   "founder_names": {},
+   "founder_source": null,
+   "exits": [],
+   "gaps": [
+    "No FOUNDED edge in Cala"
+   ],
+   "cohort_mentions": []
+  },
+  {
+   "ckey": "valpas",
+   "entity_id": "eb012d31-2b1c-4bca-9523-9bd8710f5891",
+   "name": "Valpas",
+   "country": "Finland",
+   "rounds": [
+    {
+     "year": 2024,
+     "month": 6,
+     "stage": "seed",
+     "amount_eur_m": 3.68,
+     "leads": []
+    }
+   ],
+   "fetched": "2026-11-14",
+   "cala_name": "Valpas",
+   "description": "A Finnish hardware, equipment, and hospitality company headquartered in Kirjala, founded in 2008.",
+   "founders": [
+    "2fbfdeb6-9e6a-458b-94a0-47488631a19d",
+    "48be50b8-3aa9-4c39-8854-3ac1a8324127",
+    "580ac145-f51b-4c78-832f-f401627ac27e",
+    "ecf33586-0d1f-4b60-b996-d69da6c97ea5",
+    "fc810bc1-5f5c-4aaa-8346-ec99a28e5d40"
+   ],
+   "founder_names": {
+    "2fbfdeb6-9e6a-458b-94a0-47488631a19d": "Aleksi Jokela",
+    "48be50b8-3aa9-4c39-8854-3ac1a8324127": "Aku Viskari",
+    "580ac145-f51b-4c78-832f-f401627ac27e": "Matti Parkkila",
+    "ecf33586-0d1f-4b60-b996-d69da6c97ea5": "Vertti Sarimaa",
+    "fc810bc1-5f5c-4aaa-8346-ec99a28e5d40": "Martim Gois"
+   },
+   "founder_source": "FOUNDED",
+   "exits": [],
+   "gaps": [],
+   "cohort_mentions": []
+  },
+  {
+   "ckey": "lovable",
+   "entity_id": "a1a12886-3119-492f-801a-9bfb38143209",
+   "name": "Lovable",
+   "country": "Sweden",
+   "rounds": [
+    {
+     "year": 2023,
+     "month": 6,
+     "stage": "pre-seed",
+     "amount_eur_m": null,
+     "leads": []
+    },
+    {
+     "year": 2023,
+     "month": 11,
+     "stage": "pre-seed",
+     "amount_eur_m": null,
+     "leads": []
+    },
+    {
+     "year": 2024,
+     "month": 10,
+     "stage": "pre-seed",
+     "amount_eur_m": 6.9,
+     "leads": [
+      "byfounders",
+      "hummingbird"
+     ]
+    },
+    {
+     "year": 2025,
+     "month": 1,
+     "stage": "seed",
+     "amount_eur_m": 13.8,
+     "leads": [
+      "creandum"
+     ]
+    },
+    {
+     "year": 2025,
+     "month": 7,
+     "stage": "series a",
+     "amount_eur_m": 184.0,
+     "leads": [
+      "accel"
+     ]
+    },
+    {
+     "year": 2025,
+     "month": 12,
+     "stage": "series b",
+     "amount_eur_m": 303.6,
+     "leads": [
+      "capitalg",
+      "menlo"
+     ]
+    },
+    {
+     "year": 2026,
+     "month": 8,
+     "stage": "series c",
+     "amount_eur_m": 368.0,
+     "leads": [
+      "menlo",
+      "scaleup europe"
+     ]
+    }
+   ],
+   "fetched": "2026-11-14",
+   "cala_name": "Lovable",
+   "description": "Swedish AI startup founded in 2024 that provides an AI coding platform, headquartered in Stockholm.",
+   "founders": [
+    "200f320b-5b81-4e9a-bf47-4e82a27f0a0f"
+   ],
+   "founder_names": {
+    "200f320b-5b81-4e9a-bf47-4e82a27f0a0f": "Anton Osika"
+   },
+   "founder_source": "FOUNDED",
+   "exits": [],
+   "gaps": [],
+   "cohort_mentions": []
+  },
+  {
+   "ckey": "riff",
+   "entity_id": "0f8d0392-5086-497e-b4e4-ffc763b95c5d",
+   "name": "Riff",
+   "country": "Norway",
+   "rounds": [
+    {
+     "year": 2023,
+     "month": 9,
+     "stage": "seed",
+     "amount_eur_m": 4.784,
+     "leads": [
+      "maki",
+      "skyfall"
+     ]
+    },
+    {
+     "year": 2025,
+     "month": 10,
+     "stage": "series a",
+     "amount_eur_m": 14.72,
+     "leads": [
+      "northzone"
+     ]
+    }
+   ],
+   "fetched": "2026-11-14",
+   "cala_name": "Riff",
+   "description": "A vibe coding platform that lets teams build production-ready apps, agents, and AI-powered internal tools by connecting existing data sources and workflows in minutes.",
+   "founders": [],
+   "founder_names": {},
+   "founder_source": null,
+   "exits": [],
+   "gaps": [
+    "No FOUNDED edge in Cala"
+   ],
+   "cohort_mentions": []
+  },
+  {
+   "ckey": "spektr",
+   "entity_id": "a88c0305-2762-4b19-b7e8-538ab480de26",
+   "name": "spektr",
+   "country": "Denmark (Copenhagen)",
+   "rounds": [
+    {
+     "year": 2024,
+     "month": 2,
+     "stage": "seed",
+     "amount_eur_m": 4.968,
+     "leads": [
+      "northzone"
+     ]
+    },
+    {
+     "year": 2026,
+     "month": 4,
+     "stage": "series a",
+     "amount_eur_m": 18.4,
+     "leads": [
+      "new enterprise associates"
+     ]
+    }
+   ],
+   "fetched": "2026-11-14",
+   "cala_name": "Spektr",
+   "description": "AI-powered compliance platform automating KYC and KYB due diligence workflows for banks.",
+   "founders": [
+    "5e0eca0d-e512-54fd-b533-3fc643677049",
+    "90eef050-1b1b-4fbd-a495-7086e141f3c7",
+    "c749f05b-f14e-4a9c-bd1e-b5080f30d999",
+    "ea5fea9e-1a13-50c3-b398-33fbe36e6aee"
+   ],
+   "founder_names": {
+    "5e0eca0d-e512-54fd-b533-3fc643677049": "Ciprian Florescu",
+    "90eef050-1b1b-4fbd-a495-7086e141f3c7": "Jeremy Joly",
+    "c749f05b-f14e-4a9c-bd1e-b5080f30d999": "Jan-Erik Aabo Wagner",
+    "ea5fea9e-1a13-50c3-b398-33fbe36e6aee": "Mikkel Nygaard Skarnager"
+   },
+   "founder_source": "FOUNDED",
+   "exits": [],
+   "gaps": [],
+   "cohort_mentions": []
+  },
+  {
+   "ckey": "kuvaspace",
+   "entity_id": "41f89a61-54ac-4068-82af-a2d2096efcfc",
+   "name": "Kuva Space",
+   "country": "Finland",
+   "rounds": [
+    {
+     "year": 2021,
+     "month": 6,
+     "stage": "seed",
+     "amount_eur_m": 4.2,
+     "leads": [
+      "nordic foodtech",
+      "voima"
+     ]
+    },
+    {
+     "year": 2023,
+     "month": 11,
+     "stage": "series a",
+     "amount_eur_m": 16.6,
+     "leads": []
+    }
+   ],
+   "fetched": "2026-11-14",
+   "cala_name": "Kuva Space",
+   "description": "Transform how you understand Earth with near real-time intelligence from space. Access actionable insights from our hyperspectral satellite network.",
+   "founders": [
+    "79240a18-e1ef-589c-a76e-958102fdb550"
+   ],
+   "founder_names": {
+    "79240a18-e1ef-589c-a76e-958102fdb550": "Tuomas Tikka"
+   },
+   "founder_source": "FOUNDED",
+   "exits": [],
+   "gaps": [],
+   "cohort_mentions": []
+  },
+  {
+   "ckey": "algorithmiq",
+   "entity_id": "db0dedc3-9f3f-44b1-9d64-20ae3842d754",
+   "name": "Algorithmiq",
+   "country": "Finland",
+   "rounds": [
+    {
+     "year": 2022,
+     "month": 2,
+     "stage": "seed",
+     "amount_eur_m": 3.68,
+     "leads": [
+      "tiger global"
+     ]
+    },
+    {
+     "year": 2023,
+     "month": 6,
+     "stage": "series a",
+     "amount_eur_m": 14.0,
+     "leads": [
+      "inventure"
+     ]
+    },
+    {
+     "year": 2026,
+     "month": 5,
+     "stage": "series b",
+     "amount_eur_m": 18.0,
+     "leads": [
+      "cdp",
+      "united"
+     ]
+    }
+   ],
+   "fetched": "2026-11-14",
+   "cala_name": "Algorithmiq",
+   "description": "A quantum software company developing algorithms and platforms for quantum computing applications.",
+   "founders": [],
+   "founder_names": {},
+   "founder_source": null,
+   "exits": [],
+   "gaps": [
+    "No FOUNDED edge in Cala"
+   ],
+   "cohort_mentions": []
+  },
+  {
+   "ckey": "iprallytechnologies",
+   "entity_id": "dd64c2b7-b551-4322-ac10-57fa4eead37e",
+   "name": "IPRally Technologies",
+   "country": "Finland",
+   "rounds": [
+    {
+     "year": 2023,
+     "month": 3,
+     "stage": "series a",
+     "amount_eur_m": 10.0,
+     "leads": [
+      "endeit"
+     ]
+    }
+   ],
+   "fetched": "2026-11-14",
+   "cala_name": "IPRally",
+   "description": "One custom-trained AI engine for prior art search, patent intelligence, and prior-art-aware drafting. Trusted by 275+ organizations worldwide.",
+   "founders": [
+    "285c0a14-4801-525d-9ab9-ff5176c23ea0",
+    "52351d61-5aa0-5a1d-9d81-f849e29d3188",
+    "c3324395-85e7-5a0e-8a6c-638eb67fc034"
+   ],
+   "founder_names": {
+    "285c0a14-4801-525d-9ab9-ff5176c23ea0": "Juuso Piskonen",
+    "52351d61-5aa0-5a1d-9d81-f849e29d3188": "Sakari Arvela",
+    "c3324395-85e7-5a0e-8a6c-638eb67fc034": "Juho Kallio"
+   },
+   "founder_source": "FOUNDED",
+   "exits": [],
+   "gaps": [],
+   "cohort_mentions": []
+  },
+  {
+   "ckey": "datacrunch",
+   "entity_id": "e4a37e18-6c6b-4ec7-b83b-11e2bc670e1b",
+   "name": "DataCrunch",
+   "country": "Finland",
+   "rounds": [
+    {
+     "year": 2024,
+     "month": 10,
+     "stage": "seed",
+     "amount_eur_m": 11.96,
+     "leads": [
+      "byfounders"
+     ]
+    }
+   ],
+   "fetched": "2026-11-14",
+   "cala_name": "DataCrunch",
+   "description": "AI cloud provider headquartered in Helsinki, Finland.",
+   "founders": [],
+   "founder_names": {},
+   "founder_source": null,
+   "exits": [],
+   "gaps": [
+    "No FOUNDED edge in Cala"
+   ],
+   "cohort_mentions": []
+  },
+  {
+   "ckey": "steadyenergy",
+   "entity_id": "0de5cbcc-4f9f-4ec8-a4a0-9ac663bc643c",
+   "name": "Steady Energy",
+   "country": "Finland",
+   "rounds": [
+    {
+     "year": 2023,
+     "month": 6,
+     "stage": "seed",
+     "amount_eur_m": 2.0,
+     "leads": [
+      "lifeline",
+      "vtt",
+      "yes"
+     ]
+    },
+    {
+     "year": 2024,
+     "month": 3,
+     "stage": "series a",
+     "amount_eur_m": 10.0,
+     "leads": [
+      "lifeline",
+      "yes"
+     ]
+    },
+    {
+     "year": 2025,
+     "month": 3,
+     "stage": "series b",
+     "amount_eur_m": 22.0,
+     "leads": [
+      "92"
+     ]
+    },
+    {
+     "year": 2026,
+     "month": 1,
+     "stage": null,
+     "amount_eur_m": 2.1,
+     "leads": [
+      "fortum corporation"
+     ]
+    }
+   ],
+   "fetched": "2026-11-14",
+   "cala_name": "Steady Energy Oy",
+   "description": "Finnish organization developing heat‑only small modular nuclear reactors for district‑heating applications.",
+   "founders": [],
+   "founder_names": {},
+   "founder_source": null,
+   "exits": [],
+   "gaps": [
+    "No FOUNDED edge in Cala"
+   ],
+   "cohort_mentions": []
+  },
+  {
+   "ckey": "aibidia",
+   "entity_id": "1ece17c7-9a2a-42cc-81f2-6d91ed566f76",
+   "name": "Aibidia",
+   "country": "Finland",
+   "rounds": [
+    {
+     "year": 2018,
+     "month": 5,
+     "stage": "pre-seed",
+     "amount_eur_m": 0.381,
+     "leads": []
+    },
+    {
+     "year": 2020,
+     "month": 3,
+     "stage": "seed",
+     "amount_eur_m": 4.2,
+     "leads": [
+      "global founders",
+      "icebreaker"
+     ]
+    },
+    {
+     "year": 2023,
+     "month": 5,
+     "stage": "series a",
+     "amount_eur_m": 13.0,
+     "leads": [
+      "dn",
+      "fpv"
+     ]
+    },
+    {
+     "year": 2025,
+     "month": 6,
+     "stage": "series b",
+     "amount_eur_m": 25.76,
+     "leads": [
+      "activant"
+     ]
+    }
+   ],
+   "fetched": "2026-11-14",
+   "cala_name": "Aibidia",
+   "description": "Digital end-to-end transfer pricing platform for multinational companies",
+   "founders": [],
+   "founder_names": {},
+   "founder_source": null,
+   "exits": [],
+   "gaps": [
+    "No FOUNDED edge in Cala"
+   ],
+   "cohort_mentions": []
+  },
+  {
+   "ckey": "inven",
+   "entity_id": "a0c648de-5978-4e62-83b0-a920996e3fa1",
+   "name": "Inven",
+   "country": "Finland",
+   "rounds": [
+    {
+     "year": 2023,
+     "month": 3,
+     "stage": "seed",
+     "amount_eur_m": 1.5,
+     "leads": [
+      "lifeline"
+     ]
+    },
+    {
+     "year": 2025,
+     "month": 6,
+     "stage": "series a",
+     "amount_eur_m": 11.2,
+     "leads": [
+      "vendep",
+      "ventech"
+     ]
+    }
+   ],
+   "fetched": "2026-11-14",
+   "cala_name": "Inven",
+   "description": "An AI-native deal-sourcing platform that analyzes official registries and partner data to identify off-market and founder-led companies.",
+   "founders": [],
+   "founder_names": {},
+   "founder_source": null,
+   "exits": [],
+   "gaps": [
+    "No FOUNDED edge in Cala"
+   ],
+   "cohort_mentions": []
+  },
+  {
+   "ckey": "metroc",
+   "entity_id": "f44f8250-38fc-5a30-9702-11e486eb3c36",
+   "name": "Metroc",
+   "country": "Finland",
+   "rounds": [
+    {
+     "year": 2023,
+     "month": 8,
+     "stage": "seed",
+     "amount_eur_m": 2.0,
+     "leads": [
+      "lifeline"
+     ]
+    }
+   ],
+   "fetched": "2026-11-14",
+   "cala_name": "Metroc",
+   "description": "Finnish construction and engineering company founded in 2019 and based in Helsinki.",
+   "founders": [
+    "aafbe497-a39e-58dc-9b5b-a10091c7aba3",
+    "bf375ead-8cfd-5739-b700-461cdbe8f5c7"
+   ],
+   "founder_names": {
+    "aafbe497-a39e-58dc-9b5b-a10091c7aba3": "Jussi Virnala",
+    "bf375ead-8cfd-5739-b700-461cdbe8f5c7": "Janne Johansson"
+   },
+   "founder_source": "FOUNDED",
+   "exits": [],
+   "gaps": [],
+   "cohort_mentions": []
+  },
+  {
+   "ckey": "nadmed",
+   "entity_id": "a2be62fd-59e2-48d8-bb2b-c39b58391e6f",
+   "name": "Nadmed",
+   "country": "Finland",
+   "rounds": [
+    {
+     "year": 2024,
+     "month": 8,
+     "stage": "series a",
+     "amount_eur_m": 3.5,
+     "leads": []
+    }
+   ],
+   "fetched": "2026-11-14",
+   "cala_name": "Nadmed",
+   "description": "NADMED helps clinicians and researchers measure NAD and glutathione accurately and cost-effectively, making metabolic health tracking accessible.",
+   "founders": [
+    "27192a4d-3819-5616-b7d0-b08cb4e33b0f",
+    "369c1b2b-e401-578b-a42b-a69802d2fc09",
+    "77c8eeea-3cc2-5de6-987b-c40213578cab",
+    "b8e1bb3f-2b3c-5c39-8e76-086d40faab48"
+   ],
+   "founder_names": {
+    "27192a4d-3819-5616-b7d0-b08cb4e33b0f": "Anu Suomalainen Wartiovaara",
+    "369c1b2b-e401-578b-a42b-a69802d2fc09": "Jana Buzkova",
+    "77c8eeea-3cc2-5de6-987b-c40213578cab": "Liliya Euro",
+    "b8e1bb3f-2b3c-5c39-8e76-086d40faab48": "Jari Närhi"
+   },
+   "founder_source": "FOUNDED",
+   "exits": [],
+   "gaps": [],
+   "cohort_mentions": []
+  },
+  {
+   "ckey": "quanscient",
+   "entity_id": "5d4a0842-237d-58a6-bb5d-64fa96105d3d",
+   "name": "Quanscient",
+   "country": "Finland",
+   "rounds": [
+    {
+     "year": 2023,
+     "month": 4,
+     "stage": "seed",
+     "amount_eur_m": 3.9,
+     "leads": [
+      "maki"
+     ]
+    },
+    {
+     "year": 2024,
+     "month": 11,
+     "stage": "seed",
+     "amount_eur_m": 5.2,
+     "leads": [
+      "crowberry"
+     ]
+    },
+    {
+     "year": 2026,
+     "month": 5,
+     "stage": "series a",
+     "amount_eur_m": 10.0,
+     "leads": [
+      "55 north",
+      "b c group"
+     ]
+    }
+   ],
+   "fetched": "2026-11-14",
+   "cala_name": "Quanscient Oy",
+   "description": "Groundbreaking multiphysics simulation technology powered by cloud and quantum computing reducing simulation time from days to a coffee break.",
+   "founders": [
+    "05faa8e1-8b23-5dc1-9ba1-fc267dd0ae82",
+    "5c8102b6-e7c8-5fd7-a608-f52cbc88e26e",
+    "71f53f5a-8224-5a5e-931f-4cf06d7e88aa",
+    "c802f39f-43ec-506d-8467-99ab4c9e40fc",
+    "e8ed8e43-442a-55db-a4e0-7ca4e7dfa659"
+   ],
+   "founder_names": {
+    "05faa8e1-8b23-5dc1-9ba1-fc267dd0ae82": "Valtteri Lahtinen",
+    "5c8102b6-e7c8-5fd7-a608-f52cbc88e26e": "Asser Lähdemäki",
+    "71f53f5a-8224-5a5e-931f-4cf06d7e88aa": "Andrew Tweedie",
+    "c802f39f-43ec-506d-8467-99ab4c9e40fc": "Alexandre Halbach",
+    "e8ed8e43-442a-55db-a4e0-7ca4e7dfa659": "Juha Riippi"
+   },
+   "founder_source": "FOUNDED",
+   "exits": [],
+   "gaps": [],
+   "cohort_mentions": []
+  },
+  {
+   "ckey": "encube",
+   "entity_id": "03d7c75b-0ed8-4d98-9178-4f54e5cb9eb1",
+   "name": "Encube",
+   "country": "Sweden",
+   "rounds": [
+    {
+     "year": 2016,
+     "month": 7,
+     "stage": "series c",
+     "amount_eur_m": 37.72,
+     "leads": [
+      "multiples alternate asset"
+     ]
+    },
+    {
+     "year": 2021,
+     "month": 6,
+     "stage": "series d",
+     "amount_eur_m": 92.0,
+     "leads": [
+      "quadria"
+     ]
+    },
+    {
+     "year": 2025,
+     "month": 10,
+     "stage": "series a",
+     "amount_eur_m": 21.16,
+     "leads": []
+    }
+   ],
+   "fetched": "2026-11-14",
+   "cala_name": "Encube",
+   "description": "Swedish AI-powered hardware development platform founded in 2023 and headquartered in Stockholm.",
+   "founders": [],
+   "founder_names": {},
+   "founder_source": null,
+   "exits": [],
+   "gaps": [
+    "No FOUNDED edge in Cala"
+   ],
+   "cohort_mentions": []
+  },
+  {
+   "ckey": "gilion",
+   "entity_id": "7aee8784-e220-425c-bff9-56cf5ed5932b",
+   "name": "Gilion",
+   "country": "Sweden",
+   "rounds": [
+    {
+     "year": 2021,
+     "month": 10,
+     "stage": "pre-seed",
+     "amount_eur_m": null,
+     "leads": [
+      "cofounded kapital",
+      "jacob de geer"
+     ]
+    },
+    {
+     "year": 2021,
+     "month": 10,
+     "stage": "seed",
+     "amount_eur_m": null,
+     "leads": [
+      "creandum leading the larger seed",
+      "localglobe",
+      "sequoia"
+     ]
+    },
+    {
+     "year": 2022,
+     "month": 3,
+     "stage": "seed",
+     "amount_eur_m": 165.0,
+     "leads": [
+      "creandum",
+      "localglobe"
+     ]
+    },
+    {
+     "year": 2022,
+     "month": 9,
+     "stage": "seed",
+     "amount_eur_m": 15.0,
+     "leads": [
+      "annika falkengren"
+     ]
+    },
+    {
+     "year": 2022,
+     "month": 9,
+     "stage": "seed",
+     "amount_eur_m": 9.2,
+     "leads": [
+      "creandum",
+      "localglobe"
+     ]
+    },
+    {
+     "year": 2024,
+     "month": 4,
+     "stage": "seed",
+     "amount_eur_m": 10.0,
+     "leads": [
+      "annika falkengren"
+     ]
+    }
+   ],
+   "fetched": "2026-11-14",
+   "cala_name": "Gilion",
+   "description": "Swedish fintech, software, and venture‑capital firm founded in 2021.",
+   "founders": [
+    "0a8fb60d-dcf3-5479-95a9-def3a4ed4c5b",
+    "866ad7ec-629f-484f-a393-6000cb602d7c",
+    "e520e122-3577-43a5-b662-8a5d3104d841",
+    "fd959557-ce9b-4203-be5b-c840e409394d"
+   ],
+   "founder_names": {
+    "0a8fb60d-dcf3-5479-95a9-def3a4ed4c5b": "Oscar Werner",
+    "866ad7ec-629f-484f-a393-6000cb602d7c": "Oliver Hildebrandt",
+    "e520e122-3577-43a5-b662-8a5d3104d841": "Axel Bruzelius",
+    "fd959557-ce9b-4203-be5b-c840e409394d": "Henrik Landgren"
+   },
+   "founder_source": "FOUNDED",
+   "exits": [],
+   "gaps": [],
+   "cohort_mentions": [
+    {
+     "employer": "Spotify",
+     "relation": "listed_only",
+     "evidence": ""
+    }
+   ]
+  }
+ ],
+ "people": [
+  {
+   "id": "e520e122-3577-43a5-b662-8a5d3104d841",
+   "name": "Axel Bruzelius",
+   "description": "Founder of Gilion.",
+   "linkedin_url": "",
+   "companies": [
+    "gilion"
+   ],
+   "source": {
+    "provider": "Cala entity graph (api.cala.ai/v1/entities)",
+    "entity_id": "e520e122-3577-43a5-b662-8a5d3104d841",
+    "fetched": "2026-11-14",
+    "note": "Career edges as Cala holds them; each role lists its own source URL and date."
+   },
+   "roles": [
+    {
+     "org": "Gilion",
+     "org_id": "7aee8784-e220-425c-bff9-56cf5ed5932b",
+     "role": "COO",
+     "level": 4,
+     "level_label": "Founder, C-level or partner",
+     "since": null,
+     "until": null,
+     "years": null,
+     "open": false,
+     "tags": [],
+     "sources": [
+      {
+       "name": "Gilion's new €15m acceleration round | Gilion",
+       "url": "https://www.gilion.com/news/acceleration-round",
+       "date": "2026-08-17",
+       "rank": ""
+      },
+      {
+       "name": "Gilion: Funding, Team & Investors",
+       "url": "https://startupintros.com/orgs/gilion",
+       "date": "2026-07-13",
+       "rank": ""
+      },
+      {
+       "name": "Gilion company information, funding & investors",
+       "url": "https://app.dealroom.co/companies/ark_capital_1",
+       "date": "2021-09-01",
+       "rank": ""
+      }
+     ]
+    }
+   ],
+   "founded": [
+    {
+     "org": "Gilion",
+     "org_id": "7aee8784-e220-425c-bff9-56cf5ed5932b",
+     "sample": true,
+     "sources": [
+      {
+       "name": "Gilion's new €15m acceleration round | Gilion",
+       "url": "https://www.gilion.com/news/acceleration-round",
+       "date": "2026-08-17",
+       "rank": ""
+      },
+      {
+       "name": "Gilion: Funding, Team & Investors",
+       "url": "https://startupintros.com/orgs/gilion",
+       "date": "2026-07-13",
+       "rank": ""
+      },
+      {
+       "name": "Gilion company information, funding & investors",
+       "url": "https://app.dealroom.co/companies/ark_capital_1",
+       "date": "2021-09-01",
+       "rank": ""
+      }
+     ]
+    },
+    {
+     "org": "Gilion",
+     "org_id": "7aee8784-e220-425c-bff9-56cf5ed5932b",
+     "sample": true,
+     "sources": [
+      {
+       "name": "startupintros.com",
+       "url": "https://startupintros.com/orgs/gilion",
+       "date": "2026-11-03",
+       "rank": "PRESS"
+      }
+     ]
+    }
+   ],
+   "metrics": {
+    "employers": 1,
+    "roles": 1,
+    "roles_outside_company": 0,
+    "roles_dated": 0,
+    "avg_tenure_years": null,
+    "avg_tenure_n": 0,
+    "shortest_tenure_years": null,
+    "longest_tenure_years": null,
+    "level_ups": 0,
+    "level_downs": 0,
+    "level_ups_per_year": null,
+    "dated_span_years": null,
+    "career_start": null,
+    "years_before_company": null
+   },
+   "level_steps": [],
+   "tags": [],
+   "tag_evidence": {},
+   "prior_founder": {
+    "value": false,
+    "companies": []
+   },
+   "prior_exits": [],
+   "prior_exit_checked": [],
+   "gaps": [
+    "1 of 1 roles have no start date"
+   ]
+  },
+  {
+   "id": "fd959557-ce9b-4203-be5b-c840e409394d",
+   "name": "Henrik Landgren",
+   "description": "Founder of the company Gilion.",
+   "linkedin_url": "",
+   "companies": [
+    "gilion"
+   ],
+   "source": {
+    "provider": "Cala entity graph (api.cala.ai/v1/entities)",
+    "entity_id": "fd959557-ce9b-4203-be5b-c840e409394d",
+    "fetched": "2026-11-14",
+    "note": "Career edges as Cala holds them; each role lists its own source URL and date."
+   },
+   "roles": [
+    {
+     "org": "Gilion",
+     "org_id": "7aee8784-e220-425c-bff9-56cf5ed5932b",
+     "role": "CPTO",
+     "level": null,
+     "level_label": "Not mapped",
+     "since": null,
+     "until": null,
+     "years": null,
+     "open": false,
+     "tags": [],
+     "sources": [
+      {
+       "name": "Gilion's new €15m acceleration round | Gilion",
+       "url": "https://www.gilion.com/news/acceleration-round",
+       "date": "2026-08-17",
+       "rank": ""
+      },
+      {
+       "name": "Gilion launch forecasting platform giving founders control of their growth. | Gilion",
+       "url": "https://www.gilion.com/news/ark-kapital-launch-forecasting-platform",
+       "date": "2026-08-17",
+       "rank": ""
+      },
+      {
+       "name": "Gilion: Funding, Team & Investors",
+       "url": "https://startupintros.com/orgs/gilion",
+       "date": "2026-07-13",
+       "rank": ""
+      },
+      {
+       "name": "Låneutmanaren byter namn – satsar globalt",
+       "url": "https://www.di.se/digital/laneutmanaren-byter-namn-satsar-globalt",
+       "date": "2023-12-14",
+       "rank": ""
+      }
+     ]
+    }
+   ],
+   "founded": [
+    {
+     "org": "Gilion",
+     "org_id": "7aee8784-e220-425c-bff9-56cf5ed5932b",
+     "sample": true,
+     "sources": [
+      {
+       "name": "Gilion's new €15m acceleration round | Gilion",
+       "url": "https://www.gilion.com/news/acceleration-round",
+       "date": "2026-08-17",
+       "rank": ""
+      },
+      {
+       "name": "Gilion launch forecasting platform giving founders control of their growth. | Gilion",
+       "url": "https://www.gilion.com/news/ark-kapital-launch-forecasting-platform",
+       "date": "2026-08-17",
+       "rank": ""
+      },
+      {
+       "name": "Gilion: Funding, Team & Investors",
+       "url": "https://startupintros.com/orgs/gilion",
+       "date": "2026-07-13",
+       "rank": ""
+      },
+      {
+       "name": "Låneutmanaren byter namn – satsar globalt",
+       "url": "https://www.di.se/digital/laneutmanaren-byter-namn-satsar-globalt",
+       "date": "2023-12-14",
+       "rank": ""
+      }
+     ]
+    }
+   ],
+   "metrics": {
+    "employers": 1,
+    "roles": 1,
+    "roles_outside_company": 0,
+    "roles_dated": 0,
+    "avg_tenure_years": null,
+    "avg_tenure_n": 0,
+    "shortest_tenure_years": null,
+    "longest_tenure_years": null,
+    "level_ups": 0,
+    "level_downs": 0,
+    "level_ups_per_year": null,
+    "dated_span_years": null,
+    "career_start": null,
+    "years_before_company": null
+   },
+   "level_steps": [],
+   "tags": [],
+   "tag_evidence": {},
+   "prior_founder": {
+    "value": false,
+    "companies": []
+   },
+   "prior_exits": [],
+   "prior_exit_checked": [],
+   "gaps": [
+    "1 of 1 roles have no start date"
+   ]
+  },
+  {
+   "id": "866ad7ec-629f-484f-a393-6000cb602d7c",
+   "name": "Oliver Hildebrandt",
+   "description": "Founder of Gilion.",
+   "linkedin_url": "",
+   "companies": [
+    "gilion"
+   ],
+   "source": {
+    "provider": "Cala entity graph (api.cala.ai/v1/entities)",
+    "entity_id": "866ad7ec-629f-484f-a393-6000cb602d7c",
+    "fetched": "2026-11-14",
+    "note": "Career edges as Cala holds them; each role lists its own source URL and date."
+   },
+   "roles": [
+    {
+     "org": "Gilion",
+     "org_id": "7aee8784-e220-425c-bff9-56cf5ed5932b",
+     "role": "CEO",
+     "level": 4,
+     "level_label": "Founder, C-level or partner",
+     "since": null,
+     "until": null,
+     "years": null,
+     "open": false,
+     "tags": [],
+     "sources": [
+      {
+       "name": "Gilion's new €15m acceleration round | Gilion",
+       "url": "https://www.gilion.com/news/acceleration-round",
+       "date": "2026-08-17",
+       "rank": ""
+      },
+      {
+       "name": "Gilion: Funding, Team & Investors",
+       "url": "https://startupintros.com/orgs/gilion",
+       "date": "2026-07-13",
+       "rank": ""
+      },
+      {
+       "name": "Låneutmanaren byter namn – satsar globalt",
+       "url": "https://www.di.se/digital/laneutmanaren-byter-namn-satsar-globalt",
+       "date": "2023-12-14",
+       "rank": ""
+      }
+     ]
+    }
+   ],
+   "founded": [
+    {
+     "org": "Gilion",
+     "org_id": "7aee8784-e220-425c-bff9-56cf5ed5932b",
+     "sample": true,
+     "sources": [
+      {
+       "name": "Gilion's new €15m acceleration round | Gilion",
+       "url": "https://www.gilion.com/news/acceleration-round",
+       "date": "2026-08-17",
+       "rank": ""
+      },
+      {
+       "name": "Gilion: Funding, Team & Investors",
+       "url": "https://startupintros.com/orgs/gilion",
+       "date": "2026-07-13",
+       "rank": ""
+      },
+      {
+       "name": "Låneutmanaren byter namn – satsar globalt",
+       "url": "https://www.di.se/digital/laneutmanaren-byter-namn-satsar-globalt",
+       "date": "2023-12-14",
+       "rank": ""
+      }
+     ]
+    }
+   ],
+   "metrics": {
+    "employers": 1,
+    "roles": 1,
+    "roles_outside_company": 0,
+    "roles_dated": 0,
+    "avg_tenure_years": null,
+    "avg_tenure_n": 0,
+    "shortest_tenure_years": null,
+    "longest_tenure_years": null,
+    "level_ups": 0,
+    "level_downs": 0,
+    "level_ups_per_year": null,
+    "dated_span_years": null,
+    "career_start": null,
+    "years_before_company": null
+   },
+   "level_steps": [],
+   "tags": [],
+   "tag_evidence": {},
+   "prior_founder": {
+    "value": false,
+    "companies": []
+   },
+   "prior_exits": [],
+   "prior_exit_checked": [],
+   "gaps": [
+    "1 of 1 roles have no start date"
+   ]
+  },
+  {
+   "id": "0a8fb60d-dcf3-5479-95a9-def3a4ed4c5b",
+   "name": "Oscar Werner",
+   "description": "He is the chief executive officer and founder of Gilion.",
+   "linkedin_url": "",
+   "companies": [
+    "gilion"
+   ],
+   "source": {
+    "provider": "Cala entity graph (api.cala.ai/v1/entities)",
+    "entity_id": "0a8fb60d-dcf3-5479-95a9-def3a4ed4c5b",
+    "fetched": "2026-11-14",
+    "note": "Career edges as Cala holds them; each role lists its own source URL and date."
+   },
+   "roles": [],
+   "founded": [
+    {
+     "org": "Gilion",
+     "org_id": "7aee8784-e220-425c-bff9-56cf5ed5932b",
+     "sample": true,
+     "sources": [
+      {
+       "name": "startupfundraising.com",
+       "url": "https://startupfundraising.com/founders/oscar-werner",
+       "date": "2026-11-03",
+       "rank": "PRESS"
+      }
+     ]
+    }
+   ],
+   "metrics": {
+    "employers": 1,
+    "roles": 0,
+    "roles_outside_company": 0,
+    "roles_dated": 0,
+    "avg_tenure_years": null,
+    "avg_tenure_n": 0,
+    "shortest_tenure_years": null,
+    "longest_tenure_years": null,
+    "level_ups": 0,
+    "level_downs": 0,
+    "level_ups_per_year": null,
+    "dated_span_years": null,
+    "career_start": null,
+    "years_before_company": null
+   },
+   "level_steps": [],
+   "tags": [],
+   "tag_evidence": {},
+   "prior_founder": {
+    "value": false,
+    "companies": []
+   },
+   "prior_exits": [],
+   "prior_exit_checked": [],
+   "gaps": [
+    "No WORKS_AT edges in Cala"
+   ]
+  },
+  {
+   "id": "c3324395-85e7-5a0e-8a6c-638eb67fc034",
+   "name": "Juho Kallio",
+   "description": "Founder of IPRally.",
+   "linkedin_url": "",
+   "companies": [
+    "iprallytechnologies"
+   ],
+   "source": {
+    "provider": "Cala entity graph (api.cala.ai/v1/entities)",
+    "entity_id": "c3324395-85e7-5a0e-8a6c-638eb67fc034",
+    "fetched": "2026-11-14",
+    "note": "Career edges as Cala holds them; each role lists its own source URL and date."
+   },
+   "roles": [
+    {
+     "org": "IPRally",
+     "org_id": "dd64c2b7-b551-4322-ac10-57fa4eead37e",
+     "role": "Chief Research Officer",
+     "level": 4,
+     "level_label": "Founder, C-level or partner",
+     "since": null,
+     "until": null,
+     "years": null,
+     "open": false,
+     "tags": [],
+     "sources": [
+      {
+       "name": "iprally.com",
+       "url": "https://www.iprally.com/news/patent-search--will-iprallys-technology-leap-make-boolean-history",
+       "date": "2024-06-26",
+       "rank": "PRIMARY"
+      }
+     ]
+    }
+   ],
+   "founded": [
+    {
+     "org": "IPRally",
+     "org_id": "dd64c2b7-b551-4322-ac10-57fa4eead37e",
+     "sample": true,
+     "sources": [
+      {
+       "name": "iprally.com",
+       "url": "https://www.iprally.com/news/press-release-iprally-raises-eu2-0-million-to-build-the-patent-search-engine-2-0",
+       "date": "2021-01-07",
+       "rank": "PRIMARY"
+      }
+     ]
+    }
+   ],
+   "metrics": {
+    "employers": 1,
+    "roles": 1,
+    "roles_outside_company": 0,
+    "roles_dated": 0,
+    "avg_tenure_years": null,
+    "avg_tenure_n": 0,
+    "shortest_tenure_years": null,
+    "longest_tenure_years": null,
+    "level_ups": 0,
+    "level_downs": 0,
+    "level_ups_per_year": null,
+    "dated_span_years": null,
+    "career_start": null,
+    "years_before_company": null
+   },
+   "level_steps": [],
+   "tags": [],
+   "tag_evidence": {},
+   "prior_founder": {
+    "value": false,
+    "companies": []
+   },
+   "prior_exits": [],
+   "prior_exit_checked": [],
+   "gaps": [
+    "1 of 1 roles have no start date"
+   ]
+  },
+  {
+   "id": "285c0a14-4801-525d-9ab9-ff5176c23ea0",
+   "name": "Juuso Piskonen",
+   "description": "Founder of IPRally",
+   "linkedin_url": "",
+   "companies": [
+    "iprallytechnologies"
+   ],
+   "source": {
+    "provider": "Cala entity graph (api.cala.ai/v1/entities)",
+    "entity_id": "285c0a14-4801-525d-9ab9-ff5176c23ea0",
+    "fetched": "2026-11-14",
+    "note": "Career edges as Cala holds them; each role lists its own source URL and date."
+   },
+   "roles": [],
+   "founded": [
+    {
+     "org": "IPRally",
+     "org_id": "dd64c2b7-b551-4322-ac10-57fa4eead37e",
+     "sample": true,
+     "sources": [
+      {
+       "name": "iprally.com",
+       "url": "https://www.iprally.com/news/press-release-iprally-raises-eu2-0-million-to-build-the-patent-search-engine-2-0",
+       "date": "2021-01-07",
+       "rank": "PRIMARY"
+      }
+     ]
+    }
+   ],
+   "metrics": {
+    "employers": 1,
+    "roles": 0,
+    "roles_outside_company": 0,
+    "roles_dated": 0,
+    "avg_tenure_years": null,
+    "avg_tenure_n": 0,
+    "shortest_tenure_years": null,
+    "longest_tenure_years": null,
+    "level_ups": 0,
+    "level_downs": 0,
+    "level_ups_per_year": null,
+    "dated_span_years": null,
+    "career_start": null,
+    "years_before_company": null
+   },
+   "level_steps": [],
+   "tags": [],
+   "tag_evidence": {},
+   "prior_founder": {
+    "value": false,
+    "companies": []
+   },
+   "prior_exits": [],
+   "prior_exit_checked": [],
+   "gaps": [
+    "No WORKS_AT edges in Cala"
+   ]
+  },
+  {
+   "id": "52351d61-5aa0-5a1d-9d81-f849e29d3188",
+   "name": "Sakari Arvela",
+   "description": "Entrepreneur who founded and serves as chief executive officer of IPRally.",
+   "linkedin_url": "",
+   "companies": [
+    "iprallytechnologies"
+   ],
+   "source": {
+    "provider": "Cala entity graph (api.cala.ai/v1/entities)",
+    "entity_id": "52351d61-5aa0-5a1d-9d81-f849e29d3188",
+    "fetched": "2026-11-14",
+    "note": "Career edges as Cala holds them; each role lists its own source URL and date."
+   },
+   "roles": [
+    {
+     "org": "IPRally",
+     "org_id": "dd64c2b7-b551-4322-ac10-57fa4eead37e",
+     "role": "Chief Product Officer",
+     "level": 4,
+     "level_label": "Founder, C-level or partner",
+     "since": "2024-05-21",
+     "until": null,
+     "years": null,
+     "open": true,
+     "tags": [],
+     "sources": [
+      {
+       "name": "iprally.com",
+       "url": "https://www.iprally.com/news/iprally-announces-new-ceo-to-lead-the-next-phase-of-growth",
+       "date": "2024-05-21",
+       "rank": "PRIMARY"
+      }
+     ]
+    }
+   ],
+   "founded": [
+    {
+     "org": "IPRally",
+     "org_id": "dd64c2b7-b551-4322-ac10-57fa4eead37e",
+     "sample": true,
+     "sources": [
+      {
+       "name": "iprally.com",
+       "url": "https://www.iprally.com/news/press-release-iprally-raises-eu2-0-million-to-build-the-patent-search-engine-2-0",
+       "date": "2021-01-07",
+       "rank": "PRIMARY"
+      }
+     ]
+    }
+   ],
+   "metrics": {
+    "employers": 1,
+    "roles": 1,
+    "roles_outside_company": 0,
+    "roles_dated": 1,
+    "avg_tenure_years": null,
+    "avg_tenure_n": 0,
+    "shortest_tenure_years": null,
+    "longest_tenure_years": null,
+    "level_ups": 0,
+    "level_downs": 0,
+    "level_ups_per_year": null,
+    "dated_span_years": null,
+    "career_start": "2024-05-21",
+    "years_before_company": null
+   },
+   "level_steps": [],
+   "tags": [],
+   "tag_evidence": {},
+   "prior_founder": {
+    "value": false,
+    "companies": []
+   },
+   "prior_exits": [],
+   "prior_exit_checked": [],
+   "gaps": [
+    "1 dated roles have no end date (current, or end unknown)"
+   ]
+  },
+  {
+   "id": "79240a18-e1ef-589c-a76e-958102fdb550",
+   "name": "Tuomas Tikka",
+   "description": "Entrepreneur who founded Kuva Space.",
+   "linkedin_url": "",
+   "companies": [
+    "kuvaspace"
+   ],
+   "source": {
+    "provider": "Cala entity graph (api.cala.ai/v1/entities)",
+    "entity_id": "79240a18-e1ef-589c-a76e-958102fdb550",
+    "fetched": "2026-11-14",
+    "note": "Career edges as Cala holds them; each role lists its own source URL and date."
+   },
+   "roles": [],
+   "founded": [
+    {
+     "org": "Kuva Space",
+     "org_id": "41f89a61-54ac-4068-82af-a2d2096efcfc",
+     "sample": true,
+     "sources": [
+      {
+       "name": "kuvaspace.com",
+       "url": "https://kuvaspace.com/en/about",
+       "date": "2026-11-03",
+       "rank": "PRIMARY"
+      }
+     ]
+    }
+   ],
+   "metrics": {
+    "employers": 1,
+    "roles": 0,
+    "roles_outside_company": 0,
+    "roles_dated": 0,
+    "avg_tenure_years": null,
+    "avg_tenure_n": 0,
+    "shortest_tenure_years": null,
+    "longest_tenure_years": null,
+    "level_ups": 0,
+    "level_downs": 0,
+    "level_ups_per_year": null,
+    "dated_span_years": null,
+    "career_start": null,
+    "years_before_company": null
+   },
+   "level_steps": [],
+   "tags": [],
+   "tag_evidence": {},
+   "prior_founder": {
+    "value": false,
+    "companies": []
+   },
+   "prior_exits": [],
+   "prior_exit_checked": [],
+   "gaps": [
+    "No WORKS_AT edges in Cala"
+   ]
+  },
+  {
+   "id": "200f320b-5b81-4e9a-bf47-4e82a27f0a0f",
+   "name": "Anton Osika",
+   "description": "Swedish CEO and founder of Lovable who also founded Depict, born in 1990.",
+   "linkedin_url": "https://se.linkedin.com/in/antonosika",
+   "companies": [
+    "lovable"
+   ],
+   "source": {
+    "provider": "Cala entity graph (api.cala.ai/v1/entities)",
+    "entity_id": "200f320b-5b81-4e9a-bf47-4e82a27f0a0f",
+    "fetched": "2026-11-14",
+    "note": "Career edges as Cala holds them; each role lists its own source URL and date."
+   },
+   "roles": [
+    {
+     "org": "Sana Labs",
+     "org_id": "000b899d-981a-4710-aa00-f186c3f3dace",
+     "role": "First employee and Engineer",
+     "level": 1,
+     "level_label": "Associate, engineer or specialist",
+     "since": "2016-01-01",
+     "until": "2019-12-31",
+     "years": 3.9,
+     "open": false,
+     "tags": [],
+     "sources": [
+      {
+       "name": "Anton Osika - AI People - TeamDay.ai",
+       "url": "https://www.teamday.ai/ai/people/anton-osika",
+       "date": "2026-01-01",
+       "rank": ""
+      }
+     ]
+    },
+    {
+     "org": "Lovable",
+     "org_id": "a1a12886-3119-492f-801a-9bfb38143209",
+     "role": "Co-Founder & CEO",
+     "level": 4,
+     "level_label": "Founder, C-level or partner",
+     "since": "2023-11-01",
+     "until": null,
+     "years": null,
+     "open": true,
+     "tags": [
+      "nordic_unicorn"
+     ],
+     "sources": [
+      {
+       "name": "Slush",
+       "url": "https://slush.org/program/anton-osika",
+       "date": "2025-01-01",
+       "rank": ""
+      },
+      {
+       "name": "Anton Osika - On a mission to empower anyone to create. | LinkedIn",
+       "url": "https://se.linkedin.com/in/antonosika",
+       "date": "2026-05-08",
+       "rank": ""
+      }
+     ]
+    },
+    {
+     "org": "CERN",
+     "org_id": "ab87c9e3-2e6e-420b-8c5f-35f5b868af02",
+     "role": "",
+     "level": null,
+     "level_label": "Not mapped",
+     "since": null,
+     "until": null,
+     "years": null,
+     "open": false,
+     "tags": [
+      "research"
+     ],
+     "sources": [
+      {
+       "name": "Slush",
+       "url": "https://slush.org/",
+       "date": "2026-07-22",
+       "rank": ""
+      },
+      {
+       "name": "CEO of Lovable, one of the fastest-growing startups in history, at Disrupt 2025 | TechCrunch",
+       "url": "https://techcrunch.com/",
+       "date": "2026-07-22",
+       "rank": ""
+      },
+      {
+       "name": "starngage.com",
+       "url": "https://starngage.com/",
+       "date": "2026-07-22",
+       "rank": ""
+      },
+      {
+       "name": "Anton Osika | Speaker | ASU GSV Summit",
+       "url": "https://asugsvsummit.com/",
+       "date": "2026-07-22",
+       "rank": ""
+      },
+      {
+       "name": "www.inc.com",
+       "url": "https://www.inc.com/",
+       "date": "2026-07-22",
+       "rank": ""
+      },
+      {
+       "name": "Lovable",
+       "url": "https://slawomir.it/",
+       "date": "2026-07-22",
+       "rank": ""
+      },
+      {
+       "name": "mastersofscale.com",
+       "url": "https://mastersofscale.com/",
+       "date": "2026-07-22",
+       "rank": ""
+      },
+      {
+       "name": "Anton Osika",
+       "url": "https://www.forbes.com/",
+       "date": "2026-07-22",
+       "rank": ""
+      },
+      {
+       "name": "www.crunchbase.com",
+       "url": "https://www.crunchbase.com/",
+       "date": "2026-07-22",
+       "rank": ""
+      },
+      {
+       "name": "Business Insider Africa",
+       "url": "https://africa.businessinsider.com/",
+       "date": "2026-07-22",
+       "rank": ""
+      },
+      {
+       "name": "Anton Osika Biography, Net Worth 2026 & Lovable CEO - Millionaire Script",
+       "url": "https://millionairescript.com/",
+       "date": "2026-07-22",
+       "rank": ""
+      },
+      {
+       "name": "All Europeans 🇪🇺 (@ueeu@vivaldi.net)",
+       "url": "https://social.vivaldi.net/",
+       "date": "2026-07-22",
+       "rank": ""
+      },
+      {
+       "name": "Anton Osika - Lovable Video Tutorials & Guides",
+       "url": "https://lovable.dev/",
+       "date": "2026-07-22",
+       "rank": ""
+      },
+      {
+       "name": "Anton Osika - AI People - TeamDay.ai",
+       "url": "https://www.teamday.ai/",
+       "date": "2026-07-22",
+       "rank": ""
+      },
+      {
+       "name": "Business Insider - Latest News in Tech, Markets, Economy & Innovation",
+       "url": "https://www.businessinsider.com/",
+       "date": "2026-07-22",
+       "rank": ""
+      },
+      {
+       "name": "Anton Osika - On a mission to empower anyone to create. | LinkedIn",
+       "url": "https://se.linkedin.com/",
+       "date": "2026-07-22",
+       "rank": ""
+      },
+      {
+       "name": "sv.wikipedia.org",
+       "url": "https://sv.wikipedia.org/",
+       "date": "2026-07-22",
+       "rank": ""
+      },
+      {
+       "name": "Meet Anton Osika, speaker at HumanX | HumanX Amsterdam 2026 | 22-24 Sept",
+       "url": "https://www.humanx.co/",
+       "date": "2026-07-22",
+       "rank": ""
+      },
+      {
+       "name": "explore.slush.org",
+       "url": "https://explore.slush.org/speakers/anton-osika-founder-ceo-lovable",
+       "date": "2026-07-22",
+       "rank": ""
+      },
+      {
+       "name": "mastersofscale.com",
+       "url": "https://mastersofscale.com/people/anton-osika",
+       "date": "2026-07-22",
+       "rank": ""
+      }
+     ]
+    },
+    {
+     "org": "Lovable",
+     "org_id": "89d3a43c-fee4-4491-853e-a216cbef6c50",
+     "role": "CEO",
+     "level": 4,
+     "level_label": "Founder, C-level or partner",
+     "since": null,
+     "until": null,
+     "years": null,
+     "open": false,
+     "tags": [
+      "nordic_unicorn"
+     ],
+     "sources": [
+      {
+       "name": "en.wikipedia.org",
+       "url": "https://en.wikipedia.org/wiki/Lovable_(company)",
+       "date": "2026-08-20",
+       "rank": ""
+      },
+      {
+       "name": "Two Cofounders of AI ‘Vibe Coding’ Startup Lovable Are Now Billionaires",
+       "url": "https://www.forbes.com/sites/aliciapark/2025/12/19/ai-startup-lovable-just-minted-one-of-europes-youngest-ever-self-made-billionaires",
+       "date": "2025-12-19",
+       "rank": ""
+      },
+      {
+       "name": "Sweden's Lovable, an app-building AI platform, rakes in $15M after spectacular growth | TechCrunch",
+       "url": "https://techcrunch.com/2025/02/25/swedens-lovable-an-app-building-ai-platform-rakes-in-16m-after-spectacular-growth",
+       "date": "2025-02-25",
+       "rank": ""
+      },
+      {
+       "name": "news.crunchbase.com",
+       "url": "https://news.crunchbase.com/ai/vibe-coding-startup-lovable-unicorn-status",
+       "date": "2026-08-20",
+       "rank": ""
+      },
+      {
+       "name": "Lovable: Funding, Team & Investors",
+       "url": "https://startupintros.com/orgs/lovable",
+       "date": "2026-07-13",
+       "rank": ""
+      },
+      {
+       "name": "se.linkedin.com",
+       "url": "https://se.linkedin.com/in/antonosika",
+       "date": "2026-08-20",
+       "rank": ""
+      }
+     ]
+    },
+    {
+     "org": "Organización Europea para la Investigación Nuclear (CERN)",
+     "org_id": "2dc58d4f-fdf0-4c89-b48f-7fe82e6a9985",
+     "role": "Particle Physicist",
+     "level": null,
+     "level_label": "Not mapped",
+     "since": null,
+     "until": null,
+     "years": null,
+     "open": false,
+     "tags": [
+      "research"
+     ],
+     "sources": [
+      {
+       "name": "mastersofscale.com",
+       "url": "https://mastersofscale.com/people/anton-osika",
+       "date": "2026-05-11",
+       "rank": ""
+      }
+     ]
+    },
+    {
+     "org": "Sana Labs AB",
+     "org_id": "c8a34d4d-a9b0-4547-8463-36b9c70cd756",
+     "role": "",
+     "level": null,
+     "level_label": "Not mapped",
+     "since": null,
+     "until": null,
+     "years": null,
+     "open": false,
+     "tags": [],
+     "sources": [
+      {
+       "name": "Slush",
+       "url": "https://slush.org/",
+       "date": "2026-07-22",
+       "rank": ""
+      },
+      {
+       "name": "CEO of Lovable, one of the fastest-growing startups in history, at Disrupt 2025 | TechCrunch",
+       "url": "https://techcrunch.com/",
+       "date": "2026-07-22",
+       "rank": ""
+      },
+      {
+       "name": "starngage.com",
+       "url": "https://starngage.com/",
+       "date": "2026-07-22",
+       "rank": ""
+      },
+      {
+       "name": "Anton Osika | Speaker | ASU GSV Summit",
+       "url": "https://asugsvsummit.com/",
+       "date": "2026-07-22",
+       "rank": ""
+      },
+      {
+       "name": "www.inc.com",
+       "url": "https://www.inc.com/",
+       "date": "2026-07-22",
+       "rank": ""
+      },
+      {
+       "name": "Lovable",
+       "url": "https://slawomir.it/",
+       "date": "2026-07-22",
+       "rank": ""
+      },
+      {
+       "name": "mastersofscale.com",
+       "url": "https://mastersofscale.com/",
+       "date": "2026-07-22",
+       "rank": ""
+      },
+      {
+       "name": "Anton Osika",
+       "url": "https://www.forbes.com/",
+       "date": "2026-07-22",
+       "rank": ""
+      },
+      {
+       "name": "www.crunchbase.com",
+       "url": "https://www.crunchbase.com/",
+       "date": "2026-07-22",
+       "rank": ""
+      },
+      {
+       "name": "Business Insider Africa",
+       "url": "https://africa.businessinsider.com/",
+       "date": "2026-07-22",
+       "rank": ""
+      },
+      {
+       "name": "Anton Osika Biography, Net Worth 2026 & Lovable CEO - Millionaire Script",
+       "url": "https://millionairescript.com/",
+       "date": "2026-07-22",
+       "rank": ""
+      },
+      {
+       "name": "All Europeans 🇪🇺 (@ueeu@vivaldi.net)",
+       "url": "https://social.vivaldi.net/",
+       "date": "2026-07-22",
+       "rank": ""
+      },
+      {
+       "name": "Anton Osika - Lovable Video Tutorials & Guides",
+       "url": "https://lovable.dev/",
+       "date": "2026-07-22",
+       "rank": ""
+      },
+      {
+       "name": "Anton Osika - AI People - TeamDay.ai",
+       "url": "https://www.teamday.ai/",
+       "date": "2026-07-22",
+       "rank": ""
+      },
+      {
+       "name": "Business Insider - Latest News in Tech, Markets, Economy & Innovation",
+       "url": "https://www.businessinsider.com/",
+       "date": "2026-07-22",
+       "rank": ""
+      },
+      {
+       "name": "Anton Osika - On a mission to empower anyone to create. | LinkedIn",
+       "url": "https://se.linkedin.com/",
+       "date": "2026-07-22",
+       "rank": ""
+      },
+      {
+       "name": "sv.wikipedia.org",
+       "url": "https://sv.wikipedia.org/",
+       "date": "2026-07-22",
+       "rank": ""
+      },
+      {
+       "name": "Meet Anton Osika, speaker at HumanX | HumanX Amsterdam 2026 | 22-24 Sept",
+       "url": "https://www.humanx.co/",
+       "date": "2026-07-22",
+       "rank": ""
+      },
+      {
+       "name": "explore.slush.org",
+       "url": "https://explore.slush.org/speakers/anton-osika-founder-ceo-lovable",
+       "date": "2026-07-22",
+       "rank": ""
+      },
+      {
+       "name": "mastersofscale.com",
+       "url": "https://mastersofscale.com/people/anton-osika",
+       "date": "2026-07-22",
+       "rank": ""
+      }
+     ]
+    }
+   ],
+   "founded": [
+    {
+     "org": "Lovable",
+     "org_id": "89d3a43c-fee4-4491-853e-a216cbef6c50",
+     "sample": true,
+     "sources": [
+      {
+       "name": "en.wikipedia.org",
+       "url": "https://en.wikipedia.org/wiki/Lovable_(company)",
+       "date": "2026-08-20",
+       "rank": ""
+      },
+      {
+       "name": "Two Cofounders of AI ‘Vibe Coding’ Startup Lovable Are Now Billionaires",
+       "url": "https://www.forbes.com/sites/aliciapark/2025/12/19/ai-startup-lovable-just-minted-one-of-europes-youngest-ever-self-made-billionaires",
+       "date": "2025-12-19",
+       "rank": ""
+      },
+      {
+       "name": "Sweden's Lovable, an app-building AI platform, rakes in $15M after spectacular growth | TechCrunch",
+       "url": "https://techcrunch.com/2025/02/25/swedens-lovable-an-app-building-ai-platform-rakes-in-16m-after-spectacular-growth",
+       "date": "2025-02-25",
+       "rank": ""
+      },
+      {
+       "name": "news.crunchbase.com",
+       "url": "https://news.crunchbase.com/ai/vibe-coding-startup-lovable-unicorn-status",
+       "date": "2026-08-20",
+       "rank": ""
+      },
+      {
+       "name": "Lovable: Funding, Team & Investors",
+       "url": "https://startupintros.com/orgs/lovable",
+       "date": "2026-07-13",
+       "rank": ""
+      },
+      {
+       "name": "se.linkedin.com",
+       "url": "https://se.linkedin.com/in/antonosika",
+       "date": "2026-08-20",
+       "rank": ""
+      }
+     ]
+    },
+    {
+     "org": "Lovable",
+     "org_id": "a1a12886-3119-492f-801a-9bfb38143209",
+     "sample": true,
+     "sources": [
+      {
+       "name": "Slush",
+       "url": "https://slush.org/program/anton-osika",
+       "date": "2025-01-01",
+       "rank": ""
+      },
+      {
+       "name": "Anton Osika - On a mission to empower anyone to create. | LinkedIn",
+       "url": "https://se.linkedin.com/in/antonosika",
+       "date": "2026-05-08",
+       "rank": ""
+      },
+      {
+       "name": "Anton Osika",
+       "url": "https://www.forbes.com/profile/anton-osika/",
+       "date": "2026-03-10",
+       "rank": ""
+      },
+      {
+       "name": "www.inc.com",
+       "url": "https://www.inc.com/chloe-aiello/5-things-to-know-about-anton-osika-co-founder-of-the-vibe-coding-unicorn-lovable/91223446",
+       "date": "2026-05-11",
+       "rank": ""
+      }
+     ]
+    },
+    {
+     "org": "Depict",
+     "org_id": "b662309a-ac39-4f40-bd93-1053ac44a1ed",
+     "sample": false,
+     "sources": [
+      {
+       "name": "mastersofscale.com",
+       "url": "https://mastersofscale.com/people/anton-osika",
+       "date": "2026-07-22",
+       "rank": ""
+      }
+     ]
+    },
+    {
+     "org": "Lovable",
+     "org_id": "d6725096-d466-498d-9aa4-271f5983f4b8",
+     "sample": true,
+     "sources": [
+      {
+       "name": "Slush",
+       "url": "https://slush.org/",
+       "date": "2026-07-22",
+       "rank": ""
+      },
+      {
+       "name": "CEO of Lovable, one of the fastest-growing startups in history, at Disrupt 2025 | TechCrunch",
+       "url": "https://techcrunch.com/",
+       "date": "2026-07-22",
+       "rank": ""
+      },
+      {
+       "name": "starngage.com",
+       "url": "https://starngage.com/",
+       "date": "2026-07-22",
+       "rank": ""
+      },
+      {
+       "name": "Anton Osika | Speaker | ASU GSV Summit",
+       "url": "https://asugsvsummit.com/",
+       "date": "2026-07-22",
+       "rank": ""
+      },
+      {
+       "name": "www.inc.com",
+       "url": "https://www.inc.com/",
+       "date": "2026-07-22",
+       "rank": ""
+      },
+      {
+       "name": "Lovable",
+       "url": "https://slawomir.it/",
+       "date": "2026-07-22",
+       "rank": ""
+      },
+      {
+       "name": "mastersofscale.com",
+       "url": "https://mastersofscale.com/",
+       "date": "2026-07-22",
+       "rank": ""
+      },
+      {
+       "name": "Anton Osika",
+       "url": "https://www.forbes.com/",
+       "date": "2026-07-22",
+       "rank": ""
+      },
+      {
+       "name": "www.crunchbase.com",
+       "url": "https://www.crunchbase.com/",
+       "date": "2026-07-22",
+       "rank": ""
+      },
+      {
+       "name": "Business Insider Africa",
+       "url": "https://africa.businessinsider.com/",
+       "date": "2026-07-22",
+       "rank": ""
+      },
+      {
+       "name": "Anton Osika Biography, Net Worth 2026 & Lovable CEO - Millionaire Script",
+       "url": "https://millionairescript.com/",
+       "date": "2026-07-22",
+       "rank": ""
+      },
+      {
+       "name": "All Europeans 🇪🇺 (@ueeu@vivaldi.net)",
+       "url": "https://social.vivaldi.net/",
+       "date": "2026-07-22",
+       "rank": ""
+      },
+      {
+       "name": "Anton Osika - Lovable Video Tutorials & Guides",
+       "url": "https://lovable.dev/",
+       "date": "2026-07-22",
+       "rank": ""
+      },
+      {
+       "name": "Anton Osika - AI People - TeamDay.ai",
+       "url": "https://www.teamday.ai/",
+       "date": "2026-07-22",
+       "rank": ""
+      },
+      {
+       "name": "Business Insider - Latest News in Tech, Markets, Economy & Innovation",
+       "url": "https://www.businessinsider.com/",
+       "date": "2026-07-22",
+       "rank": ""
+      },
+      {
+       "name": "Anton Osika - On a mission to empower anyone to create. | LinkedIn",
+       "url": "https://se.linkedin.com/",
+       "date": "2026-07-22",
+       "rank": ""
+      },
+      {
+       "name": "sv.wikipedia.org",
+       "url": "https://sv.wikipedia.org/",
+       "date": "2026-07-22",
+       "rank": ""
+      },
+      {
+       "name": "Meet Anton Osika, speaker at HumanX | HumanX Amsterdam 2026 | 22-24 Sept",
+       "url": "https://www.humanx.co/",
+       "date": "2026-07-22",
+       "rank": ""
+      },
+      {
+       "name": "explore.slush.org",
+       "url": "https://explore.slush.org/speakers/anton-osika-founder-ceo-lovable",
+       "date": "2026-07-22",
+       "rank": ""
+      },
+      {
+       "name": "mastersofscale.com",
+       "url": "https://mastersofscale.com/people/anton-osika",
+       "date": "2026-07-22",
+       "rank": ""
+      },
+      {
+       "name": "wikidata.org",
+       "url": "https://www.wikidata.org/wiki/Q135998012",
+       "date": "2026-10-30",
+       "rank": "AGGREGATOR"
+      }
+     ]
+    }
+   ],
+   "metrics": {
+    "employers": 4,
+    "roles": 6,
+    "roles_outside_company": 4,
+    "roles_dated": 2,
+    "avg_tenure_years": 3.9,
+    "avg_tenure_n": 1,
+    "shortest_tenure_years": 3.9,
+    "longest_tenure_years": 3.9,
+    "level_ups": 1,
+    "level_downs": 0,
+    "level_ups_per_year": 0.13,
+    "dated_span_years": 7.8,
+    "career_start": "2016-01-01",
+    "years_before_company": 7.8
+   },
+   "level_steps": [
+    {
+     "from": "First employee and Engineer",
+     "to": "Co-Founder & CEO",
+     "at": "2023-11-01",
+     "org": "Lovable",
+     "dir": "up"
+    }
+   ],
+   "tags": [
+    "research"
+   ],
+   "tag_evidence": {
+    "research": [
+     "CERN",
+     "Organización Europea para la Investigación Nuclear (CERN)"
+    ]
+   },
+   "prior_founder": {
+    "value": true,
+    "companies": [
+     {
+      "org": "Depict",
+      "org_id": "b662309a-ac39-4f40-bd93-1053ac44a1ed",
+      "via": "FOUNDED edge"
+     }
+    ]
+   },
+   "prior_exits": [],
+   "prior_exit_checked": [
+    "Depict"
+   ],
+   "gaps": [
+    "4 of 6 roles have no start date",
+    "1 dated roles have no end date (current, or end unknown)",
+    "Depict: no acquisition event in Cala. Absence in Cala is not proof there was none"
+   ]
+  },
+  {
+   "id": "aafbe497-a39e-58dc-9b5b-a10091c7aba3",
+   "name": "Jussi Virnala",
+   "description": "Chief executive officer and founder of Metroc.",
+   "linkedin_url": "",
+   "companies": [
+    "metroc"
+   ],
+   "source": {
+    "provider": "Cala entity graph (api.cala.ai/v1/entities)",
+    "entity_id": "aafbe497-a39e-58dc-9b5b-a10091c7aba3",
+    "fetched": "2026-11-14",
+    "note": "Career edges as Cala holds them; each role lists its own source URL and date."
+   },
+   "roles": [],
+   "founded": [
+    {
+     "org": "Metroc",
+     "org_id": "f44f8250-38fc-5a30-9702-11e486eb3c36",
+     "sample": true,
+     "sources": [
+      {
+       "name": "metroc.ai",
+       "url": "https://metroc.ai/en/resources/metroc-secures-e2-million-in-new-funding/",
+       "date": "2026-11-07",
+       "rank": "PRIMARY"
+      },
+      {
+       "name": "siliconcanals.com",
+       "url": "https://siliconcanals.com/metroc-raises-2m/",
+       "date": "2023-08-25",
+       "rank": "PRESS"
+      },
+      {
+       "name": "en.ain.ua",
+       "url": "https://en.ain.ua/2023/08/25/finnish-metroc-secures-2m",
+       "date": "2023-08-25",
+       "rank": "PRESS"
+      }
+     ]
+    }
+   ],
+   "metrics": {
+    "employers": 1,
+    "roles": 0,
+    "roles_outside_company": 0,
+    "roles_dated": 0,
+    "avg_tenure_years": null,
+    "avg_tenure_n": 0,
+    "shortest_tenure_years": null,
+    "longest_tenure_years": null,
+    "level_ups": 0,
+    "level_downs": 0,
+    "level_ups_per_year": null,
+    "dated_span_years": null,
+    "career_start": null,
+    "years_before_company": null
+   },
+   "level_steps": [],
+   "tags": [],
+   "tag_evidence": {},
+   "prior_founder": {
+    "value": false,
+    "companies": []
+   },
+   "prior_exits": [],
+   "prior_exit_checked": [],
+   "gaps": [
+    "No WORKS_AT edges in Cala"
+   ]
+  },
+  {
+   "id": "b8e1bb3f-2b3c-5c39-8e76-086d40faab48",
+   "name": "Jari Närhi",
+   "description": "Businessperson who founded Nadmed and serves as its chief executive officer.",
+   "linkedin_url": "",
+   "companies": [
+    "nadmed"
+   ],
+   "source": {
+    "provider": "Cala entity graph (api.cala.ai/v1/entities)",
+    "entity_id": "b8e1bb3f-2b3c-5c39-8e76-086d40faab48",
+    "fetched": "2026-11-14",
+    "note": "Career edges as Cala holds them; each role lists its own source URL and date."
+   },
+   "roles": [],
+   "founded": [
+    {
+     "org": "Nadmed",
+     "org_id": "a2be62fd-59e2-48d8-bb2b-c39b58391e6f",
+     "sample": true,
+     "sources": [
+      {
+       "name": "nadmed.com",
+       "url": "https://www.nadmed.com/wp-content/uploads/2026/04/James-Lee-press-release.pdf",
+       "date": "2026-04-29",
+       "rank": "PRIMARY"
+      },
+      {
+       "name": "news.cision.com",
+       "url": "https://news.cision.com/san-francisco-oy/r/nadmed-raises--3-5m-to-bring-nad-tests-to-international-markets--advancing-personalized-treatment-op,c4027281",
+       "date": "2024-08-22",
+       "rank": "PRIMARY"
+      }
+     ]
+    }
+   ],
+   "metrics": {
+    "employers": 1,
+    "roles": 0,
+    "roles_outside_company": 0,
+    "roles_dated": 0,
+    "avg_tenure_years": null,
+    "avg_tenure_n": 0,
+    "shortest_tenure_years": null,
+    "longest_tenure_years": null,
+    "level_ups": 0,
+    "level_downs": 0,
+    "level_ups_per_year": null,
+    "dated_span_years": null,
+    "career_start": null,
+    "years_before_company": null
+   },
+   "level_steps": [],
+   "tags": [],
+   "tag_evidence": {},
+   "prior_founder": {
+    "value": false,
+    "companies": []
+   },
+   "prior_exits": [],
+   "prior_exit_checked": [],
+   "gaps": [
+    "No WORKS_AT edges in Cala"
+   ]
+  },
+  {
+   "id": "05faa8e1-8b23-5dc1-9ba1-fc267dd0ae82",
+   "name": "Valtteri Lahtinen",
+   "description": "Founder of Quanscient Oy.",
+   "linkedin_url": "",
+   "companies": [
+    "quanscient"
+   ],
+   "source": {
+    "provider": "Cala entity graph (api.cala.ai/v1/entities)",
+    "entity_id": "05faa8e1-8b23-5dc1-9ba1-fc267dd0ae82",
+    "fetched": "2026-11-14",
+    "note": "Career edges as Cala holds them; each role lists its own source URL and date."
+   },
+   "roles": [],
+   "founded": [
+    {
+     "org": "Quanscient Oy",
+     "org_id": "5d4a0842-237d-58a6-bb5d-64fa96105d3d",
+     "sample": true,
+     "sources": [
+      {
+       "name": "quanscient.com",
+       "url": "https://quanscient.com/about-us",
+       "date": "2026-11-03",
+       "rank": "PRIMARY"
+      }
+     ]
+    }
+   ],
+   "metrics": {
+    "employers": 1,
+    "roles": 0,
+    "roles_outside_company": 0,
+    "roles_dated": 0,
+    "avg_tenure_years": null,
+    "avg_tenure_n": 0,
+    "shortest_tenure_years": null,
+    "longest_tenure_years": null,
+    "level_ups": 0,
+    "level_downs": 0,
+    "level_ups_per_year": null,
+    "dated_span_years": null,
+    "career_start": null,
+    "years_before_company": null
+   },
+   "level_steps": [],
+   "tags": [],
+   "tag_evidence": {},
+   "prior_founder": {
+    "value": false,
+    "companies": []
+   },
+   "prior_exits": [],
+   "prior_exit_checked": [],
+   "gaps": [
+    "No WORKS_AT edges in Cala"
+   ]
+  },
+  {
+   "id": "9d217ba5-8a96-5402-af68-f0c39d4287e6",
+   "name": "Eemeli Tsupari",
+   "description": "Entrepreneur who founded Reduciner Oy.",
+   "linkedin_url": "",
+   "companies": [
+    "reduciner"
+   ],
+   "source": {
+    "provider": "Cala entity graph (api.cala.ai/v1/entities)",
+    "entity_id": "9d217ba5-8a96-5402-af68-f0c39d4287e6",
+    "fetched": "2026-11-14",
+    "note": "Career edges as Cala holds them; each role lists its own source URL and date."
+   },
+   "roles": [],
+   "founded": [
+    {
+     "org": "Reduciner Oy",
+     "org_id": "7e3bbb7d-ef73-582c-b42e-d34a6a627c49",
+     "sample": true,
+     "sources": [
+      {
+       "name": "reduciner.com",
+       "url": "https://www.reduciner.com/team",
+       "date": "2026-11-03",
+       "rank": "PRIMARY"
+      }
+     ]
+    }
+   ],
+   "metrics": {
+    "employers": 1,
+    "roles": 0,
+    "roles_outside_company": 0,
+    "roles_dated": 0,
+    "avg_tenure_years": null,
+    "avg_tenure_n": 0,
+    "shortest_tenure_years": null,
+    "longest_tenure_years": null,
+    "level_ups": 0,
+    "level_downs": 0,
+    "level_ups_per_year": null,
+    "dated_span_years": null,
+    "career_start": null,
+    "years_before_company": null
+   },
+   "level_steps": [],
+   "tags": [],
+   "tag_evidence": {},
+   "prior_founder": {
+    "value": false,
+    "companies": []
+   },
+   "prior_exits": [],
+   "prior_exit_checked": [],
+   "gaps": [
+    "No WORKS_AT edges in Cala"
+   ]
+  },
+  {
+   "id": "ff8df96c-e270-5ee0-9c2f-43a53ef277ac",
+   "name": "Johanna Grönroos",
+   "description": "Chief executive officer and founder of Reduciner Oy",
+   "linkedin_url": "",
+   "companies": [
+    "reduciner"
+   ],
+   "source": {
+    "provider": "Cala entity graph (api.cala.ai/v1/entities)",
+    "entity_id": "ff8df96c-e270-5ee0-9c2f-43a53ef277ac",
+    "fetched": "2026-11-14",
+    "note": "Career edges as Cala holds them; each role lists its own source URL and date."
+   },
+   "roles": [],
+   "founded": [
+    {
+     "org": "Reduciner Oy",
+     "org_id": "7e3bbb7d-ef73-582c-b42e-d34a6a627c49",
+     "sample": true,
+     "sources": [
+      {
+       "name": "reduciner.com",
+       "url": "https://www.reduciner.com/team",
+       "date": "2026-11-13",
+       "rank": "PRIMARY"
+      },
+      {
+       "name": "reduciner.com",
+       "url": "https://www.reduciner.com/news/press-release",
+       "date": "2026-05-05",
+       "rank": "PRIMARY"
+      }
+     ]
+    }
+   ],
+   "metrics": {
+    "employers": 1,
+    "roles": 0,
+    "roles_outside_company": 0,
+    "roles_dated": 0,
+    "avg_tenure_years": null,
+    "avg_tenure_n": 0,
+    "shortest_tenure_years": null,
+    "longest_tenure_years": null,
+    "level_ups": 0,
+    "level_downs": 0,
+    "level_ups_per_year": null,
+    "dated_span_years": null,
+    "career_start": null,
+    "years_before_company": null
+   },
+   "level_steps": [],
+   "tags": [],
+   "tag_evidence": {},
+   "prior_founder": {
+    "value": false,
+    "companies": []
+   },
+   "prior_exits": [],
+   "prior_exit_checked": [],
+   "gaps": [
+    "No WORKS_AT edges in Cala"
+   ]
+  },
+  {
+   "id": "a80ec975-2db0-5251-87df-688ebf336ec3",
+   "name": "Sampsa Vuori",
+   "description": "Entrepreneur who founded Reduciner Oy.",
+   "linkedin_url": "",
+   "companies": [
+    "reduciner"
+   ],
+   "source": {
+    "provider": "Cala entity graph (api.cala.ai/v1/entities)",
+    "entity_id": "a80ec975-2db0-5251-87df-688ebf336ec3",
+    "fetched": "2026-11-14",
+    "note": "Career edges as Cala holds them; each role lists its own source URL and date."
+   },
+   "roles": [],
+   "founded": [
+    {
+     "org": "Reduciner Oy",
+     "org_id": "7e3bbb7d-ef73-582c-b42e-d34a6a627c49",
+     "sample": true,
+     "sources": [
+      {
+       "name": "reduciner.com",
+       "url": "https://www.reduciner.com/team",
+       "date": "2026-11-03",
+       "rank": "PRIMARY"
+      }
+     ]
+    }
+   ],
+   "metrics": {
+    "employers": 1,
+    "roles": 0,
+    "roles_outside_company": 0,
+    "roles_dated": 0,
+    "avg_tenure_years": null,
+    "avg_tenure_n": 0,
+    "shortest_tenure_years": null,
+    "longest_tenure_years": null,
+    "level_ups": 0,
+    "level_downs": 0,
+    "level_ups_per_year": null,
+    "dated_span_years": null,
+    "career_start": null,
+    "years_before_company": null
+   },
+   "level_steps": [],
+   "tags": [],
+   "tag_evidence": {},
+   "prior_founder": {
+    "value": false,
+    "companies": []
+   },
+   "prior_exits": [],
+   "prior_exit_checked": [],
+   "gaps": [
+    "No WORKS_AT edges in Cala"
+   ]
+  },
+  {
+   "id": "5e0eca0d-e512-54fd-b533-3fc643677049",
+   "name": "Ciprian Florescu",
+   "description": "Romanian entrepreneur and founder of Spektr.",
+   "linkedin_url": "",
+   "companies": [
+    "spektr"
+   ],
+   "source": {
+    "provider": "Cala entity graph (api.cala.ai/v1/entities)",
+    "entity_id": "5e0eca0d-e512-54fd-b533-3fc643677049",
+    "fetched": "2026-11-14",
+    "note": "Career edges as Cala holds them; each role lists its own source URL and date."
+   },
+   "roles": [
+    {
+     "org": "Spektr",
+     "org_id": "a88c0305-2762-4b19-b7e8-538ab480de26",
+     "role": "CTO",
+     "level": 4,
+     "level_label": "Founder, C-level or partner",
+     "since": null,
+     "until": null,
+     "years": null,
+     "open": false,
+     "tags": [],
+     "sources": [
+      {
+       "name": "About spektr | AI Compliance Platform Company",
+       "url": "https://www.spektr.com/about",
+       "date": "2022-01-01",
+       "rank": ""
+      },
+      {
+       "name": "Media Resources",
+       "url": "https://www.spektr.com/press-room/media-resources",
+       "date": "2000-01-01",
+       "rank": ""
+      },
+      {
+       "name": "news.crunchbase.com",
+       "url": "https://news.crunchbase.com/venture/fintech-compliance-founders-20m-seriesa-spektr",
+       "date": "2026-07-30",
+       "rank": ""
+      },
+      {
+       "name": "spektr launches with €5M in funding to streamline ongoing due diligence - Seedcamp",
+       "url": "https://seedcamp.com/views/spektr-launches-with-e5m-in-funding-to-streamline-ongoing-due-diligence",
+       "date": "2024-02-21",
+       "rank": ""
+      },
+      {
+       "name": "How spektr is Building the Compliance Infrastructure Layer for the AI Era",
+       "url": "https://www.nea.com/blog/how-spektr-is-building-the-compliance-infrastructure-layer-for-the-ai-era",
+       "date": "2026-04-21",
+       "rank": ""
+      }
+     ]
+    }
+   ],
+   "founded": [
+    {
+     "org": "Spektr",
+     "org_id": "a88c0305-2762-4b19-b7e8-538ab480de26",
+     "sample": true,
+     "sources": [
+      {
+       "name": "About spektr | AI Compliance Platform Company",
+       "url": "https://www.spektr.com/about",
+       "date": "2022-01-01",
+       "rank": ""
+      },
+      {
+       "name": "Media Resources",
+       "url": "https://www.spektr.com/press-room/media-resources",
+       "date": "2000-01-01",
+       "rank": ""
+      },
+      {
+       "name": "news.crunchbase.com",
+       "url": "https://news.crunchbase.com/venture/fintech-compliance-founders-20m-seriesa-spektr",
+       "date": "2026-07-30",
+       "rank": ""
+      },
+      {
+       "name": "spektr launches with €5M in funding to streamline ongoing due diligence - Seedcamp",
+       "url": "https://seedcamp.com/views/spektr-launches-with-e5m-in-funding-to-streamline-ongoing-due-diligence",
+       "date": "2024-02-21",
+       "rank": ""
+      },
+      {
+       "name": "How spektr is Building the Compliance Infrastructure Layer for the AI Era",
+       "url": "https://www.nea.com/blog/how-spektr-is-building-the-compliance-infrastructure-layer-for-the-ai-era",
+       "date": "2026-04-21",
+       "rank": ""
+      }
+     ]
+    },
+    {
+     "org": "Spektr",
+     "org_id": "a88c0305-2762-4b19-b7e8-538ab480de26",
+     "sample": true,
+     "sources": [
+      {
+       "name": "tracxn.com",
+       "url": "https://tracxn.com/d/companies/spektr/__dMQaW0uiTmNcNIBHC8QKja31SBzsnTRMhXCNnG7wzAk",
+       "date": "2026-11-03",
+       "rank": "AGGREGATOR"
+      }
+     ]
+    }
+   ],
+   "metrics": {
+    "employers": 1,
+    "roles": 1,
+    "roles_outside_company": 0,
+    "roles_dated": 0,
+    "avg_tenure_years": null,
+    "avg_tenure_n": 0,
+    "shortest_tenure_years": null,
+    "longest_tenure_years": null,
+    "level_ups": 0,
+    "level_downs": 0,
+    "level_ups_per_year": null,
+    "dated_span_years": null,
+    "career_start": null,
+    "years_before_company": null
+   },
+   "level_steps": [],
+   "tags": [],
+   "tag_evidence": {},
+   "prior_founder": {
+    "value": false,
+    "companies": []
+   },
+   "prior_exits": [],
+   "prior_exit_checked": [],
+   "gaps": [
+    "1 of 1 roles have no start date"
+   ]
+  },
+  {
+   "id": "c749f05b-f14e-4a9c-bd1e-b5080f30d999",
+   "name": "Jan-Erik Aabo Wagner",
+   "description": "Founder of the company Spektr.",
+   "linkedin_url": "",
+   "companies": [
+    "spektr"
+   ],
+   "source": {
+    "provider": "Cala entity graph (api.cala.ai/v1/entities)",
+    "entity_id": "c749f05b-f14e-4a9c-bd1e-b5080f30d999",
+    "fetched": "2026-11-14",
+    "note": "Career edges as Cala holds them; each role lists its own source URL and date."
+   },
+   "roles": [
+    {
+     "org": "Spektr",
+     "org_id": "a88c0305-2762-4b19-b7e8-538ab480de26",
+     "role": "CRO",
+     "level": null,
+     "level_label": "Not mapped",
+     "since": null,
+     "until": null,
+     "years": null,
+     "open": false,
+     "tags": [],
+     "sources": [
+      {
+       "name": "About spektr | AI Compliance Platform Company",
+       "url": "https://www.spektr.com/about",
+       "date": "2022-01-01",
+       "rank": ""
+      },
+      {
+       "name": "Media Resources",
+       "url": "https://www.spektr.com/press-room/media-resources",
+       "date": "2000-01-01",
+       "rank": ""
+      },
+      {
+       "name": "news.crunchbase.com",
+       "url": "https://news.crunchbase.com/venture/fintech-compliance-founders-20m-seriesa-spektr",
+       "date": "2026-07-30",
+       "rank": ""
+      },
+      {
+       "name": "spektr launches with €5M in funding to streamline ongoing due diligence - Seedcamp",
+       "url": "https://seedcamp.com/views/spektr-launches-with-e5m-in-funding-to-streamline-ongoing-due-diligence",
+       "date": "2024-02-21",
+       "rank": ""
+      },
+      {
+       "name": "How spektr is Building the Compliance Infrastructure Layer for the AI Era",
+       "url": "https://www.nea.com/blog/how-spektr-is-building-the-compliance-infrastructure-layer-for-the-ai-era",
+       "date": "2026-04-21",
+       "rank": ""
+      }
+     ]
+    }
+   ],
+   "founded": [
+    {
+     "org": "Spektr",
+     "org_id": "a88c0305-2762-4b19-b7e8-538ab480de26",
+     "sample": true,
+     "sources": [
+      {
+       "name": "About spektr | AI Compliance Platform Company",
+       "url": "https://www.spektr.com/about",
+       "date": "2022-01-01",
+       "rank": ""
+      },
+      {
+       "name": "Media Resources",
+       "url": "https://www.spektr.com/press-room/media-resources",
+       "date": "2000-01-01",
+       "rank": ""
+      },
+      {
+       "name": "news.crunchbase.com",
+       "url": "https://news.crunchbase.com/venture/fintech-compliance-founders-20m-seriesa-spektr",
+       "date": "2026-07-30",
+       "rank": ""
+      },
+      {
+       "name": "spektr launches with €5M in funding to streamline ongoing due diligence - Seedcamp",
+       "url": "https://seedcamp.com/views/spektr-launches-with-e5m-in-funding-to-streamline-ongoing-due-diligence",
+       "date": "2024-02-21",
+       "rank": ""
+      },
+      {
+       "name": "How spektr is Building the Compliance Infrastructure Layer for the AI Era",
+       "url": "https://www.nea.com/blog/how-spektr-is-building-the-compliance-infrastructure-layer-for-the-ai-era",
+       "date": "2026-04-21",
+       "rank": ""
+      }
+     ]
+    }
+   ],
+   "metrics": {
+    "employers": 1,
+    "roles": 1,
+    "roles_outside_company": 0,
+    "roles_dated": 0,
+    "avg_tenure_years": null,
+    "avg_tenure_n": 0,
+    "shortest_tenure_years": null,
+    "longest_tenure_years": null,
+    "level_ups": 0,
+    "level_downs": 0,
+    "level_ups_per_year": null,
+    "dated_span_years": null,
+    "career_start": null,
+    "years_before_company": null
+   },
+   "level_steps": [],
+   "tags": [],
+   "tag_evidence": {},
+   "prior_founder": {
+    "value": false,
+    "companies": []
+   },
+   "prior_exits": [],
+   "prior_exit_checked": [],
+   "gaps": [
+    "1 of 1 roles have no start date"
+   ]
+  },
+  {
+   "id": "90eef050-1b1b-4fbd-a495-7086e141f3c7",
+   "name": "Jeremy Joly",
+   "description": "Founder of the company Spektr.",
+   "linkedin_url": "",
+   "companies": [
+    "spektr"
+   ],
+   "source": {
+    "provider": "Cala entity graph (api.cala.ai/v1/entities)",
+    "entity_id": "90eef050-1b1b-4fbd-a495-7086e141f3c7",
+    "fetched": "2026-11-14",
+    "note": "Career edges as Cala holds them; each role lists its own source URL and date."
+   },
+   "roles": [
+    {
+     "org": "Spektr",
+     "org_id": "a88c0305-2762-4b19-b7e8-538ab480de26",
+     "role": "CPO",
+     "level": 4,
+     "level_label": "Founder, C-level or partner",
+     "since": null,
+     "until": null,
+     "years": null,
+     "open": false,
+     "tags": [],
+     "sources": [
+      {
+       "name": "About spektr | AI Compliance Platform Company",
+       "url": "https://www.spektr.com/about",
+       "date": "2022-01-01",
+       "rank": ""
+      },
+      {
+       "name": "Media Resources",
+       "url": "https://www.spektr.com/press-room/media-resources",
+       "date": "2000-01-01",
+       "rank": ""
+      },
+      {
+       "name": "How spektr is Building the Compliance Infrastructure Layer for the AI Era",
+       "url": "https://www.nea.com/blog/how-spektr-is-building-the-compliance-infrastructure-layer-for-the-ai-era",
+       "date": "2026-04-21",
+       "rank": ""
+      },
+      {
+       "name": "Trusted Data at Scale: Powering spektr with Kyckr’s Global Registry Coverage | Kyckr",
+       "url": "https://kyckr.com/customer-stories/kyckr-powers-spektr",
+       "date": "2026-02-09",
+       "rank": ""
+      },
+      {
+       "name": "www.crunchbase.com",
+       "url": "https://www.crunchbase.com/organization/spektr",
+       "date": "2026-07-30",
+       "rank": ""
+      },
+      {
+       "name": "Danish spektr lands $20M Series A to automate compliance work in financial services",
+       "url": "https://vestbee.com/insights/articles/spektr-lands-20-m",
+       "date": "2026-04-16",
+       "rank": ""
+      }
+     ]
+    }
+   ],
+   "founded": [
+    {
+     "org": "Spektr",
+     "org_id": "a88c0305-2762-4b19-b7e8-538ab480de26",
+     "sample": true,
+     "sources": [
+      {
+       "name": "About spektr | AI Compliance Platform Company",
+       "url": "https://www.spektr.com/about",
+       "date": "2022-01-01",
+       "rank": ""
+      },
+      {
+       "name": "Media Resources",
+       "url": "https://www.spektr.com/press-room/media-resources",
+       "date": "2000-01-01",
+       "rank": ""
+      },
+      {
+       "name": "How spektr is Building the Compliance Infrastructure Layer for the AI Era",
+       "url": "https://www.nea.com/blog/how-spektr-is-building-the-compliance-infrastructure-layer-for-the-ai-era",
+       "date": "2026-04-21",
+       "rank": ""
+      },
+      {
+       "name": "Trusted Data at Scale: Powering spektr with Kyckr’s Global Registry Coverage | Kyckr",
+       "url": "https://kyckr.com/customer-stories/kyckr-powers-spektr",
+       "date": "2026-02-09",
+       "rank": ""
+      },
+      {
+       "name": "www.crunchbase.com",
+       "url": "https://www.crunchbase.com/organization/spektr",
+       "date": "2026-07-30",
+       "rank": ""
+      },
+      {
+       "name": "Danish spektr lands $20M Series A to automate compliance work in financial services",
+       "url": "https://vestbee.com/insights/articles/spektr-lands-20-m",
+       "date": "2026-04-16",
+       "rank": ""
+      }
+     ]
+    }
+   ],
+   "metrics": {
+    "employers": 1,
+    "roles": 1,
+    "roles_outside_company": 0,
+    "roles_dated": 0,
+    "avg_tenure_years": null,
+    "avg_tenure_n": 0,
+    "shortest_tenure_years": null,
+    "longest_tenure_years": null,
+    "level_ups": 0,
+    "level_downs": 0,
+    "level_ups_per_year": null,
+    "dated_span_years": null,
+    "career_start": null,
+    "years_before_company": null
+   },
+   "level_steps": [],
+   "tags": [],
+   "tag_evidence": {},
+   "prior_founder": {
+    "value": false,
+    "companies": []
+   },
+   "prior_exits": [],
+   "prior_exit_checked": [],
+   "gaps": [
+    "1 of 1 roles have no start date"
+   ]
+  },
+  {
+   "id": "ea5fea9e-1a13-50c3-b398-33fbe36e6aee",
+   "name": "Mikkel Nygaard Skarnager",
+   "description": "Danish entrepreneur who founded Spektr, born in 1995.",
+   "linkedin_url": "",
+   "companies": [
+    "spektr"
+   ],
+   "source": {
+    "provider": "Cala entity graph (api.cala.ai/v1/entities)",
+    "entity_id": "ea5fea9e-1a13-50c3-b398-33fbe36e6aee",
+    "fetched": "2026-11-14",
+    "note": "Career edges as Cala holds them; each role lists its own source URL and date."
+   },
+   "roles": [
+    {
+     "org": "Spektr",
+     "org_id": "a88c0305-2762-4b19-b7e8-538ab480de26",
+     "role": "CEO",
+     "level": 4,
+     "level_label": "Founder, C-level or partner",
+     "since": null,
+     "until": null,
+     "years": null,
+     "open": false,
+     "tags": [],
+     "sources": [
+      {
+       "name": "About spektr | AI Compliance Platform Company",
+       "url": "https://www.spektr.com/about",
+       "date": "2022-01-01",
+       "rank": ""
+      },
+      {
+       "name": "Media Resources",
+       "url": "https://www.spektr.com/press-room/media-resources",
+       "date": "2000-01-01",
+       "rank": ""
+      },
+      {
+       "name": "Spektr - Northzone multi-stage venture capital fund",
+       "url": "https://northzone.com/portfolio/spektr",
+       "date": "2024-02-21",
+       "rank": ""
+      },
+      {
+       "name": "How spektr is Building the Compliance Infrastructure Layer for the AI Era",
+       "url": "https://www.nea.com/blog/how-spektr-is-building-the-compliance-infrastructure-layer-for-the-ai-era",
+       "date": "2026-04-21",
+       "rank": ""
+      },
+      {
+       "name": "www.eu-startups.com",
+       "url": "https://www.eu-startups.com/2024/02/copenhagen-based-fintech-spektr-comes-out-of-stealth-raising-e5-million-to-transform-due-diligence",
+       "date": "2026-07-30",
+       "rank": ""
+      },
+      {
+       "name": "Danish spektr lands $20M Series A to automate compliance work in financial services",
+       "url": "https://vestbee.com/insights/articles/spektr-lands-20-m",
+       "date": "2026-04-16",
+       "rank": ""
+      }
+     ]
+    }
+   ],
+   "founded": [
+    {
+     "org": "Spektr",
+     "org_id": "a88c0305-2762-4b19-b7e8-538ab480de26",
+     "sample": true,
+     "sources": [
+      {
+       "name": "About spektr | AI Compliance Platform Company",
+       "url": "https://www.spektr.com/about",
+       "date": "2022-01-01",
+       "rank": ""
+      },
+      {
+       "name": "Media Resources",
+       "url": "https://www.spektr.com/press-room/media-resources",
+       "date": "2000-01-01",
+       "rank": ""
+      },
+      {
+       "name": "Spektr - Northzone multi-stage venture capital fund",
+       "url": "https://northzone.com/portfolio/spektr",
+       "date": "2024-02-21",
+       "rank": ""
+      },
+      {
+       "name": "How spektr is Building the Compliance Infrastructure Layer for the AI Era",
+       "url": "https://www.nea.com/blog/how-spektr-is-building-the-compliance-infrastructure-layer-for-the-ai-era",
+       "date": "2026-04-21",
+       "rank": ""
+      },
+      {
+       "name": "www.eu-startups.com",
+       "url": "https://www.eu-startups.com/2024/02/copenhagen-based-fintech-spektr-comes-out-of-stealth-raising-e5-million-to-transform-due-diligence",
+       "date": "2026-07-30",
+       "rank": ""
+      },
+      {
+       "name": "Danish spektr lands $20M Series A to automate compliance work in financial services",
+       "url": "https://vestbee.com/insights/articles/spektr-lands-20-m",
+       "date": "2026-04-16",
+       "rank": ""
+      }
+     ]
+    },
+    {
+     "org": "Spektr",
+     "org_id": "a88c0305-2762-4b19-b7e8-538ab480de26",
+     "sample": true,
+     "sources": [
+      {
+       "name": "spektr.com",
+       "url": "https://www.spektr.com/press-room/media-resources",
+       "date": "2026-11-03",
+       "rank": "AGGREGATOR"
+      }
+     ]
+    }
+   ],
+   "metrics": {
+    "employers": 1,
+    "roles": 1,
+    "roles_outside_company": 0,
+    "roles_dated": 0,
+    "avg_tenure_years": null,
+    "avg_tenure_n": 0,
+    "shortest_tenure_years": null,
+    "longest_tenure_years": null,
+    "level_ups": 0,
+    "level_downs": 0,
+    "level_ups_per_year": null,
+    "dated_span_years": null,
+    "career_start": null,
+    "years_before_company": null
+   },
+   "level_steps": [],
+   "tags": [],
+   "tag_evidence": {},
+   "prior_founder": {
+    "value": false,
+    "companies": []
+   },
+   "prior_exits": [],
+   "prior_exit_checked": [],
+   "gaps": [
+    "1 of 1 roles have no start date"
+   ]
+  },
+  {
+   "id": "2fbfdeb6-9e6a-458b-94a0-47488631a19d",
+   "name": "Aleksi Jokela",
+   "description": "Founder of Valpas",
+   "linkedin_url": "",
+   "companies": [
+    "valpas"
+   ],
+   "source": {
+    "provider": "Cala entity graph (api.cala.ai/v1/entities)",
+    "entity_id": "2fbfdeb6-9e6a-458b-94a0-47488631a19d",
+    "fetched": "2026-11-14",
+    "note": "Career edges as Cala holds them; each role lists its own source URL and date."
+   },
+   "roles": [
+    {
+     "org": "Valpas",
+     "org_id": "eb012d31-2b1c-4bca-9523-9bd8710f5891",
+     "role": "CTO",
+     "level": 4,
+     "level_label": "Founder, C-level or partner",
+     "since": null,
+     "until": null,
+     "years": null,
+     "open": false,
+     "tags": [],
+     "sources": [
+      {
+       "name": "fi.linkedin.com",
+       "url": "https://fi.linkedin.com/in/aleksi-jokela",
+       "date": "2026-08-20",
+       "rank": ""
+      },
+      {
+       "name": "techfundingnews.com",
+       "url": "https://techfundingnews.com/finnish-startup-valpas-raises-e4m-for-chemical-free-bedbug-safety-tech",
+       "date": "2026-08-20",
+       "rank": ""
+      },
+      {
+       "name": "Helsinki-based Valpas raises €4M to help hotels safe from bed bugs: Here’s how - Silicon Canals",
+       "url": "https://siliconcanals.com/helsinki-based-valpas-raises-4m",
+       "date": "2024-06-26",
+       "rank": ""
+      },
+      {
+       "name": "Helsinki startup raises €4M for smart bed legs to outsmart bed bugs",
+       "url": "https://thenextweb.com/news/helsinki-startup-valpas-smart-bed-legs-bed-bugs",
+       "date": "2024-06-26",
+       "rank": ""
+      },
+      {
+       "name": "Press release: Valpas announces Japanese market entry strategy to tackle share of €15bn bed bug problem, backed by Canon Marketing Japan Inc. investment",
+       "url": "https://valpashotels.com/blog/valpas-announces-japanese-market-entry-strategy-to-tackle-share-of-eur15bn-bed-bug-problem-backed-by-canon-marketing-japan-inc-investment",
+       "date": "2025-01-07",
+       "rank": ""
+      }
+     ]
+    }
+   ],
+   "founded": [
+    {
+     "org": "Valpas",
+     "org_id": "eb012d31-2b1c-4bca-9523-9bd8710f5891",
+     "sample": true,
+     "sources": [
+      {
+       "name": "fi.linkedin.com",
+       "url": "https://fi.linkedin.com/in/aleksi-jokela",
+       "date": "2026-08-20",
+       "rank": ""
+      },
+      {
+       "name": "techfundingnews.com",
+       "url": "https://techfundingnews.com/finnish-startup-valpas-raises-e4m-for-chemical-free-bedbug-safety-tech",
+       "date": "2026-08-20",
+       "rank": ""
+      },
+      {
+       "name": "Helsinki-based Valpas raises €4M to help hotels safe from bed bugs: Here’s how - Silicon Canals",
+       "url": "https://siliconcanals.com/helsinki-based-valpas-raises-4m",
+       "date": "2024-06-26",
+       "rank": ""
+      },
+      {
+       "name": "Helsinki startup raises €4M for smart bed legs to outsmart bed bugs",
+       "url": "https://thenextweb.com/news/helsinki-startup-valpas-smart-bed-legs-bed-bugs",
+       "date": "2024-06-26",
+       "rank": ""
+      },
+      {
+       "name": "Press release: Valpas announces Japanese market entry strategy to tackle share of €15bn bed bug problem, backed by Canon Marketing Japan Inc. investment",
+       "url": "https://valpashotels.com/blog/valpas-announces-japanese-market-entry-strategy-to-tackle-share-of-eur15bn-bed-bug-problem-backed-by-canon-marketing-japan-inc-investment",
+       "date": "2025-01-07",
+       "rank": ""
+      }
+     ]
+    }
+   ],
+   "metrics": {
+    "employers": 1,
+    "roles": 1,
+    "roles_outside_company": 0,
+    "roles_dated": 0,
+    "avg_tenure_years": null,
+    "avg_tenure_n": 0,
+    "shortest_tenure_years": null,
+    "longest_tenure_years": null,
+    "level_ups": 0,
+    "level_downs": 0,
+    "level_ups_per_year": null,
+    "dated_span_years": null,
+    "career_start": null,
+    "years_before_company": null
+   },
+   "level_steps": [],
+   "tags": [],
+   "tag_evidence": {},
+   "prior_founder": {
+    "value": false,
+    "companies": []
+   },
+   "prior_exits": [],
+   "prior_exit_checked": [],
+   "gaps": [
+    "1 of 1 roles have no start date"
+   ]
+  },
+  {
+   "id": "fc810bc1-5f5c-4aaa-8346-ec99a28e5d40",
+   "name": "Martim Gois",
+   "description": "Founder of Valpas",
+   "linkedin_url": "",
+   "companies": [
+    "valpas"
+   ],
+   "source": {
+    "provider": "Cala entity graph (api.cala.ai/v1/entities)",
+    "entity_id": "fc810bc1-5f5c-4aaa-8346-ec99a28e5d40",
+    "fetched": "2026-11-14",
+    "note": "Career edges as Cala holds them; each role lists its own source URL and date."
+   },
+   "roles": [
+    {
+     "org": "Valpas",
+     "org_id": "eb012d31-2b1c-4bca-9523-9bd8710f5891",
+     "role": "CEO",
+     "level": 4,
+     "level_label": "Founder, C-level or partner",
+     "since": null,
+     "until": null,
+     "years": null,
+     "open": false,
+     "tags": [],
+     "sources": [
+      {
+       "name": "Our Story",
+       "url": "https://valpashotels.com/about",
+       "date": "2026-07-01",
+       "rank": ""
+      },
+      {
+       "name": "Valpas | LinkedIn",
+       "url": "https://fi.linkedin.com/company/valpashotels",
+       "date": "2026-08-20",
+       "rank": ""
+      },
+      {
+       "name": "techfundingnews.com",
+       "url": "https://techfundingnews.com/finnish-startup-valpas-raises-e4m-for-chemical-free-bedbug-safety-tech",
+       "date": "2026-08-20",
+       "rank": ""
+      },
+      {
+       "name": "Helsinki-based Valpas raises €4M to help hotels safe from bed bugs: Here’s how - Silicon Canals",
+       "url": "https://siliconcanals.com/helsinki-based-valpas-raises-4m",
+       "date": "2024-06-26",
+       "rank": ""
+      },
+      {
+       "name": "Valpas - Maki.vc",
+       "url": "https://maki.vc/case/valpas",
+       "date": "2026-03-11",
+       "rank": ""
+      },
+      {
+       "name": "Valpas Expands to Paris Region: The Future of Environmental Responsible Hospitality is Here",
+       "url": "https://www.chooseparisregion.org/success-stories/valpas-expands-paris-region-future-environmental-responsible-hospitality-here",
+       "date": "2025-02-18",
+       "rank": ""
+      },
+      {
+       "name": "Valpas raises 1.6m€ to empower hotels to make every trip bed bug-safe",
+       "url": "https://valpashotels.com/blog/valpas-raises-1-6meur-to-empower-hotels-to-make-every-trip-bed-bug-safe",
+       "date": "2022-04-21",
+       "rank": ""
+      }
+     ]
+    }
+   ],
+   "founded": [
+    {
+     "org": "Valpas",
+     "org_id": "eb012d31-2b1c-4bca-9523-9bd8710f5891",
+     "sample": true,
+     "sources": [
+      {
+       "name": "Our Story",
+       "url": "https://valpashotels.com/about",
+       "date": "2026-07-01",
+       "rank": ""
+      },
+      {
+       "name": "Valpas | LinkedIn",
+       "url": "https://fi.linkedin.com/company/valpashotels",
+       "date": "2026-08-20",
+       "rank": ""
+      },
+      {
+       "name": "techfundingnews.com",
+       "url": "https://techfundingnews.com/finnish-startup-valpas-raises-e4m-for-chemical-free-bedbug-safety-tech",
+       "date": "2026-08-20",
+       "rank": ""
+      },
+      {
+       "name": "Helsinki-based Valpas raises €4M to help hotels safe from bed bugs: Here’s how - Silicon Canals",
+       "url": "https://siliconcanals.com/helsinki-based-valpas-raises-4m",
+       "date": "2024-06-26",
+       "rank": ""
+      },
+      {
+       "name": "Valpas - Maki.vc",
+       "url": "https://maki.vc/case/valpas",
+       "date": "2026-03-11",
+       "rank": ""
+      },
+      {
+       "name": "Valpas Expands to Paris Region: The Future of Environmental Responsible Hospitality is Here",
+       "url": "https://www.chooseparisregion.org/success-stories/valpas-expands-paris-region-future-environmental-responsible-hospitality-here",
+       "date": "2025-02-18",
+       "rank": ""
+      },
+      {
+       "name": "Valpas raises 1.6m€ to empower hotels to make every trip bed bug-safe",
+       "url": "https://valpashotels.com/blog/valpas-raises-1-6meur-to-empower-hotels-to-make-every-trip-bed-bug-safe",
+       "date": "2022-04-21",
+       "rank": ""
+      }
+     ]
+    }
+   ],
+   "metrics": {
+    "employers": 1,
+    "roles": 1,
+    "roles_outside_company": 0,
+    "roles_dated": 0,
+    "avg_tenure_years": null,
+    "avg_tenure_n": 0,
+    "shortest_tenure_years": null,
+    "longest_tenure_years": null,
+    "level_ups": 0,
+    "level_downs": 0,
+    "level_ups_per_year": null,
+    "dated_span_years": null,
+    "career_start": null,
+    "years_before_company": null
+   },
+   "level_steps": [],
+   "tags": [],
+   "tag_evidence": {},
+   "prior_founder": {
+    "value": false,
+    "companies": []
+   },
+   "prior_exits": [],
+   "prior_exit_checked": [],
+   "gaps": [
+    "1 of 1 roles have no start date"
+   ]
+  },
+  {
+   "id": "a8f39e27-5939-48de-903f-75f867517680",
+   "name": "Ruben Bryon",
+   "description": "Businessperson who founded and serves as chief executive officer of Verda.",
+   "linkedin_url": "",
+   "companies": [
+    "verda"
+   ],
+   "source": {
+    "provider": "Cala entity graph (api.cala.ai/v1/entities)",
+    "entity_id": "a8f39e27-5939-48de-903f-75f867517680",
+    "fetched": "2026-11-14",
+    "note": "Career edges as Cala holds them; each role lists its own source URL and date."
+   },
+   "roles": [],
+   "founded": [
+    {
+     "org": "Verda",
+     "org_id": "3d3edba6-f4d7-432b-80d3-d07872e11def",
+     "sample": true,
+     "sources": [
+      {
+       "name": "verda.com",
+       "url": "https://verda.com/blog/verda-raises-189m",
+       "date": "2026-09-22",
+       "rank": "PRIMARY"
+      },
+      {
+       "name": "verda.com",
+       "url": "https://verda.com/company",
+       "date": "2026-09-30",
+       "rank": "PRIMARY"
+      }
+     ]
+    }
+   ],
+   "metrics": {
+    "employers": 1,
+    "roles": 0,
+    "roles_outside_company": 0,
+    "roles_dated": 0,
+    "avg_tenure_years": null,
+    "avg_tenure_n": 0,
+    "shortest_tenure_years": null,
+    "longest_tenure_years": null,
+    "level_ups": 0,
+    "level_downs": 0,
+    "level_ups_per_year": null,
+    "dated_span_years": null,
+    "career_start": null,
+    "years_before_company": null
+   },
+   "level_steps": [],
+   "tags": [],
+   "tag_evidence": {},
+   "prior_founder": {
+    "value": false,
+    "companies": []
+   },
+   "prior_exits": [],
+   "prior_exit_checked": [],
+   "gaps": [
+    "No WORKS_AT edges in Cala"
+   ]
+  }
+ ],
+ "cohorts": [
+  {
+   "employer": "McKinsey",
+   "query": "companies.founder.incorporation>2015.previous_job=McKinsey",
+   "fetched": "2026-11-14",
+   "source": "Cala knowledge query (api.cala.ai/v1/knowledge/query), rows carry no source URLs",
+   "rows": [
+    {
+     "company": "Kavak",
+     "founded": "2016",
+     "founders": "Carlos Julio Garcia, Loreanne Garcia",
+     "about": "Online used-car marketplace",
+     "location": "Mexico City",
+     "funding_text": "",
+     "note": "",
+     "relation": "listed_only",
+     "evidence": "",
+     "in_snapshot": false,
+     "snapshot_rounds": []
+    },
+    {
+     "company": "Ajaib",
+     "founded": "2018",
+     "founders": "Yada Piyajomkwan (McKinsey Bangkok 2014–17)",
+     "about": "Investment platform",
+     "location": "Jakarta",
+     "funding_text": "",
+     "note": "",
+     "relation": "worked_at_stated",
+     "evidence": "yada piyajomkwan (mckinsey bangkok 2014–17)",
+     "in_snapshot": false,
+     "snapshot_rounds": []
+    },
+    {
+     "company": "Zetwerk",
+     "founded": "2018",
+     "founders": "Amrit Acharya (ex-McKinsey)",
+     "about": "B2B manufacturing marketplace",
+     "location": "Bangalore",
+     "funding_text": "",
+     "note": "",
+     "relation": "worked_at_stated",
+     "evidence": "amrit acharya (ex-mckinsey)",
+     "in_snapshot": true,
+     "snapshot_rounds": [
+      {
+       "year": 2025,
+       "stage": "series f",
+       "amount_eur_m": 4.6,
+       "leads": []
+      }
+     ]
+    },
+    {
+     "company": "Razor Group",
+     "founded": "2020",
+     "founders": "Oliver Dlugosch (McKinsey Düsseldorf 2014–19)",
+     "about": "E-commerce brand aggregator",
+     "location": "Berlin",
+     "funding_text": "",
+     "note": "",
+     "relation": "worked_at_stated",
+     "evidence": "oliver dlugosch (mckinsey düsseldorf 2014–19)",
+     "in_snapshot": false,
+     "snapshot_rounds": []
+    },
+    {
+     "company": "Merama",
+     "founded": "2020",
+     "founders": "Renato Andrade (McKinsey São Paulo 2016–21), Guilherme Nosralla",
+     "about": "E-commerce aggregator (LatAm)",
+     "location": "Mexico City",
+     "funding_text": "",
+     "note": "",
+     "relation": "worked_at_stated",
+     "evidence": "renato andrade (mckinsey são paulo 2016–21), guilherme nosralla",
+     "in_snapshot": false,
+     "snapshot_rounds": []
+    },
+    {
+     "company": "Aurora Innovation",
+     "founded": "2017",
+     "founders": "Sterling Anderson (ex-McKinsey)",
+     "about": "Self-driving vehicles",
+     "location": "Pittsburgh, PA",
+     "funding_text": "",
+     "note": "",
+     "relation": "worked_at_stated",
+     "evidence": "sterling anderson (ex-mckinsey)",
+     "in_snapshot": false,
+     "snapshot_rounds": []
+    },
+    {
+     "company": "Grasp",
+     "founded": "2020",
+     "founders": "Richard Karlsson, Johan Devér (both ex-McKinsey)",
+     "about": "AI for finance (multi-agent systems)",
+     "location": "Stockholm",
+     "funding_text": "",
+     "note": "",
+     "relation": "worked_at_stated",
+     "evidence": "richard karlsson, johan devér (both ex-mckinsey)",
+     "in_snapshot": true,
+     "snapshot_rounds": [
+      {
+       "year": 2024,
+       "stage": "seed",
+       "amount_eur_m": 1.7,
+       "leads": [
+        "yanno"
+       ]
+      },
+      {
+       "year": 2025,
+       "stage": "series a",
+       "amount_eur_m": 6.44,
+       "leads": [
+        "octopus"
+       ]
+      }
+     ]
+    },
+    {
+     "company": "Deasy Labs",
+     "founded": "2023",
+     "founders": "Reece (ex-McKinsey / X26 community)",
+     "about": "AI & financial services",
+     "location": "",
+     "funding_text": "",
+     "note": "",
+     "relation": "worked_at_stated",
+     "evidence": "reece (ex-mckinsey / x26 community)",
+     "in_snapshot": true,
+     "snapshot_rounds": [
+      {
+       "year": 2023,
+       "stage": "seed",
+       "amount_eur_m": 2.668,
+       "leads": [
+        "y combinator"
+       ]
+      }
+     ]
+    }
+   ],
+   "n": 8,
+   "n_worked_at_stated": 7,
+   "n_funded_by": 0,
+   "n_listed_only": 1,
+   "n_in_snapshot": 3,
+   "gaps": [
+    "Rows are Cala QL output without source URLs: a stated prior job is a claim to check, not a fact",
+    "The previous_job filter mixes founders who worked at the employer with companies it funded; each row is tagged by its own text: worked_at_stated, funded_by, sold_to or listed_only"
+   ]
+  },
+  {
+   "employer": "BCG",
+   "query": "companies.founder.incorporation>2015.previous_job=BCG",
+   "fetched": "2026-11-14",
+   "source": "Cala knowledge query (api.cala.ai/v1/knowledge/query), rows carry no source URLs",
+   "rows": [
+    {
+     "company": "Remy AI",
+     "founded": "2025",
+     "founders": "Oscar Brisset (with Ben Kaye)",
+     "about": "AI-powered robots for e-commerce warehouses. Brisset quit BCG in November 2025 and joined Y Combinator's Winter 2026 batch. Raised over $650,000.",
+     "location": "",
+     "funding_text": "",
+     "note": "",
+     "relation": "worked_at_stated",
+     "evidence": "brisset quit bcg in november 2025 and joined y combinator's winter 2026 batch.",
+     "in_snapshot": false,
+     "snapshot_rounds": []
+    },
+    {
+     "company": "Lapiaz Transmission",
+     "founded": null,
+     "founders": "Clément Béguin & Mikaël Boulon",
+     "about": "Search fund launched by two former BCG consultants with subsequent startup leadership experience, focused on acquiring businesses.",
+     "location": "",
+     "funding_text": "",
+     "note": "",
+     "relation": "worked_at_stated",
+     "evidence": "clément béguin & mikaël boulon search fund launched by two former bcg consultants with subsequent startup leadership experience, focused on acquiring businesses",
+     "in_snapshot": false,
+     "snapshot_rounds": []
+    },
+    {
+     "company": "Credimi",
+     "founded": "2016",
+     "founders": "Ignazio Rocco di Torrepadula",
+     "about": "Italian fintech company providing digital lending to SMEs. Rocco is a former BCG consultant who founded the company, which completed a €32 million securitization of loans.",
+     "location": "",
+     "funding_text": "",
+     "note": "",
+     "relation": "worked_at_stated",
+     "evidence": "rocco is a former bcg consultant who founded the company, which completed a €32 million securitization of loans.",
+     "in_snapshot": false,
+     "snapshot_rounds": []
+    }
+   ],
+   "n": 3,
+   "n_worked_at_stated": 3,
+   "n_funded_by": 0,
+   "n_listed_only": 0,
+   "n_in_snapshot": 0,
+   "gaps": [
+    "Rows are Cala QL output without source URLs: a stated prior job is a claim to check, not a fact",
+    "The previous_job filter mixes founders who worked at the employer with companies it funded; each row is tagged by its own text: worked_at_stated, funded_by, sold_to or listed_only"
+   ]
+  },
+  {
+   "employer": "Bain",
+   "query": "companies.founder.incorporation>2015.previous_job=Bain",
+   "fetched": "2026-11-14",
+   "source": "Cala knowledge query (api.cala.ai/v1/knowledge/query), rows carry no source URLs",
+   "rows": [
+    {
+     "company": "Vendelux",
+     "founded": "2021",
+     "founders": "Alex Reynolds (former Bain AC)",
+     "about": "AI-enabled event intelligence platform for marketers",
+     "location": "",
+     "funding_text": "",
+     "note": "",
+     "relation": "worked_at_stated",
+     "evidence": "alex reynolds (former bain ac)",
+     "in_snapshot": false,
+     "snapshot_rounds": []
+    },
+    {
+     "company": "HIVED",
+     "founded": null,
+     "founders": "Bain alumni-led",
+     "about": "Logistics/delivery startup (FBV portfolio company)",
+     "location": "",
+     "funding_text": "",
+     "note": "",
+     "relation": "worked_at_stated",
+     "evidence": "bain alumni-led logistics/delivery startup (fbv portfolio company)",
+     "in_snapshot": true,
+     "snapshot_rounds": [
+      {
+       "year": 2025,
+       "stage": "series b",
+       "amount_eur_m": 38.64,
+       "leads": [
+        "nordicninja"
+       ]
+      }
+     ]
+    },
+    {
+     "company": "Common Sense Privacy",
+     "founded": null,
+     "founders": "Bain alumni-led",
+     "about": "Privacy-focused tech startup (FBV portfolio company)",
+     "location": "",
+     "funding_text": "",
+     "note": "",
+     "relation": "worked_at_stated",
+     "evidence": "bain alumni-led privacy-focused tech startup (fbv portfolio company)",
+     "in_snapshot": false,
+     "snapshot_rounds": []
+    },
+    {
+     "company": "Duckbill",
+     "founded": null,
+     "founders": "Bain alumni-led",
+     "about": "AI-focused startup (FBV portfolio company)",
+     "location": "",
+     "funding_text": "",
+     "note": "",
+     "relation": "worked_at_stated",
+     "evidence": "bain alumni-led ai-focused startup (fbv portfolio company)",
+     "in_snapshot": false,
+     "snapshot_rounds": []
+    },
+    {
+     "company": "Qube",
+     "founded": null,
+     "founders": "Bain alumni-led",
+     "about": "AI-focused startup (FBV portfolio company)",
+     "location": "",
+     "funding_text": "",
+     "note": "",
+     "relation": "worked_at_stated",
+     "evidence": "bain alumni-led ai-focused startup (fbv portfolio company)",
+     "in_snapshot": false,
+     "snapshot_rounds": []
+    }
+   ],
+   "n": 5,
+   "n_worked_at_stated": 5,
+   "n_funded_by": 0,
+   "n_listed_only": 0,
+   "n_in_snapshot": 1,
+   "gaps": [
+    "Rows are Cala QL output without source URLs: a stated prior job is a claim to check, not a fact",
+    "The previous_job filter mixes founders who worked at the employer with companies it funded; each row is tagged by its own text: worked_at_stated, funded_by, sold_to or listed_only"
+   ]
+  },
+  {
+   "employer": "Rovio",
+   "query": "companies.founder.incorporation>2015.previous_job=Rovio",
+   "fetched": "2026-11-14",
+   "source": "Cala knowledge query (api.cala.ai/v1/knowledge/query), rows carry no source URLs",
+   "rows": [
+    {
+     "company": "Village Studio",
+     "founded": "2021",
+     "founders": "Will Luton, Cyril Barrow, Tak Fung",
+     "about": "Web3 gaming platform with cross-game NFT avatars (Playken)",
+     "location": "Helsinki, Finland",
+     "funding_text": "€2.1M (~$2.3M) pre-seed led by Animoca Brands",
+     "note": "",
+     "relation": "listed_only",
+     "evidence": "",
+     "in_snapshot": false,
+     "snapshot_rounds": []
+    },
+    {
+     "company": "Phantom Gamelabs",
+     "founded": "2022",
+     "founders": "Former developers from Zynga, Rovio, and Kopla Games",
+     "about": "Multiplayer loot shooter for mobile devices",
+     "location": "Finland",
+     "funding_text": "Investment from Supercell",
+     "note": "",
+     "relation": "worked_at_stated",
+     "evidence": "former developers from zynga, rovio, and kopla games multiplayer loot shooter for mobile devices",
+     "in_snapshot": false,
+     "snapshot_rounds": []
+    },
+    {
+     "company": "Koukoi Games",
+     "founded": null,
+     "founders": "Led by Antti Kananen, team of former Rovio and Nokia developers",
+     "about": "Deeper, more complex mobile games",
+     "location": "Oulu, Finland",
+     "funding_text": "",
+     "note": "",
+     "relation": "worked_at_stated",
+     "evidence": "led by antti kananen, team of former rovio and nokia developers deeper, more complex mobile games",
+     "in_snapshot": false,
+     "snapshot_rounds": []
+    }
+   ],
+   "n": 3,
+   "n_worked_at_stated": 2,
+   "n_funded_by": 0,
+   "n_listed_only": 1,
+   "n_in_snapshot": 0,
+   "gaps": [
+    "Rows are Cala QL output without source URLs: a stated prior job is a claim to check, not a fact",
+    "The previous_job filter mixes founders who worked at the employer with companies it funded; each row is tagged by its own text: worked_at_stated, funded_by, sold_to or listed_only"
+   ]
+  },
+  {
+   "employer": "Wolt",
+   "query": "companies.founder.incorporation>2015.previous_job=Wolt",
+   "fetched": "2026-11-14",
+   "source": "Cala knowledge query (api.cala.ai/v1/knowledge/query), rows carry no source URLs",
+   "rows": [],
+   "n": 0,
+   "n_worked_at_stated": 0,
+   "n_funded_by": 0,
+   "n_listed_only": 0,
+   "n_in_snapshot": 0,
+   "gaps": [
+    "Rows are Cala QL output without source URLs: a stated prior job is a claim to check, not a fact",
+    "The previous_job filter mixes founders who worked at the employer with companies it funded; each row is tagged by its own text: worked_at_stated, funded_by, sold_to or listed_only",
+    "Query returned no rows"
+   ]
+  },
+  {
+   "employer": "Spotify",
+   "query": "companies.founder.incorporation>2015.previous_job=Spotify",
+   "fetched": "2026-11-14",
+   "source": "Cala knowledge query (api.cala.ai/v1/knowledge/query), rows carry no source URLs",
+   "rows": [
+    {
+     "company": "Neko Health",
+     "founded": "2018",
+     "founders": "Daniel Ek, Hjalmar Nilsonne",
+     "about": "Preventative healthcare technology using AI-powered full-body scanning. Launched in Stockholm and expanded to the UK and US. Has raised over $700M in funding.",
+     "location": "",
+     "funding_text": "",
+     "note": "",
+     "relation": "listed_only",
+     "evidence": "",
+     "in_snapshot": true,
+     "snapshot_rounds": [
+      {
+       "year": 2023,
+       "stage": "series a",
+       "amount_eur_m": 59.8,
+       "leads": [
+        "lakestar"
+       ]
+      },
+      {
+       "year": 2025,
+       "stage": "series b",
+       "amount_eur_m": 239.2,
+       "leads": [
+        "lightspeed"
+       ]
+      },
+      {
+       "year": 2026,
+       "stage": "series c",
+       "amount_eur_m": 644.0,
+       "leads": [
+        "lightspeed"
+       ]
+      }
+     ]
+    },
+    {
+     "company": "Gilion",
+     "founded": "2021",
+     "founders": "Henrik Landgren, Oscar Werner, Oliver Hildebrandt, Axel Bruzelius",
+     "about": "Swedish fintech and growth-forecasting firm that provides intelligent funding with AI precision to tech companies.",
+     "location": "",
+     "funding_text": "",
+     "note": "",
+     "relation": "listed_only",
+     "evidence": "",
+     "in_snapshot": true,
+     "snapshot_rounds": [
+      {
+       "year": 2021,
+       "stage": "pre-seed",
+       "amount_eur_m": null,
+       "leads": [
+        "cofounded kapital",
+        "jacob de geer"
+       ]
+      },
+      {
+       "year": 2021,
+       "stage": "seed",
+       "amount_eur_m": null,
+       "leads": [
+        "creandum leading the larger seed",
+        "localglobe",
+        "sequoia"
+       ]
+      },
+      {
+       "year": 2022,
+       "stage": "seed",
+       "amount_eur_m": 165.0,
+       "leads": [
+        "creandum",
+        "localglobe"
+       ]
+      },
+      {
+       "year": 2022,
+       "stage": "seed",
+       "amount_eur_m": 15.0,
+       "leads": [
+        "annika falkengren"
+       ]
+      },
+      {
+       "year": 2022,
+       "stage": "seed",
+       "amount_eur_m": 9.2,
+       "leads": [
+        "creandum",
+        "localglobe"
+       ]
+      },
+      {
+       "year": 2024,
+       "stage": "seed",
+       "amount_eur_m": 10.0,
+       "leads": [
+        "annika falkengren"
+       ]
+      }
+     ]
+    },
+    {
+     "company": "Anyfin",
+     "founded": "2016",
+     "founders": "Sven Perkmann, Filip Polhem, Mikael Hussain",
+     "about": "Consumer-credit fintech that refinances existing installments, credit cards, and personal loans in seconds from a photo of the current statement. Operates in Sweden, Norway, and other markets. Raised €30M+ in Series C funding.",
+     "location": "",
+     "funding_text": "",
+     "note": "",
+     "relation": "listed_only",
+     "evidence": "",
+     "in_snapshot": true,
+     "snapshot_rounds": [
+      {
+       "year": 2018,
+       "stage": "series a",
+       "amount_eur_m": 4.8,
+       "leads": [
+        "accel northzone"
+       ]
+      },
+      {
+       "year": 2019,
+       "stage": "series a",
+       "amount_eur_m": 8.0,
+       "leads": [
+        "northzone"
+       ]
+      },
+      {
+       "year": 2020,
+       "stage": "series b",
+       "amount_eur_m": 27.6,
+       "leads": [
+        "eqt"
+       ]
+      },
+      {
+       "year": 2021,
+       "stage": "series b",
+       "amount_eur_m": 47.84,
+       "leads": [
+        "fintech collective"
+       ]
+      },
+      {
+       "year": 2023,
+       "stage": "series c",
+       "amount_eur_m": 30.0,
+       "leads": [
+        "northzone"
+       ]
+      },
+      {
+       "year": 2024,
+       "stage": "series c",
+       "amount_eur_m": 13.5,
+       "leads": []
+      }
+     ]
+    },
+    {
+     "company": "Oboe",
+     "founded": "2024",
+     "founders": "Nir Zicherman, Michael Mignano",
+     "about": "AI-powered educational startup aiming to democratize access to learning. Raised $4M in seed funding.",
+     "location": "",
+     "funding_text": "",
+     "note": "",
+     "relation": "listed_only",
+     "evidence": "",
+     "in_snapshot": false,
+     "snapshot_rounds": []
+    },
+    {
+     "company": "PAVE Studios",
+     "founded": "2024",
+     "founders": "Max Cutler",
+     "about": "New media company at the forefront of audio, video, books, and entertainment, focused on empowering creators.",
+     "location": "",
+     "funding_text": "",
+     "note": "",
+     "relation": "listed_only",
+     "evidence": "",
+     "in_snapshot": false,
+     "snapshot_rounds": []
+    },
+    {
+     "company": "A Vinyl Bar in Shibuya",
+     "founded": "2024",
+     "founders": "Máuhan M. Zonoozy",
+     "about": "Music technology startup building interactive music-making apps and tools. Raised $5.5M in pre-seed funding from Mantis VC, SV Angel, BoxGroup, and others.",
+     "location": "",
+     "funding_text": "",
+     "note": "",
+     "relation": "listed_only",
+     "evidence": "",
+     "in_snapshot": false,
+     "snapshot_rounds": []
+    },
+    {
+     "company": "Spoti Angels",
+     "founded": "2021",
+     "founders": "Katia Yakovleva, John Bonten, Axel Bard Bringéus",
+     "about": "Business angel syndicate based in Berlin, supporting European startups with up to €150,000 per investment, focusing on consumer tech, the creator economy, and the future of work.",
+     "location": "",
+     "funding_text": "",
+     "note": "",
+     "relation": "listed_only",
+     "evidence": "",
+     "in_snapshot": false,
+     "snapshot_rounds": []
+    }
+   ],
+   "n": 7,
+   "n_worked_at_stated": 0,
+   "n_funded_by": 0,
+   "n_listed_only": 7,
+   "n_in_snapshot": 3,
+   "gaps": [
+    "Rows are Cala QL output without source URLs: a stated prior job is a claim to check, not a fact",
+    "The previous_job filter mixes founders who worked at the employer with companies it funded; each row is tagged by its own text: worked_at_stated, funded_by, sold_to or listed_only"
+   ]
+  },
+  {
+   "employer": "Klarna",
+   "query": "companies.founder.incorporation>2015.previous_job=Klarna",
+   "fetched": "2026-11-14",
+   "source": "Cala knowledge query (api.cala.ai/v1/knowledge/query), rows carry no source URLs",
+   "rows": [
+    {
+     "company": "Anyfin",
+     "founded": "2017",
+     "founders": "Mikael Hussain (former VP Credit at Klarna), Sven Perkmann (Head of Risk Product), Filip Polhem",
+     "about": "Stockholm-based fintech helping consumers refinance loans at lower interest rates",
+     "location": "",
+     "funding_text": "",
+     "note": "",
+     "relation": "worked_at_stated",
+     "evidence": "mikael hussain (former vp credit at klarna), sven perkmann (head of risk product), filip polhem stockholm-based fintech helping consumers refinance loans at low",
+     "in_snapshot": true,
+     "snapshot_rounds": [
+      {
+       "year": 2018,
+       "stage": "series a",
+       "amount_eur_m": 4.8,
+       "leads": [
+        "accel northzone"
+       ]
+      },
+      {
+       "year": 2019,
+       "stage": "series a",
+       "amount_eur_m": 8.0,
+       "leads": [
+        "northzone"
+       ]
+      },
+      {
+       "year": 2020,
+       "stage": "series b",
+       "amount_eur_m": 27.6,
+       "leads": [
+        "eqt"
+       ]
+      },
+      {
+       "year": 2021,
+       "stage": "series b",
+       "amount_eur_m": 47.84,
+       "leads": [
+        "fintech collective"
+       ]
+      },
+      {
+       "year": 2023,
+       "stage": "series c",
+       "amount_eur_m": 30.0,
+       "leads": [
+        "northzone"
+       ]
+      },
+      {
+       "year": 2024,
+       "stage": "series c",
+       "amount_eur_m": 13.5,
+       "leads": []
+      }
+     ]
+    },
+    {
+     "company": "Bits Technology",
+     "founded": "2022",
+     "founders": "Former operators from Klarna, AWS, and Tink",
+     "about": "Compliance infrastructure platform for regulated companies (onboarding, risk assessment, monitoring)",
+     "location": "",
+     "funding_text": "",
+     "note": "",
+     "relation": "worked_at_stated",
+     "evidence": "former operators from klarna, aws, and tink compliance infrastructure platform for regulated companies (onboarding, risk assessment, monitoring)",
+     "in_snapshot": true,
+     "snapshot_rounds": [
+      {
+       "year": 2022,
+       "stage": "pre-seed",
+       "amount_eur_m": 1.0,
+       "leads": [
+        "cherry"
+       ]
+      },
+      {
+       "year": 2023,
+       "stage": "seed",
+       "amount_eur_m": 4.0,
+       "leads": [
+        "unusual"
+       ]
+      },
+      {
+       "year": 2026,
+       "stage": "series a",
+       "amount_eur_m": 12.0,
+       "leads": [
+        "alstin"
+       ]
+      }
+     ]
+    },
+    {
+     "company": "Pretzel AI",
+     "founded": "2023/2024",
+     "founders": "Prasoon Shukla (former Data Scientist at Klarna) and Ramon Garate (former Engineer at Klarna)",
+     "about": "Berlin-based AI-powered coding/notebook platform (Y Combinator W24)",
+     "location": "",
+     "funding_text": "",
+     "note": "",
+     "relation": "worked_at_stated",
+     "evidence": "prasoon shukla (former data scientist at klarna)",
+     "in_snapshot": false,
+     "snapshot_rounds": []
+    },
+    {
+     "company": "Cloover",
+     "founded": "2022",
+     "founders": "Cameron Borrett (former Product Manager at Klarna) and co-founders",
+     "about": "Climate fintech enabling renewable energy subscriptions",
+     "location": "",
+     "funding_text": "",
+     "note": "",
+     "relation": "worked_at_stated",
+     "evidence": "cameron borrett (former product manager at klarna)",
+     "in_snapshot": true,
+     "snapshot_rounds": [
+      {
+       "year": 2023,
+       "stage": "pre-seed",
+       "amount_eur_m": 7.0,
+       "leads": [
+        "9900"
+       ]
+      }
+     ]
+    },
+    {
+     "company": "Scrive",
+     "founded": "Post-2015",
+     "founders": "Gracjan Polak (former Klarna engineer)",
+     "about": "Electronic signature platform based in Sweden",
+     "location": "",
+     "funding_text": "",
+     "note": "",
+     "relation": "worked_at_stated",
+     "evidence": "gracjan polak (former klarna engineer)",
+     "in_snapshot": false,
+     "snapshot_rounds": []
+    },
+    {
+     "company": "QisstPay",
+     "founded": "2021",
+     "founders": "Jordan Olivas (former Klarna employee, helped launch Pay In 4)",
+     "about": "Pakistan's first buy-now-pay-later platform; raised $15M",
+     "location": "",
+     "funding_text": "",
+     "note": "",
+     "relation": "worked_at_stated",
+     "evidence": "jordan olivas (former klarna employee, helped launch pay in 4)",
+     "in_snapshot": false,
+     "snapshot_rounds": []
+    },
+    {
+     "company": "Norrsken Foundation",
+     "founded": "2016",
+     "founders": "Niklas Adalberth (Klarna co-founder)",
+     "about": "Impact-focused nonprofit and VC ecosystem managing ~€1B in funds",
+     "location": "",
+     "funding_text": "",
+     "note": "",
+     "relation": "worked_at_stated",
+     "evidence": "niklas adalberth (klarna co-founder)",
+     "in_snapshot": false,
+     "snapshot_rounds": []
+    },
+    {
+     "company": "Skalar",
+     "founded": "Recent",
+     "founders": "Founder who previously sold a startup to Klarna for €110M",
+     "about": "Munich-based AI tax and accounting startup; raised €12M",
+     "location": "",
+     "funding_text": "",
+     "note": "",
+     "relation": "sold_to",
+     "evidence": "sold a startup to klarna",
+     "in_snapshot": false,
+     "snapshot_rounds": []
+    }
+   ],
+   "n": 8,
+   "n_worked_at_stated": 7,
+   "n_funded_by": 0,
+   "n_listed_only": 0,
+   "n_in_snapshot": 3,
+   "gaps": [
+    "Rows are Cala QL output without source URLs: a stated prior job is a claim to check, not a fact",
+    "The previous_job filter mixes founders who worked at the employer with companies it funded; each row is tagged by its own text: worked_at_stated, funded_by, sold_to or listed_only"
+   ]
+  },
+  {
+   "employer": "Supercell",
+   "query": "companies.founder.incorporation>2015.previous_job=Supercell",
+   "fetched": "2026-11-14",
+   "source": "Cala knowledge query (api.cala.ai/v1/knowledge/query), rows carry no source URLs",
+   "rows": [
+    {
+     "company": "Antihero Studios",
+     "founded": "2024",
+     "founders": "Brice Laville Saint-Martin, Frank Yan, Andre Parodi",
+     "about": "Multiplayer mobile games (\"games worth sharing\")",
+     "location": "Finland and Barcelona",
+     "funding_text": "Support from Sisu Game Ventures and the Finnish government",
+     "note": "",
+     "relation": "listed_only",
+     "evidence": "",
+     "in_snapshot": true,
+     "snapshot_rounds": [
+      {
+       "year": 2026,
+       "stage": "seed",
+       "amount_eur_m": 4.14,
+       "leads": [
+        "a16z speedrun",
+        "laton"
+       ]
+      }
+     ]
+    },
+    {
+     "company": "Bit Odd",
+     "founded": "2019",
+     "founders": "Lasse Louhento, Jani Lintunen, Taneli Oksama",
+     "about": "Free-to-play multiplayer action games for mobile, emphasizing emotional and creative design",
+     "location": "Helsinki, Finland",
+     "funding_text": "€5 million (Round A led by Index Ventures) and later €17 million ($18m)",
+     "note": "",
+     "relation": "listed_only",
+     "evidence": "",
+     "in_snapshot": false,
+     "snapshot_rounds": []
+    },
+    {
+     "company": "Redly Games",
+     "founded": "2024",
+     "founders": "Thea Chow",
+     "about": "Immersive 3D adventure games (mobile-first, built in Unreal Engine 5)",
+     "location": "Helsinki, Finland (remote-first)",
+     "funding_text": "Pre-seed backing from Supercell Ventures",
+     "note": "",
+     "relation": "funded_by",
+     "evidence": "pre-seed backing from supercell ventures",
+     "in_snapshot": false,
+     "snapshot_rounds": []
+    },
+    {
+     "company": "Shipyard Games",
+     "founded": "2017",
+     "founders": "Andreas Wedenberg and team",
+     "about": "Location-based mobile games",
+     "location": "Helsinki, Finland",
+     "funding_text": "$2.9 million from Supercell",
+     "note": "Ceased operations in 2024 after running out of funds",
+     "relation": "funded_by",
+     "evidence": "$2.9 million from supercell",
+     "in_snapshot": false,
+     "snapshot_rounds": []
+    }
+   ],
+   "n": 4,
+   "n_worked_at_stated": 0,
+   "n_funded_by": 2,
+   "n_listed_only": 2,
+   "n_in_snapshot": 1,
+   "gaps": [
+    "Rows are Cala QL output without source URLs: a stated prior job is a claim to check, not a fact",
+    "The previous_job filter mixes founders who worked at the employer with companies it funded; each row is tagged by its own text: worked_at_stated, funded_by, sold_to or listed_only"
+   ]
+  }
+ ],
+ "patterns": [
+  {
+   "label": "Worked at: Management consulting",
+   "count": 0,
+   "n": 1,
+   "share": 0.0,
+   "note": "Founders in this sample whose Cala record shows any role or company outside the company they were found through; founders with no such record are not counted as 'no'"
+  },
+  {
+   "label": "Worked at: Big tech",
+   "count": 0,
+   "n": 1,
+   "share": 0.0,
+   "note": "Founders in this sample whose Cala record shows any role or company outside the company they were found through; founders with no such record are not counted as 'no'"
+  },
+  {
+   "label": "Worked at: Nordic unicorn alumni",
+   "count": 0,
+   "n": 1,
+   "share": 0.0,
+   "note": "Founders in this sample whose Cala record shows any role or company outside the company they were found through; founders with no such record are not counted as 'no'"
+  },
+  {
+   "label": "Worked at: Nokia or Ericsson",
+   "count": 0,
+   "n": 1,
+   "share": 0.0,
+   "note": "Founders in this sample whose Cala record shows any role or company outside the company they were found through; founders with no such record are not counted as 'no'"
+  },
+  {
+   "label": "Worked at: University or research lab",
+   "count": 1,
+   "n": 1,
+   "share": 1.0,
+   "note": "Founders in this sample whose Cala record shows any role or company outside the company they were found through; founders with no such record are not counted as 'no'"
+  },
+  {
+   "label": "Worked at: Investment banking or investing",
+   "count": 0,
+   "n": 1,
+   "share": 0.0,
+   "note": "Founders in this sample whose Cala record shows any role or company outside the company they were found through; founders with no such record are not counted as 'no'"
+  },
+  {
+   "label": "Founded another company before or alongside",
+   "count": 1,
+   "n": 1,
+   "share": 1.0,
+   "note": "Founders in this sample whose Cala record shows any role or company outside the company they were found through; founders with no such record are not counted as 'no'"
+  },
+  {
+   "label": "Another company they founded was acquired",
+   "count": 0,
+   "n": 1,
+   "share": 0.0,
+   "note": "Only checked where call budget allowed; see prior_exit_checked"
+  },
+  {
+   "label": "Years from first dated role to joining this company",
+   "median": 7.8,
+   "n": 1,
+   "min": 7.8,
+   "max": 7.8,
+   "note": "Only people with dated roles before and at the company"
+  },
+  {
+   "label": "Average tenure per closed role (years)",
+   "median": 3.9,
+   "n": 1,
+   "min": 3.9,
+   "max": 3.9,
+   "note": "Roles with start and end date"
+  },
+  {
+   "label": "Employers on record",
+   "median": 1.0,
+   "n": 22,
+   "min": 1,
+   "max": 4,
+   "note": "Distinct organisations in WORKS_AT and FOUNDED"
+  },
+  {
+   "label": "Title level changes up per year",
+   "median": 0.13,
+   "n": 1,
+   "min": 0.13,
+   "max": 0.13,
+   "note": "Dated span of at least one year; coarse title mapping"
+  }
+ ]
+}
