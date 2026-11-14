@@ -216,11 +216,12 @@ def summary_line(years: dict[int, dict], stage: str) -> tuple[str | None, dict |
     if known < MIN_OVERALL_KNOWN:
         return None, None, (f"Fewer than {MIN_OVERALL_KNOWN} lead-known rounds at {where} since {YEARS[0]} "
                             f"({known}), so no summary.")
-    active = [y for y, c in years.items() if c["led"] or c["joined"]]
-    line = f"Led {led} of {known} lead-known rounds at {where}, {_span(active[0], active[-1])}"
+    # every count covers the whole window, so the line names the same years as the strip's header
+    a, b = YEARS[0], YEARS[-1]
+    line = f"Led {led} of {known} lead-known rounds at {where}, {_span(a, b)}"
     line += f" ({unknown} more {_rounds_word(unknown)}, lead unknown)." if unknown else "."
     ids = [rid for c in years.values() for rid in c["led"] + c["joined"]]
-    return line, {"kind": "overall", "from": active[0], "to": active[-1], "led": led, "lead_known": known,
+    return line, {"kind": "overall", "from": a, "to": b, "led": led, "lead_known": known,
                   "lead_unknown": unknown, "round_ids": ids}, None
 
 

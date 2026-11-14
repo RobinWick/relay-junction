@@ -565,7 +565,8 @@ def _shared(entry: dict) -> dict:
     return {"key": entry["key"], "name": entry["name"],
             "lead_record": {x: lr.get(x) for x in ("stage", "verdict", "verdict_label", "led_at_stage", "led",
                                                    "known", "unknown")}
-                           | {"last_lead": {x: lr["last_lead"].get(x) for x in BRIEF} if lr.get("last_lead") else None},
+                           | {k: {x: lr[k].get(x) for x in BRIEF} if lr.get(k) else None
+                              for k in ("last_lead", "last_lead_at_stage")},
             "shared_rounds": [{x: r.get(x) for x in SHARED_KEEP} for r in entry["shared_rounds"]]}
 
 

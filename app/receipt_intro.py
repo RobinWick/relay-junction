@@ -7,7 +7,9 @@ Rules (research/patterns/DECISION.md #1, research/patterns/warm-path-stress.md):
   non-equity round, and not a round whose date looks defaulted (year only, quarter, or a June with no June in the text).
   Company aliases (IQM / IQM Quantum Computers, Leya / Legora) and same-round echoes are merged before any count.
   A round is "confirmed" when one company-first Cala row names both funds, or two independent sources each name both.
-  Otherwise it is "one_sided" and ranks below every confirmed tie.
+  Otherwise it is "one_sided". Suggestions use confirmed rounds only (DECISION.md #1): a one-sided round is
+  dropped from them, so a fund with only one-sided ties is not suggested. A fund the founder names keeps every
+  round, each with its confirmation label.
   Suggested funds must lead at the next stage by engine.fund_profile (verdict "leads" or "leads_size").
   Order: confirmed shared companies, then all shared companies, then the most recent shared round, then rounds led at
   the next stage. The order is a sort, not a score, and no number for it is returned.
@@ -27,9 +29,9 @@ LEADS_VERDICTS = {"leads", "leads_size"}
 FOOTNOTE = ("A shared round is not a relationship. Ties are only visible for funds in our data. About 94% of next "
             "leads in our data had no prior tie with the seed lead (320 of 342 outside handoffs).")
 RULES = ("Shared round: equity, 2 to 6 named investors, at most 50M EUR, last 4 years, precise date, not disputed, "
-         "not your own company. Confirmed: one company-first source, or two independent sources, name both funds. "
-         "One-sided ties rank below confirmed ones. Order: confirmed shared companies, shared companies, most recent "
-         "shared round, rounds led at your next stage.")
+         "not your own company. Suggested funds need a confirmed round: one company-first source, or two "
+         "independent sources, name both funds. Order: shared companies, most recent shared round, rounds led at "
+         "your next stage.")
 FOOTNOTE_SOURCE = "research/patterns/warm-path-stress.md (T1 baseline, warm_path_stress_out.json)"
 QUERIED_FUND = re.compile(r"(?:round that|rounds) (.+?) invested in", re.I)  # both investor-first query wordings
 
@@ -181,9 +183,11 @@ def lead_record(snap: Snapshot, fund: str, stage: str, target_m: float | None) -
     """The fund's lead record at `stage` from engine.fund_profile: counts with their denominators and the rounds."""
     p = fund_profile(snap, fund, stage, target_m)
     at_stage = [r for r in p["rounds_led"] if r["stage"] == STAGE_LABEL.get(stage)]
+    last_at_stage = max(at_stage, key=lambda r: r["t"]) if at_stage else None
     return {"stage": STAGE_LABEL.get(stage, stage), "verdict": p["verdict"], "verdict_label": p["verdict_label"],
             "led_at_stage": p["led_at_stage"], "led": p["led"], "known": p["known"], "unknown": p["unknown"],
-            "window_years": WINDOW_YEARS, "last_lead": p["last_lead"], "rounds_led_at_stage": at_stage,
+            "window_years": WINDOW_YEARS, "last_lead": p["last_lead"], "last_lead_at_stage": last_at_stage,
+            "rounds_led_at_stage": at_stage,
             "size": p["size"]}
 
 
@@ -227,7 +231,7 @@ def intro_paths(snap: Snapshot, my_investors: list[str], next_stage: str, target
         record = lead_record(snap, f, next_stage, target_m)
         if record["verdict"] not in LEADS_VERDICTS:
             continue
-        receipts = shared_rounds(snap, f, mine, my_company)
+        receipts = [r for r in shared_rounds(snap, f, mine, my_company) if r["confirmation"] != "one_sided"]
         if receipts:
             entries.append(_entry(snap, f, receipts, record))
     entries.sort(key=_order)

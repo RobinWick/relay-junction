@@ -25,8 +25,9 @@ EXITS_PATH = Path(__file__).resolve().parent / "exits.json"
 VINTAGE_YEARS = 6
 VALUE_LABEL = "deal value, not return"
 UNDISCLOSED = "undisclosed"
-CAVEAT = ("Acquisitions found in Cala for companies this fund invested in at least 6 years before the deal. "
-          "Deal value is the total price, not the fund's return. No exit found in Cala does not mean no exit.")
+CAVEAT = ("Acquisitions Cala has on file for companies this fund backed. A deal counts if it closed at least 6 years "
+          "ago, or a source dates the investment 6 or more years before the deal. Deal value is the total price, "
+          "not the fund's return. No exit found in Cala does not mean no exit.")
 
 
 def parse_day(raw: str | None) -> date | None:

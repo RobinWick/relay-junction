@@ -140,8 +140,9 @@ def build_funds(rounds: list[dict], names: dict, fund_keys: list[str], asof: dat
             "recent_rounds": [dict(round_view(r, names), role=role)
                               for role, r in sorted(rows, key=lambda x: -x[1]["t"])[:RECENT_FUND_ROUNDS]],
             "exits": exits,
-            "exits_caveat": "Acquisitions found in Cala for companies this fund invested in at least 6 years "
-                            "before the deal. Deal value is the total price, not the fund's return. "
+            "exits_caveat": "Acquisitions Cala has on file for companies this fund backed. A deal counts if it "
+                            "closed at least 6 years ago, or a source dates the investment 6 or more years before "
+                            "the deal. Deal value is the total price, not the fund's return. "
                             "No exit found in Cala does not mean no exit.",
             "source": src,
         }

@@ -319,6 +319,10 @@ details.fold[open] summary{margin-bottom:8px}
 .pc-led{fill:var(--accent)}
 .pc-join{fill:var(--panel);stroke:var(--hollow);stroke-width:1.2}
 .pc-unk{fill:var(--line-strong)}
+.pc-col{cursor:pointer;outline:none}
+.pc-hit{fill:transparent}
+.pc-col:hover .pc-hit,.pc-col:focus-visible .pc-hit{fill:var(--hover)}
+.pc-all{margin:4px 0 6px;padding:0;border:0;background:none;color:var(--accent);font-size:12.5px;cursor:pointer}
 .pc-yr{font:500 10.5px var(--mono);fill:var(--ink-3);text-anchor:middle}
 .pc-n{font:500 9.5px var(--mono);fill:var(--ink-2);text-anchor:middle}
 .pc-key{display:flex;flex-wrap:wrap;gap:4px 14px;margin:6px 0 0;font-size:12.5px;color:var(--ink-3)}

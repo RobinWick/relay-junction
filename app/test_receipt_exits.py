@@ -1,4 +1,4 @@
-"""Tests for receipt_exits (run: cd app && python3 -m pytest test_receipt_exits.py)."""
+"""Tests for receipt_exits (run: python3 app/test_receipt_exits.py, or pytest)."""
 import json
 from datetime import date
 
@@ -174,3 +174,7 @@ def test_cached_file_only_keys_by_canon_fund_keys():
         for r in fund["receipts"] + fund["undisclosed"]:
             assert r["sources"] and r["fund_link_sources"] and r["vintage"]
             assert r["value"]["label"] == "deal value, not return"
+
+if __name__ == "__main__":
+    import minitest
+    minitest.main(globals())

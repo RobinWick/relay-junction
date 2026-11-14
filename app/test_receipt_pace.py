@@ -1,10 +1,13 @@
-"""Tests for receipt_pace (run: cd app && python3 -m pytest test_receipt_pace.py)."""
+"""Tests for receipt_pace (run: python3 app/test_receipt_pace.py, or pytest)."""
 import json
 import os
 import re
 from pathlib import Path
 
-import pytest
+try:
+    import pytest
+except ImportError:  # run without pytest: python3 app/<this file>.py
+    import minitest as pytest
 
 from engine import Snapshot
 from receipt_pace import POPULATION_CONTEXT, dedup_rounds, lead_pace
@@ -102,7 +105,7 @@ def test_open_run_today_is_never_a_line():
     rs = _pause_history()[:-2]  # no lead in 2024: the run is still open
     p = lead_pace(_snap(rs), "f", "seed")
     assert p["summary_basis"]["kind"] == "overall"
-    assert p["summary"] == "Led 4 of 8 lead-known rounds at Pre-seed to Series A, 2019 to 2023."
+    assert p["summary"] == "Led 4 of 8 lead-known rounds at Pre-seed to Series A, 2019 to 2026."
     assert "aused" not in p["summary"]
 
 
@@ -186,3 +189,7 @@ def test_real_snapshot_dedup_and_target_global():
     assert p["summary_basis"]["kind"] == "overall"
     for s_ in _strings(p):
         assert not FORBIDDEN.search(s_), s_
+
+if __name__ == "__main__":
+    import minitest
+    minitest.main(globals())

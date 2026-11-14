@@ -1045,6 +1045,10 @@ function onPaneClick(e) {
   const rid = e.target.closest("[data-rid]");
   if (rid) { e.preventDefault(); openRound(+rid.dataset.rid); return; }
   if (e.target.closest("[data-backfund]")) { e.preventDefault(); showFund(state.openIdx); return; }
+  const bar = e.target.closest("[data-pyear]");
+  if (bar) return showPaceYear(bar.closest(".rc"), bar.dataset.pyear);
+  const all = e.target.closest("[data-pall]");
+  if (all) return showPaceYear(all.closest(".rc"), null);
   const more = e.target.closest("[data-more]");
   const list = more?.previousElementSibling;
   if (list) {
@@ -1053,6 +1057,20 @@ function onPaneClick(e) {
     hidden[0]?.querySelector("a")?.focus();
     more.remove();
   }
+}
+
+/* Open the pace fold on one year's rounds (year null = every year). */
+function showPaceYear(sec, year) {
+  const fold = sec && $(".fold", sec);
+  if (!fold) return;
+  const rows = $$(".pr", fold);
+  rows.forEach((x) => x.classList.toggle("hidden", year != null && x.dataset.year !== String(year)));
+  const n = rows.filter((x) => !x.classList.contains("hidden")).length;
+  $(".pc-sel", fold).textContent = year != null ? `(${n} in ${year})` : `(${rows.length})`;
+  $("[data-pall]", fold).classList.toggle("hidden", year == null);
+  fold.open = true;
+  fold.scrollIntoView({block: "nearest", behavior: "smooth"});
+  rows.find((x) => !x.classList.contains("hidden"))?.querySelector("a")?.focus({preventScroll: true});
 }
 
 /* fromPop: the browser already left the pane's history entry. Otherwise step back out of it, so Back after a
@@ -1180,11 +1198,14 @@ function paceStrip(years) {
     let top = H;
     const bar = (n, cls) => { if (!n) return ""; const h = Math.max(2, n * u); top -= h; return `<rect class="${cls}" x="${x + 4}" y="${top.toFixed(1)}" width="${W - 8}" height="${(h - 1).toFixed(1)}" rx="1.5"/>`; };
     const c = {led: y.led.length, joined: y.joined.length, unk: y.lead_unknown.length};
-    return `<g><title>${y.year}: led ${c.led}, joined ${c.joined}, lead unknown ${c.unk}</title>${bar(c.led, "pc-led")}${bar(c.joined, "pc-join")}${bar(c.unk, "pc-unk")}<text x="${x + W / 2}" y="${H + 14}" class="pc-yr">${String(y.year).slice(2)}</text>${c.led + c.joined + c.unk ? `<text x="${x + W / 2}" y="${top - 3}" class="pc-n">${c.led}/${c.led + c.joined}</text>` : ""}</g>`;
+    const any = c.led + c.joined + c.unk;
+    const tip = `${y.year}: led ${c.led}, joined ${c.joined}, lead unknown ${c.unk}`;
+    const hit = any ? `<rect class="pc-hit" x="${x}" y="-12" width="${W}" height="${H + 30}"/>` : "";
+    return `<g${any ? ` class="pc-col" data-pyear="${y.year}" tabindex="0" role="button" aria-label="${esc(tip)}. Show these rounds."` : ""}><title>${tip}</title>${hit}${bar(c.led, "pc-led")}${bar(c.joined, "pc-join")}${bar(c.unk, "pc-unk")}<text x="${x + W / 2}" y="${H + 14}" class="pc-yr">${String(y.year).slice(2)}</text>${c.led + c.joined ? `<text x="${x + W / 2}" y="${top - 3}" class="pc-n">${c.led}/${c.led + c.joined}</text>` : ""}</g>`;
   }).join("");
   const label = years.map((y) => `${y.year} led ${y.led.length} of ${y.led.length + y.joined.length}, ${y.lead_unknown.length} lead unknown`).join("; ");
   const w = years.length * (W + gap) - gap;
-  return `<svg class="pace" viewBox="0 -12 ${w} ${H + 30}" role="img" aria-label="${esc(label)}">${cols}</svg>`;
+  return `<svg class="pace" viewBox="0 -12 ${w} ${H + 30}" role="group" aria-label="${esc(label)}">${cols}</svg>`;
 }
 
 function paceHtml(p) {
@@ -1194,13 +1215,13 @@ function paceHtml(p) {
   const rows = [];
   [...p.years].reverse().forEach((y) => ["led", "joined", "lead_unknown", "follow_on"].forEach((k) => y[k].forEach((id) => {
     const b = p.rounds[id];
-    if (b) rows.push(`<div class="rr pr"><span class="co">${ridLink(id, b.company)}</span><span class="st">${ROLE[k]}</span><span class="st">${esc(b.stage)}</span><span class="dt">${esc(b.date)}</span></div>`);
+    if (b) rows.push(`<div class="rr pr" data-year="${y.year}"><span class="co">${ridLink(id, b.company)}</span><span class="st">${ROLE[k]}</span><span class="st">${esc(b.stage)}</span><span class="dt">${esc(b.date)}</span></div>`);
   })));
   const has = p.years.some((y) => y.led.length + y.joined.length + y.lead_unknown.length);
   return `<div class="sec rc"><h3 class="sech">Lead pace <span class="n">${esc(p.band_label)}, 2019 to 2026</span></h3>
-    ${has ? `${paceStrip(p.years)}<p class="pc-key"><span><i class="k-led"></i>Led</span><span><i class="k-join"></i>Joined, another lead named</span><span><i class="k-unk"></i>Lead unknown</span><span class="muted">Label: led / lead-known rounds</span></p>` : ""}
+    ${has ? `${paceStrip(p.years)}<p class="pc-key"><span><i class="k-led"></i>Led</span><span><i class="k-join"></i>Joined, another lead named</span><span><i class="k-unk"></i>Lead unknown</span><span class="muted">Label: led / lead-known rounds. Click a bar for its rounds.</span></p>` : ""}
     <p class="rc-line">${p.summary ? esc(p.summary) : `<span class="muted">${esc(p.summary_withheld || "No summary.")}</span>`} ${last}</p>
-    ${rows.length ? `<details class="fold"><summary>The rounds behind it (${rows.length})</summary><div class="rt">${rows.join("")}</div></details>` : ""}
+    ${rows.length ? `<details class="fold"><summary>The rounds behind it <span class="pc-sel">(${rows.length})</span></summary><button class="pc-all hidden" type="button" data-pall>Show all years</button><div class="rt">${rows.join("")}</div></details>` : ""}
     <p class="pnote">${esc(p.caveat)} Follow-on rounds in its own companies are listed, never counted as leads.</p></div>`;
 }
 
@@ -1214,6 +1235,7 @@ function exitsHtml(x) {
     const buyers = (e.acquirers || []).map((a) => a.name).join(", ") || "a buyer not named";
     return `<li class="ex"><div class="ex1"><b>${esc(e.company)}</b> bought by ${esc(buyers)}</div>
       <div class="ex2"><span class="val num">${esc(e.value?.display || "undisclosed")}</span><span class="lab">${esc(x.value_label)}</span><span class="muted">${fmtDay(e.date)}</span>${src ? `<a href="${esc(src.url)}" target="_blank" rel="noopener noreferrer">${ICON.link}Source</a>` : ""}</div>
+      ${e.vintage?.text ? `<div class="ex3 muted">${esc(e.vintage.text)}</div>` : ""}
       ${e.description ? `<div class="ex3">${esc(e.description.length > 170 ? e.description.slice(0, 167).replace(/\s+\S*$/, "") + "..." : e.description)}</div>` : ""}</li>`;
   };
   return `<div class="sec rc"><h3 class="sech">Who bought its companies <span class="n">from Cala's M&amp;A records</span></h3>
@@ -1228,7 +1250,8 @@ function sharedLine(sr, fundName) {
 }
 function leadsNext(lr, next) {
   const leads = lr.verdict === "leads" || lr.verdict === "leads_size";
-  const last = lr.last_lead ? ` Last lead: ${ridLink(lr.last_lead.id, lr.last_lead.company)}, ${esc(lr.last_lead.stage)}, ${esc(lr.last_lead.date)}.` : "";
+  const ls = lr.last_lead_at_stage;
+  const last = ls ? ` Last lead at ${esc(next)}: ${ridLink(ls.id, ls.company)}, ${esc(ls.date)}.` : "";
   return leads ? `Led ${esc(plural(lr.led_at_stage, `${next} round`, `${next} rounds`))} in four years.${last}`
     : `Led ${lr.led} of ${lr.known} rounds with a named lead near ${esc(next)}.${last}`;
 }
@@ -2091,8 +2114,8 @@ function renderMethod() {
       <p>Your LinkedIn connections file is read in your browser. Only first name, last name, company and position are kept, in memory, for this page; URLs and emails are never read, and nothing is uploaded or stored. Each connection's company is matched by name to the companies a fund led or joined in our data. Very short or generic company names are skipped. Names of 5 letters or fewer and ordinary words (Junction, Bolt, Garage) are shown as "same name" only, never as founder level, because a stranger's employer can share them. A title counts as founder level only when it starts with founder, co-founder, CEO, CTO, managing director or general or managing partner; assistants and associates do not count. A match is a person at a company, not a promise they know the partner.</p>
       <p>The Map draws the same ways in as lines from you, through the person, to each fund, with the funds in the list's groups and order. A thick solid line is someone at a company the fund led, a dashed line someone at a company it only joined, a dotted line your investor in a small round with it, the same order the list ranks by. "No way in found" means no path yet, not a bad fund.</p></section>
     <section><h2>Receipts in a fund's pane</h2>
-      <p><b>Lead pace</b> counts, per year since 2019, the rounds the fund led, joined under another named lead, or joined with the lead unknown, at your stage and the stages next to it, after merging duplicate rounds; a one-line summary shows only with 5 or more lead-known rounds, and every bar opens its rounds.</p>
-      <p><b>Who bought its companies</b> lists completed acquisitions in Cala's M&amp;A records of companies the fund invested in at least 6 years before the deal, with buyer, date and source; the value is the deal value, not the fund's return, and no acquisition found in Cala does not mean no exit.</p>
+      <p><b>Lead pace</b> counts, per year since 2019, the rounds the fund led, joined under another named lead, or joined with the lead unknown, at your stage and the stages next to it, after merging duplicate rounds; a one-line summary shows only with 5 or more lead-known rounds, and clicking a bar opens that year's rounds.</p>
+      <p><b>Who bought its companies</b> lists completed acquisitions in Cala's M&amp;A records of companies the fund backed, where the deal closed at least 6 years ago or a source dates the investment 6 or more years before the deal, with buyer, date and source; the value is the deal value, not the fund's return, and no acquisition found in Cala does not mean no exit.</p>
       <p><b>Shared-round intro paths</b> shows, once you add your investors, funds that lead at your next stage and sat with them in a small equity round (2 to 6 investors, at most EUR 50m, last 4 years, precise date, not disputed), confirmed first when the company's own record or two sources name both; a shared round is not a relationship.</p></section>
     <section><h2>What we tested</h2>
       ${v ? `<table class="simple"><thead><tr><th>Test</th><th>Result</th><th>n</th></tr></thead><tbody>${v.rows.map((r) => `<tr><td>${esc(r.test)}</td><td>${esc(r.result)}</td><td class="num">${esc(r.n)}</td></tr>`).join("")}</tbody></table><p class="muted">${esc(v.note || "")}</p>` : `<p class="muted">Validation numbers are being recomputed on the full data.</p>`}
@@ -2126,6 +2149,10 @@ document.addEventListener("DOMContentLoaded", () => {
   $("#sample").addEventListener("click", runSample);
   $("#sample-top").addEventListener("click", runSample);
   $("#pane-root").addEventListener("click", onPaneClick);
+  $("#pane-root").addEventListener("keydown", (e) => {
+    const bar = (e.key === "Enter" || e.key === " ") && e.target.closest("[data-pyear]");
+    if (bar) { e.preventDefault(); showPaceYear(bar.closest(".rc"), bar.dataset.pyear); }
+  });
   $("#target").addEventListener("input", () => { if ($("#target-err").textContent) targetOk(); });
   $("#check-form").addEventListener("submit", (e) => { e.preventDefault(); (state.mode === "find" ? runFind : run)(); });
   $("#to-find").addEventListener("click", () => setMode(state.mode === "find" ? "list" : "find"));

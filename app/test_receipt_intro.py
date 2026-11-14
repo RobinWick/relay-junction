@@ -1,9 +1,12 @@
-"""Tests for receipt_intro (run: cd app && python3 -m pytest test_receipt_intro.py)."""
+"""Tests for receipt_intro (run: python3 app/test_receipt_intro.py, or pytest)."""
 import json
 import os
 from pathlib import Path
 
-import pytest
+try:
+    import pytest
+except ImportError:  # run without pytest: python3 app/<this file>.py
+    import minitest as pytest
 
 from engine import Snapshot
 from receipt_intro import (FOOTNOTE, confirmation, dedupe_rounds, intro_paths, next_stage_of, pasted_fund_receipts,
@@ -83,15 +86,34 @@ def test_rounds_that_are_not_small_recent_equity_rounds_are_never_receipts(bad):
     assert intro_paths(snap, ["Alpha"], "series a", my_company="My Startup")["suggestions"] == []
 
 
-def test_one_sided_tie_ranks_below_confirmed_tie():
+def test_one_sided_tie_is_never_suggested():
     charlie = [rnd(f"Cco{i}", 2025.0 + i / 10, ["charlie"], ["zeta"], stage="series a", amount=10.0) for i in range(3)]
     one_sided = rnd("Ovi", 2026.0, ["alpha"], ["bravo"], sources=[inv("Alpha", ["Alpha"], ["Alpha", "Bravo"])])
     confirmed = rnd("Qmi", 2024.5, ["alpha"], ["charlie"])
     snap = make(bravo_leads_series_a() + charlie + [one_sided, confirmed])
     out = intro_paths(snap, ["Alpha"], "series a")
-    assert [s["name"] for s in out["suggestions"]] == ["Charlie", "Bravo"]  # older but confirmed comes first
-    assert out["suggestions"][1]["one_sided_only"] is True
-    assert out["suggestions"][1]["shared_rounds"][0]["confirmation"] == "one_sided"
+    assert [s["name"] for s in out["suggestions"]] == ["Charlie"]  # Bravo has only a one-sided tie
+    assert all(r["confirmation"] != "one_sided" for s in out["suggestions"] for r in s["shared_rounds"])
+    # a fund the founder names still shows its one-sided round, labelled
+    named = pasted_fund_receipts(snap, ["Bravo"], ["Alpha"], "series a")["funds"][0]
+    assert named["one_sided_only"] is True and named["shared_rounds"][0]["confirmation"] == "one_sided"
+
+
+def test_suggestion_drops_one_sided_rounds_but_keeps_confirmed_ones():
+    one_sided = rnd("Ovi", 2026.0, ["alpha"], ["bravo"], sources=[inv("Alpha", ["Alpha"], ["Alpha", "Bravo"])])
+    confirmed = rnd("Qmi", 2024.5, ["alpha"], ["bravo"])
+    out = intro_paths(make(bravo_leads_series_a() + [one_sided, confirmed]), ["Alpha"], "series a")
+    (s,) = out["suggestions"]
+    assert [r["company"] for r in s["shared_rounds"]] == ["Qmi"]
+    assert s["shared_rounds"][0]["confirmation"] == "company_first"
+
+
+def test_last_lead_at_stage_is_at_the_next_stage():
+    later_seed = rnd("Late", 2026.5, ["bravo"], ["zeta"], stage="seed")
+    snap = make(bravo_leads_series_a() + [later_seed, rnd("Qmi", 2024.5, ["alpha"], ["bravo"])])
+    lr = intro_paths(snap, ["Alpha"], "series a")["suggestions"][0]["lead_record"]
+    assert lr["last_lead_at_stage"]["stage"] == "Series A"
+    assert lr["last_lead_at_stage"]["t"] == max(r["t"] for r in lr["rounds_led_at_stage"])
 
 
 def test_two_independent_investor_first_answers_confirm_a_tie():
@@ -152,13 +174,15 @@ def test_real_snapshot_receipts_obey_the_rules():
     snap = Snapshot.from_dict(json.loads(SNAPSHOT.read_text()))
     out = intro_paths(snap, ["Lifeline Ventures", "Maki.vc"], "series a", 8.0, my_lead="Lifeline Ventures")
     assert out["suggestions"] and not out["unmatched"]
-    rank = {"one_sided": 0, "two_sources": 1, "company_first": 1}
-    seen_one_sided = False
+    rank = {"two_sources", "company_first"}  # one-sided rounds are never suggested
     for s in out["suggestions"]:
         assert s["lead_record"]["verdict"] in ("leads", "leads_size")
-        seen_one_sided |= s["confirmed_companies"] == 0
-        assert not (seen_one_sided and s["confirmed_companies"] > 0)  # confirmed ties always come first
+        assert s["confirmed_companies"] > 0 and not s["one_sided_only"]
         for r in s["shared_rounds"]:
             assert 2 <= r["n_investors"] <= 6 and (r["amount_eur_m"] or 0) <= 50
             assert snap.now_t - r["t"] <= 4 and r["confirmation"] in rank
             assert not snap.rounds[r["rid"]].get("disputed")
+
+if __name__ == "__main__":
+    import minitest
+    minitest.main(globals())

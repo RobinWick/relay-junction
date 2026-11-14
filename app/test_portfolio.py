@@ -1,4 +1,4 @@
-"""Tests for engine.portfolio (run: cd app && python3 -m pytest test_portfolio.py)."""
+"""Tests for engine.portfolio (run: python3 app/test_portfolio.py, or pytest)."""
 from engine import portfolio, weak_name
 
 
@@ -37,3 +37,7 @@ def test_weak_names_short_or_ordinary_words():
     out = portfolio([_r(1, "Junction", 2025.0, participants=["f"]), _r(2, "KineDB", 2025.0, leads=["f"])], "f",
                     common=common)
     assert {p["ckey"]: p["weak"] for p in out} == {"junction": True, "kinedb": False}
+
+if __name__ == "__main__":
+    import minitest
+    minitest.main(globals())

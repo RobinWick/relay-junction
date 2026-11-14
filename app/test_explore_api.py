@@ -1,4 +1,4 @@
-"""Tests for the Explore router (run: cd app && python3 -m pytest test_explore_api.py).
+"""Tests for the Explore router (run: python3 app/test_explore_api.py, or pytest).
 
 Uses a tiny local app that includes only the router, with the real snapshot. `python3 test_explore_api.py serve`
 starts that same app on port 8891 for manual checks.
@@ -10,7 +10,10 @@ import os
 import sys
 from pathlib import Path
 
-import pytest
+try:
+    import pytest
+except ImportError:  # run without pytest: python3 app/<this file>.py
+    import minitest as pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
@@ -215,3 +218,6 @@ def test_ai_filters_size_limits(client):
 if __name__ == "__main__" and sys.argv[1:] == ["serve"]:
     import uvicorn
     uvicorn.run(make_app(), host="127.0.0.1", port=PORT)
+elif __name__ == "__main__":
+    import minitest
+    minitest.main(globals())
