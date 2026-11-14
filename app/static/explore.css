@@ -236,11 +236,13 @@ table.grid{width:100%;border-collapse:collapse;font-size:13px}
 }
 @media (max-width:760px){
   .app{grid-template-columns:1fr}
-  .side{position:static;height:auto;flex-direction:row;align-items:center;gap:6px;padding:8px 12px;overflow-x:auto}
+  .side{position:static;height:auto;flex-direction:row;flex-wrap:wrap;align-items:center;gap:4px 6px;padding:8px 12px}
   .brand{margin:0;padding:0 4px;flex:none}
-  .nav{flex-direction:row;gap:2px;flex:none}
-  .nav a{height:30px;padding:0 8px;font-size:13px;white-space:nowrap}
-  .nav a svg,.nav-h,.nav-out,.side-foot{display:none}
+  /* own row, wrapping, so every link (Founders, Check a list) shows at 375px without sideways scrolling */
+  .nav{flex-direction:row;flex-wrap:wrap;gap:2px;flex:1 1 100%}
+  .nav a{height:30px;padding:0 7px;font-size:13px;white-space:nowrap}
+  .nav a.nav-out{margin-top:0}
+  .nav a svg,.nav-h,.side-foot{display:none}
   .work{margin:0 8px 8px;border-radius:var(--r-lg)}
   .page{padding:16px 16px 32px}
   .start{padding:32px 16px}
@@ -260,3 +262,4 @@ details.cohort>summary .muted{font-weight:400}
 details.cohort .table-wrap{margin-top:10px}
 details.cohort .list .src{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px}
 .section-h+.neutral+details.cohort{border-top:0}
+.ask-out .refusal{flex-basis:100%;font-weight:560;color:var(--ink)}

@@ -64,7 +64,7 @@
     const key = opts ? null : url;
     if (key && cache.has(key)) return cache.get(key);
     const p = fetch(url, opts).then(async (r) => {
-      if (!r.ok) throw new Error(`${url} answered ${r.status}`);
+      if (!r.ok) throw Object.assign(new Error(r.status === 404 ? "not in our Cala data" : `${url} answered ${r.status}`), { status: r.status });
       return r.json();
     });
     if (key) { cache.set(key, p); p.catch(() => cache.delete(key)); }
@@ -220,6 +220,10 @@
       else if (page === "person") await renderPerson(m, key);
       else m.replaceChildren(h("div", { class: "page" }, h("p", { class: "error" }, "Page not found. "), h("a", { href: "#/" }, "Start over")));
     } catch (err) {
+      if (err.status === 404) {  // a mistyped or stale link: say so, nothing to log
+        m.replaceChildren(h("div", { class: "page" }, h("p", { class: "error", role: "alert" }, "That page is not in our Cala data. "), h("a", { href: "#/" }, "Start over")));
+        return;
+      }
       m.replaceChildren(h("div", { class: "page" }, h("p", { class: "error", role: "alert" }, `Could not load this view: ${err.message}`)));
       console.error(err);
     }
@@ -230,7 +234,7 @@
     const meta = await api.meta();
     m.replaceChildren(h("section", { class: "start", "aria-labelledby": "start-h" },
       h("h1", { id: "start-h" }, "Explore the receipts"),
-      h("p", { class: "sub" }, "Filter funds, companies and founder careers counted from Cala data. Describe what you want and the filters set themselves. Every number links to the rounds behind it."),
+      h("p", { class: "sub" }, "Filter funds, companies and founder careers counted from Cala data. Describe what you want and the filters set themselves. Every number is a count over Cala records, and every page names its source and retrieval date."),
       h("div", { class: "roles" },
         h("a", { class: "role", href: "#/funds", "data-role": "founder" },
           h("b", {}, "I am a founder"),
@@ -336,13 +340,16 @@
     const ai = state.ai[view];
     const keys = [...state.aiKeys[view]];
     if (!ai) { el.replaceChildren(); return; }
-    const labels = keys.map((k) => (defOf(view, k) || { label: k }).label);
+    /* Built from the filters actually set (live, so a removed chip leaves the line), never from model prose. */
+    const set = keys.filter((k) => defOf(view, k) && has(state.filters[view][k]))
+      .map((k) => valueText(defOf(view, k), state.filters[view][k]));
     el.replaceChildren(h("div", { class: "ask-out", role: "status" },
       h("span", { class: "badge ai" }, "AI"),
-      keys.length
-        ? h("span", {}, `Set ${plural(keys.length, "filter")}: ${labels.join("; ")}. Edit any of them in the filter rail.`)
+      set.length
+        ? h("span", {}, `Set ${plural(set.length, "filter")}: ${set.join("; ")}. Edit any of them in the filter rail.`)
         : h("span", {}, "No filter matched that description. Try naming a stage, a country, a round size or a background."),
-      ai.unmatched && ai.unmatched.length ? h("span", { class: "muted" }, `Not used: ${ai.unmatched.join(", ")}.`) : null,
+      ai.refusal ? h("span", { class: "refusal" }, ai.refusal) : null,
+      ai.unmatched && ai.unmatched.length ? h("span", { class: "muted" }, `Not matched: ${ai.unmatched.join("; ")}.`) : null,
       ai.engine ? h("span", { class: "muted" }, `Read by ${ai.engine}${ai.notice ? ` (${ai.notice})` : ""}`) : null,
       h("span", { class: "sp" }),
       keys.length ? h("button", { class: "linkbtn", type: "button", onclick: () => {
@@ -723,7 +730,7 @@
         h("div", { class: "tags" }, p.tags.map((t) => h("span", { class: "tag", title: (p.tag_evidence[t] || []).join(", ") || null }, t)))),
       tiles([
         ["Roles on file", mt.roles, `${mt.roles_dated} with dates`],
-        ["Organisations", mt.employers ?? "n/a"],
+        ["Organisations", mt.employers ?? "n/a", "in roles and companies founded"],
         ["Average years per role", mt.avg_tenure_years ?? "n/a", mt.avg_tenure_n ? `over ${plural(mt.avg_tenure_n, "dated role")}` : "needs start and end dates"],
         ["Shortest and longest", mt.shortest_tenure_years == null ? "n/a" : `${mt.shortest_tenure_years} to ${mt.longest_tenure_years} y`],
         ["Title level-ups", mt.level_ups ?? "n/a", mt.level_ups_per_year != null ? `${mt.level_ups_per_year} per year` : ""],

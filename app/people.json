@@ -1238,7 +1238,7 @@
    "prior_exits": [],
    "prior_exit_checked": [],
    "gaps": [
-    "1 of 1 roles have no start date"
+    "1 of 1 role has no start date"
    ]
   },
   {
@@ -1354,7 +1354,7 @@
    "prior_exits": [],
    "prior_exit_checked": [],
    "gaps": [
-    "1 of 1 roles have no start date"
+    "1 of 1 role has no start date"
    ]
   },
   {
@@ -1458,7 +1458,7 @@
    "prior_exits": [],
    "prior_exit_checked": [],
    "gaps": [
-    "1 of 1 roles have no start date"
+    "1 of 1 role has no start date"
    ]
   },
   {
@@ -1597,7 +1597,7 @@
    "prior_exits": [],
    "prior_exit_checked": [],
    "gaps": [
-    "1 of 1 roles have no start date"
+    "1 of 1 role has no start date"
    ]
   },
   {
@@ -1736,7 +1736,7 @@
    "prior_exits": [],
    "prior_exit_checked": [],
    "gaps": [
-    "1 dated roles have no end date (current, or end unknown)"
+    "1 dated role has no end date (current, or end unknown)"
    ]
   },
   {
@@ -1862,194 +1862,6 @@
      ]
     },
     {
-     "org": "CERN",
-     "org_id": "ab87c9e3-2e6e-420b-8c5f-35f5b868af02",
-     "role": "",
-     "level": null,
-     "level_label": "Not mapped",
-     "since": null,
-     "until": null,
-     "years": null,
-     "open": false,
-     "tags": [
-      "research"
-     ],
-     "sources": [
-      {
-       "name": "Slush",
-       "url": "https://slush.org/",
-       "date": "2026-07-22",
-       "rank": ""
-      },
-      {
-       "name": "CEO of Lovable, one of the fastest-growing startups in history, at Disrupt 2025 | TechCrunch",
-       "url": "https://techcrunch.com/",
-       "date": "2026-07-22",
-       "rank": ""
-      },
-      {
-       "name": "starngage.com",
-       "url": "https://starngage.com/",
-       "date": "2026-07-22",
-       "rank": ""
-      },
-      {
-       "name": "Anton Osika | Speaker | ASU GSV Summit",
-       "url": "https://asugsvsummit.com/",
-       "date": "2026-07-22",
-       "rank": ""
-      },
-      {
-       "name": "www.inc.com",
-       "url": "https://www.inc.com/",
-       "date": "2026-07-22",
-       "rank": ""
-      },
-      {
-       "name": "Lovable",
-       "url": "https://slawomir.it/",
-       "date": "2026-07-22",
-       "rank": ""
-      },
-      {
-       "name": "mastersofscale.com",
-       "url": "https://mastersofscale.com/",
-       "date": "2026-07-22",
-       "rank": ""
-      },
-      {
-       "name": "Anton Osika",
-       "url": "https://www.forbes.com/",
-       "date": "2026-07-22",
-       "rank": ""
-      },
-      {
-       "name": "www.crunchbase.com",
-       "url": "https://www.crunchbase.com/",
-       "date": "2026-07-22",
-       "rank": ""
-      },
-      {
-       "name": "Business Insider Africa",
-       "url": "https://africa.businessinsider.com/",
-       "date": "2026-07-22",
-       "rank": ""
-      },
-      {
-       "name": "Anton Osika Biography, Net Worth 2026 & Lovable CEO - Millionaire Script",
-       "url": "https://millionairescript.com/",
-       "date": "2026-07-22",
-       "rank": ""
-      },
-      {
-       "name": "All Europeans 🇪🇺 (@ueeu@vivaldi.net)",
-       "url": "https://social.vivaldi.net/",
-       "date": "2026-07-22",
-       "rank": ""
-      },
-      {
-       "name": "Anton Osika - Lovable Video Tutorials & Guides",
-       "url": "https://lovable.dev/",
-       "date": "2026-07-22",
-       "rank": ""
-      },
-      {
-       "name": "Anton Osika - AI People - TeamDay.ai",
-       "url": "https://www.teamday.ai/",
-       "date": "2026-07-22",
-       "rank": ""
-      },
-      {
-       "name": "Business Insider - Latest News in Tech, Markets, Economy & Innovation",
-       "url": "https://www.businessinsider.com/",
-       "date": "2026-07-22",
-       "rank": ""
-      },
-      {
-       "name": "Anton Osika - On a mission to empower anyone to create. | LinkedIn",
-       "url": "https://se.linkedin.com/",
-       "date": "2026-07-22",
-       "rank": ""
-      },
-      {
-       "name": "sv.wikipedia.org",
-       "url": "https://sv.wikipedia.org/",
-       "date": "2026-07-22",
-       "rank": ""
-      },
-      {
-       "name": "Meet Anton Osika, speaker at HumanX | HumanX Amsterdam 2026 | 22-24 Sept",
-       "url": "https://www.humanx.co/",
-       "date": "2026-07-22",
-       "rank": ""
-      },
-      {
-       "name": "explore.slush.org",
-       "url": "https://explore.slush.org/speakers/anton-osika-founder-ceo-lovable",
-       "date": "2026-07-22",
-       "rank": ""
-      },
-      {
-       "name": "mastersofscale.com",
-       "url": "https://mastersofscale.com/people/anton-osika",
-       "date": "2026-07-22",
-       "rank": ""
-      }
-     ]
-    },
-    {
-     "org": "Lovable",
-     "org_id": "89d3a43c-fee4-4491-853e-a216cbef6c50",
-     "role": "CEO",
-     "level": 4,
-     "level_label": "Founder, C-level or partner",
-     "since": null,
-     "until": null,
-     "years": null,
-     "open": false,
-     "tags": [
-      "nordic_unicorn"
-     ],
-     "sources": [
-      {
-       "name": "en.wikipedia.org",
-       "url": "https://en.wikipedia.org/wiki/Lovable_(company)",
-       "date": "2026-08-20",
-       "rank": ""
-      },
-      {
-       "name": "Two Cofounders of AI ‘Vibe Coding’ Startup Lovable Are Now Billionaires",
-       "url": "https://www.forbes.com/sites/aliciapark/2025/12/19/ai-startup-lovable-just-minted-one-of-europes-youngest-ever-self-made-billionaires",
-       "date": "2025-12-19",
-       "rank": ""
-      },
-      {
-       "name": "Sweden's Lovable, an app-building AI platform, rakes in $15M after spectacular growth | TechCrunch",
-       "url": "https://techcrunch.com/2025/02/25/swedens-lovable-an-app-building-ai-platform-rakes-in-16m-after-spectacular-growth",
-       "date": "2025-02-25",
-       "rank": ""
-      },
-      {
-       "name": "news.crunchbase.com",
-       "url": "https://news.crunchbase.com/ai/vibe-coding-startup-lovable-unicorn-status",
-       "date": "2026-08-20",
-       "rank": ""
-      },
-      {
-       "name": "Lovable: Funding, Team & Investors",
-       "url": "https://startupintros.com/orgs/lovable",
-       "date": "2026-07-13",
-       "rank": ""
-      },
-      {
-       "name": "se.linkedin.com",
-       "url": "https://se.linkedin.com/in/antonosika",
-       "date": "2026-08-20",
-       "rank": ""
-      }
-     ]
-    },
-    {
      "org": "Organización Europea para la Investigación Nuclear (CERN)",
      "org_id": "2dc58d4f-fdf0-4c89-b48f-7fe82e6a9985",
      "role": "Particle Physicist",
@@ -2067,140 +1879,6 @@
        "name": "mastersofscale.com",
        "url": "https://mastersofscale.com/people/anton-osika",
        "date": "2026-05-11",
-       "rank": ""
-      }
-     ]
-    },
-    {
-     "org": "Sana Labs AB",
-     "org_id": "c8a34d4d-a9b0-4547-8463-36b9c70cd756",
-     "role": "",
-     "level": null,
-     "level_label": "Not mapped",
-     "since": null,
-     "until": null,
-     "years": null,
-     "open": false,
-     "tags": [],
-     "sources": [
-      {
-       "name": "Slush",
-       "url": "https://slush.org/",
-       "date": "2026-07-22",
-       "rank": ""
-      },
-      {
-       "name": "CEO of Lovable, one of the fastest-growing startups in history, at Disrupt 2025 | TechCrunch",
-       "url": "https://techcrunch.com/",
-       "date": "2026-07-22",
-       "rank": ""
-      },
-      {
-       "name": "starngage.com",
-       "url": "https://starngage.com/",
-       "date": "2026-07-22",
-       "rank": ""
-      },
-      {
-       "name": "Anton Osika | Speaker | ASU GSV Summit",
-       "url": "https://asugsvsummit.com/",
-       "date": "2026-07-22",
-       "rank": ""
-      },
-      {
-       "name": "www.inc.com",
-       "url": "https://www.inc.com/",
-       "date": "2026-07-22",
-       "rank": ""
-      },
-      {
-       "name": "Lovable",
-       "url": "https://slawomir.it/",
-       "date": "2026-07-22",
-       "rank": ""
-      },
-      {
-       "name": "mastersofscale.com",
-       "url": "https://mastersofscale.com/",
-       "date": "2026-07-22",
-       "rank": ""
-      },
-      {
-       "name": "Anton Osika",
-       "url": "https://www.forbes.com/",
-       "date": "2026-07-22",
-       "rank": ""
-      },
-      {
-       "name": "www.crunchbase.com",
-       "url": "https://www.crunchbase.com/",
-       "date": "2026-07-22",
-       "rank": ""
-      },
-      {
-       "name": "Business Insider Africa",
-       "url": "https://africa.businessinsider.com/",
-       "date": "2026-07-22",
-       "rank": ""
-      },
-      {
-       "name": "Anton Osika Biography, Net Worth 2026 & Lovable CEO - Millionaire Script",
-       "url": "https://millionairescript.com/",
-       "date": "2026-07-22",
-       "rank": ""
-      },
-      {
-       "name": "All Europeans 🇪🇺 (@ueeu@vivaldi.net)",
-       "url": "https://social.vivaldi.net/",
-       "date": "2026-07-22",
-       "rank": ""
-      },
-      {
-       "name": "Anton Osika - Lovable Video Tutorials & Guides",
-       "url": "https://lovable.dev/",
-       "date": "2026-07-22",
-       "rank": ""
-      },
-      {
-       "name": "Anton Osika - AI People - TeamDay.ai",
-       "url": "https://www.teamday.ai/",
-       "date": "2026-07-22",
-       "rank": ""
-      },
-      {
-       "name": "Business Insider - Latest News in Tech, Markets, Economy & Innovation",
-       "url": "https://www.businessinsider.com/",
-       "date": "2026-07-22",
-       "rank": ""
-      },
-      {
-       "name": "Anton Osika - On a mission to empower anyone to create. | LinkedIn",
-       "url": "https://se.linkedin.com/",
-       "date": "2026-07-22",
-       "rank": ""
-      },
-      {
-       "name": "sv.wikipedia.org",
-       "url": "https://sv.wikipedia.org/",
-       "date": "2026-07-22",
-       "rank": ""
-      },
-      {
-       "name": "Meet Anton Osika, speaker at HumanX | HumanX Amsterdam 2026 | 22-24 Sept",
-       "url": "https://www.humanx.co/",
-       "date": "2026-07-22",
-       "rank": ""
-      },
-      {
-       "name": "explore.slush.org",
-       "url": "https://explore.slush.org/speakers/anton-osika-founder-ceo-lovable",
-       "date": "2026-07-22",
-       "rank": ""
-      },
-      {
-       "name": "mastersofscale.com",
-       "url": "https://mastersofscale.com/people/anton-osika",
-       "date": "2026-07-22",
        "rank": ""
       }
      ]
@@ -2430,8 +2108,8 @@
    ],
    "metrics": {
     "employers": 4,
-    "roles": 6,
-    "roles_outside_company": 4,
+    "roles": 3,
+    "roles_outside_company": 2,
     "roles_dated": 2,
     "avg_tenure_years": 3.9,
     "avg_tenure_n": 1,
@@ -2458,7 +2136,6 @@
    ],
    "tag_evidence": {
     "research": [
-     "CERN",
      "Organización Europea para la Investigación Nuclear (CERN)"
     ]
    },
@@ -2477,8 +2154,8 @@
     "Depict"
    ],
    "gaps": [
-    "4 of 6 roles have no start date",
-    "1 dated roles have no end date (current, or end unknown)",
+    "1 of 3 roles has no start date",
+    "1 dated role has no end date (current, or end unknown)",
     "Depict: no acquisition event in Cala. Absence in Cala is not proof there was none"
    ]
   },
@@ -2998,7 +2675,7 @@
    "prior_exits": [],
    "prior_exit_checked": [],
    "gaps": [
-    "1 of 1 roles have no start date"
+    "1 of 1 role has no start date"
    ]
   },
   {
@@ -3126,7 +2803,7 @@
    "prior_exits": [],
    "prior_exit_checked": [],
    "gaps": [
-    "1 of 1 roles have no start date"
+    "1 of 1 role has no start date"
    ]
   },
   {
@@ -3266,7 +2943,7 @@
    "prior_exits": [],
    "prior_exit_checked": [],
    "gaps": [
-    "1 of 1 roles have no start date"
+    "1 of 1 role has no start date"
    ]
   },
   {
@@ -3419,7 +3096,7 @@
    "prior_exits": [],
    "prior_exit_checked": [],
    "gaps": [
-    "1 of 1 roles have no start date"
+    "1 of 1 role has no start date"
    ]
   },
   {
@@ -3547,7 +3224,7 @@
    "prior_exits": [],
    "prior_exit_checked": [],
    "gaps": [
-    "1 of 1 roles have no start date"
+    "1 of 1 role has no start date"
    ]
   },
   {
@@ -3699,7 +3376,7 @@
    "prior_exits": [],
    "prior_exit_checked": [],
    "gaps": [
-    "1 of 1 roles have no start date"
+    "1 of 1 role has no start date"
    ]
   },
   {

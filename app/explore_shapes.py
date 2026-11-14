@@ -27,6 +27,15 @@ EXITS_CAVEAT = ("Acquisitions Cala has on file for companies this fund backed. A
 COHORT_RELATION = {"worked_at_stated": "Text says a founder worked there", "funded_by": "Employer invested in it",
                    "sold_to": "Sold to the employer", "listed_only": "Listed by Cala, no tie stated"}
 BORN = re.compile(r",?\s*born (in )?\d{4}", re.I)  # age must never become a filter or a label
+DASH_RANGE = re.compile(r"(\d)\s*[\u2012-\u2015]\s*(\d)")
+DASH = re.compile(r"\s*[\u2012-\u2015]\s*")
+
+
+def no_dash(text):
+    """Cala's own text carries en and em dashes ('McKinsey Bangkok 2014\u201317'); the page shows none."""
+    if not isinstance(text, str):
+        return text
+    return DASH.sub(", ", DASH_RANGE.sub(r"\1 to \2", text)).strip(", ")
 
 
 def country(raw: Optional[str]) -> Optional[str]:
@@ -155,8 +164,9 @@ def build_companies(rounds: list[dict], names: dict, asof: date, src: dict, peop
             "last_amount_eur_m": last["amount_eur_m"],
             "months_since_last_round": months_between(date(last["year"], last.get("month") or 1, 1), asof),
             "total_known_eur_m": round(sum(amounts), 1) if amounts else None,
-            "investors": [{"key": k, "name": names.get(k, k)} for k, _ in investors.most_common(12)],
-            "leads": [{"key": k, "name": names.get(k, k)} for k, _ in leads.most_common(12)],
+            # every investor and lead: the page filters on these lists, so a cap would hide real matches
+            "investors": [{"key": k, "name": names.get(k, k)} for k, _ in investors.most_common()],
+            "leads": [{"key": k, "name": names.get(k, k)} for k, _ in leads.most_common()],
             "last_leads": [{"key": k, "name": names.get(k, k)} for k in last["leads"]] if not last.get("not_led") else [],
             "founders": [{"id": p["id"], "name": p["name"]} for p in founders],
             "founder_tags": sorted({t for p in founders for t in p["tags"]}),
@@ -177,24 +187,22 @@ def _months(a: str, b: str) -> int:
     return months_between(date(int(a[:4]), int(a[5:7]), 1), date(int(b[:4]), int(b[5:7]), 1))
 
 
-def person_view(p: dict, home: Optional[dict], tag_labels: dict, org_key, asof: date) -> dict:
-    """One people.py record -> the page's Person. org_key is people.org_key (merges Cala's duplicate entities)."""
+def person_view(p: dict, home: Optional[dict], tag_labels: dict, org_key, asof: date,
+                merge_roles=lambda rows: rows) -> dict:
+    """One people.py record -> the page's Person. org_key and merge_roles are people.py's (they merge Cala's
+    duplicate entities), so the page shows exactly the rows people.py counted in its metrics and gaps."""
     home_name = (home or {}).get("name") or ""
     home_keys = {org_key(home_name)}
-    seen, dated, undated = set(), [], []
-    for r in p.get("roles") or []:
-        key = (org_key(r.get("org") or ""), (r.get("role") or "").lower(), r.get("since"))
-        if key in seen:
-            continue
-        seen.add(key)
-        own = key[0] in home_keys
+    dated, undated = [], []
+    for r in merge_roles(p.get("roles") or []):
+        own = org_key(r.get("org") or "") in home_keys
         tags = [tag_labels[t] for t in r.get("tags") or [] if t in tag_labels and not own]
         start, end = _ym(r.get("since")), _ym(r.get("until"))
-        view = {"org": r.get("org") or "Organisation not named", "org_type": "Own company" if own else
-                (tags[0] if tags else "Employer"), "title": r.get("role") or "Title not stated",
+        view = {"org": no_dash(r.get("org")) or "Organisation not named", "org_type": "Own company" if own else
+                (tags[0] if tags else "Employer"), "title": no_dash(r.get("role")) or "Title not stated",
                 "level": r.get("level"), "level_label": r.get("level_label") or "Not mapped",
                 "start": start, "end": end, "current": bool(r.get("open")),
-                "sources": [{"name": s.get("name") or s.get("url"), "url": s.get("url"), "date": s.get("date")}
+                "sources": [{"name": no_dash(s.get("name") or s.get("url")), "url": s.get("url"), "date": s.get("date")}
                             for s in (r.get("sources") or [])[:3] if s.get("url")]}
         if start:
             view["months"] = _months(start, end or asof.isoformat()[:7])
@@ -202,10 +210,7 @@ def person_view(p: dict, home: Optional[dict], tag_labels: dict, org_key, asof: 
         else:
             undated.append(view)
     dated.sort(key=lambda r: r["start"])
-    # Cala holds one org under several entities ('CERN' and its Spanish name): keep one undated row per org, and
-    # none for an org that already has a dated row
-    keys = {org_key(r["org"]) for r in dated}
-    undated = [r for r in undated if org_key(r["org"]) not in keys and not keys.add(org_key(r["org"]))]
+    shown = dated + undated
     m = p.get("metrics") or {}
     prior = p.get("prior_founder") or {}
     prior_cos = [c.get("org") for c in prior.get("companies") or [] if c.get("org")]
@@ -218,7 +223,7 @@ def person_view(p: dict, home: Optional[dict], tag_labels: dict, org_key, asof: 
         "country": country((home or {}).get("country")) or "Not stated",
         "company": home_name or "Company not named", "company_key": (home or {}).get("ckey"),
         "company_stage": rounds[-1].get("stage") if rounds else None,
-        "description": BORN.sub("", p.get("description") or "").strip() or None,
+        "description": no_dash(BORN.sub("", p.get("description") or "").strip()) or None,
         "linkedin_url": p.get("linkedin_url"),
         "career_start": _ym(m.get("career_start")),
         "roles": dated, "undated_roles": undated,
@@ -229,8 +234,9 @@ def person_view(p: dict, home: Optional[dict], tag_labels: dict, org_key, asof: 
             else "Checked: no acquisition in Cala, which is not proof there was none"
             if c in (p.get("prior_exit_checked") or []) else "Not checked"} for c in prior_cos],
         "metrics": {
-            "employers": m.get("employers"), "roles": len(dated) + len(undated), "roles_dated": len(dated),
-            "roles_outside_company": m.get("roles_outside_company"),
+            # counted over the rows the page shows, so roles, outside roles and the gaps text agree
+            "employers": m.get("employers"), "roles": len(shown), "roles_dated": len(dated),
+            "roles_outside_company": sum(1 for r in shown if r["org_type"] != "Own company"),
             "avg_tenure_years": m.get("avg_tenure_years"), "avg_tenure_n": m.get("avg_tenure_n"),
             "shortest_tenure_years": m.get("shortest_tenure_years"),
             "longest_tenure_years": m.get("longest_tenure_years"),
@@ -241,21 +247,22 @@ def person_view(p: dict, home: Optional[dict], tag_labels: dict, org_key, asof: 
         },
         "tags": tags + (["Repeat founder"] if prior.get("value") else []),
         "tag_evidence": {tag_labels[k]: v for k, v in (p.get("tag_evidence") or {}).items() if k in tag_labels},
-        "gaps": p.get("gaps") or [],
+        "gaps": [no_dash(g) for g in p.get("gaps") or []],
         "source": {"name": src.get("provider") or "Cala entity graph", "retrieved": src.get("fetched") or "",
                    "entity_id": src.get("entity_id") or p["id"],
                    "note": src.get("note") or "Career edges as Cala holds them."},
     }
 
 
-def build_founders(people_json: dict, tag_labels: dict, org_key, asof: date) -> tuple[list[dict], dict]:
+def build_founders(people_json: dict, tag_labels: dict, org_key, asof: date,
+                   merge_roles=lambda rows: rows) -> tuple[list[dict], dict]:
     homes = {c["ckey"]: c for c in people_json.get("companies") or [] if c.get("ckey")}
     people = []
     for p in people_json.get("people") or []:
         if not (p.get("id") and p.get("name")):
             continue
         home = next((homes[c] for c in p.get("companies") or [] if c in homes), None)
-        people.append(person_view(p, home, tag_labels, org_key, asof))
+        people.append(person_view(p, home, tag_labels, org_key, asof, merge_roles))
     people.sort(key=lambda x: (x["company"].lower(), x["name"].lower()))
     return people, {p["id"]: p for p in people}
 
@@ -271,10 +278,11 @@ def cohort_views(people_json: dict, company_keys: set) -> list[dict]:
         rows = []
         for r in c.get("rows") or []:
             ck = re.sub(r"[^a-z0-9]", "", (r.get("company") or "").lower())
-            rows.append({"company": r.get("company"), "founded": r.get("founded"), "founders": r.get("founders"),
-                         "about": r.get("about"), "location": r.get("location"),
+            rows.append({"company": no_dash(r.get("company")), "founded": r.get("founded"),
+                         "founders": no_dash(r.get("founders")),
+                         "about": no_dash(r.get("about")), "location": no_dash(r.get("location")),
                          "relation": r.get("relation"), "relation_label": COHORT_RELATION.get(r.get("relation"), ""),
-                         "evidence": r.get("evidence") or "",
+                         "evidence": no_dash(r.get("evidence") or ""),
                          "ckey": ck if r.get("in_snapshot") and ck in company_keys else None})
         out.append({"employer": c.get("employer"), "fetched": c.get("fetched"), "source": c.get("source"),
                     "n": c.get("n", len(rows)), "n_worked_at_stated": c.get("n_worked_at_stated", 0),

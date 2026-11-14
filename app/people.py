@@ -185,6 +185,40 @@ def roles(person: dict) -> list[dict]:
     return sorted(rows, key=lambda r: (year_of(r["since"]) is None, year_of(r["since"]) or 0, r["org"]))
 
 
+def merge_roles(rows: list[dict]) -> list[dict]:
+    """Cala keeps one organisation under several entities ('CERN' and its Spanish name, 'Sana Labs' and
+    'Sana Labs AB'), so one job can arrive as several edges. Keep each dated role once (org, title, start). An undated
+    row is the same job when its org already has a row whose title contains its title ('CEO' in 'Co-Founder & CEO'),
+    or when it has no title and its org already has a row; a row with a title wins over one without. A different
+    undated title at the same org (a later CPO role with no start date) stays. Every count and gap is computed over
+    the merged rows, so they agree with each other."""
+    dated, seen = [], set()
+    for r in rows:
+        if r["since"]:
+            key = (org_key(r["org"]), (r["role"] or "").lower(), r["since"])
+            if key not in seen:
+                seen.add(key)
+                dated.append(r)
+    titles: dict[str, list[str]] = {}
+    for r in dated:
+        titles.setdefault(org_key(r["org"]), []).append((r["role"] or "").lower())
+    undated = [r for r in rows if not r["since"]]
+    kept = []
+    for r in sorted(undated, key=lambda r: not r["role"]):  # titled rows first, so they win
+        k, t = org_key(r["org"]), (r["role"] or "").lower()
+        have = titles.setdefault(k, [])
+        if (t and any(t in x for x in have)) or (not t and (have or any(org_key(x["org"]) == k for x in kept))):
+            continue
+        have.append(t)
+        kept.append(r)
+    order = {id(r): i for i, r in enumerate(rows)}
+    return dated + sorted(kept, key=lambda r: order[id(r)])
+
+
+def _n(n: int, one: str, many: str) -> str:
+    return f"{n} {one if n == 1 else many}"
+
+
 def level_changes(rows: list[dict]) -> dict:
     """Title level changes between consecutive dated roles. Up and down are both counted, with dates."""
     dated = [r for r in rows if year_of(r["since"]) is not None and r["level"] is not None]
@@ -207,11 +241,12 @@ def person_record(raw: dict, home: list[str], company_ids: dict[str, str], exits
                   same_name: int, home_names_of: Optional[list[str]] = None) -> dict:
     """One person: timeline, metrics, tags, prior founding and exits, gaps. No score."""
     ent = raw["response"]
-    rows = roles(ent)
+    all_rows = roles(ent)
+    rows = merge_roles(all_rows)
     home_ids = {company_ids[k] for k in home if k in company_ids}
     home_names = frozenset(home_names_of or [])
     # Cala keeps duplicate entities of one company: an edge to an entity with the home company's name is home too
-    home_ids |= {r["org_id"] for r in rows if _squash(r["org"]) in home_names}
+    home_ids |= {r["org_id"] for r in all_rows if _squash(r["org"]) in home_names}
     home_ids |= {e["id"] for e in _edges(ent, "outgoing", "FOUNDED") if _squash(e.get("name") or "") in home_names}
     founded = [{"org": e.get("name") or "", "org_id": e["id"], "sample": e["id"] in home_ids,
                 "sources": _sources(e.get("properties") or {})} for e in _edges(ent, "outgoing", "FOUNDED")]
@@ -250,13 +285,13 @@ def person_record(raw: dict, home: list[str], company_ids: dict[str, str], exits
         gaps.append("No WORKS_AT edges in Cala")
     undated = sum(1 for r in rows if not r["since"])
     if undated:
-        gaps.append(f"{undated} of {len(rows)} roles have no start date")
+        gaps.append(f"{undated} of {_n(len(rows), 'role', 'roles')} {'has' if undated == 1 else 'have'} no start date")
     no_end = sum(1 for r in rows if r["since"] and not r["until"])
     if no_end:
-        gaps.append(f"{no_end} dated roles have no end date (current, or end unknown)")
-    if not (home_ids & ({r["org_id"] for r in rows} | {f["org_id"] for f in founded})):
+        gaps.append(f"{_n(no_end, 'dated role has', 'dated roles have')} no end date (current, or end unknown)")
+    if not (home_ids & ({r["org_id"] for r in all_rows} | {f["org_id"] for f in founded})):
         gaps.append("Record does not link back to the company it was found through: possible name collision")
-    bad = sorted({s["name"] for r in rows for s in r["sources"] if any(d in s["url"] for d in COLLISION_DOMAINS)})
+    bad = sorted({s["name"] for r in all_rows for s in r["sources"] if any(d in s["url"] for d in COLLISION_DOMAINS)})
     if bad:
         gaps.append("Some sources look like other people with the same name: " + ", ".join(bad))
     if same_name > 1:

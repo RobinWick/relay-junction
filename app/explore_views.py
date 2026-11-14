@@ -26,8 +26,24 @@ router = APIRouter(prefix="/api/explore/ui")
 TAG_LABELS = {k: v["label"] for k, v in pp.TAGS.items()}
 LEVELS = {str(lvl): label for lvl, label, _ in pp.LEVELS}
 FOUNDER_WORDS = re.compile(r"founder|ceo|team|background|worked|career|consult|mckinsey|bcg|bain|alumni|\bex-", re.I)
+NEGATION = re.compile(r"\b(no|not|without|never|none)\b|n't\b", re.I)
 DROPPED_LABEL = {"tags": "founder background", "co_invested_with": "co-investor name", "investor": "investor name",
                  "lead": "lead name"}
+VIEW_TARGET = {"funds": "funds", "companies": "companies", "founders": "people"}
+NO_RANKING = "Recount doesn't rank people or predict success. It shows what Cala has on file."
+RANK_WORDS = re.compile(r"\b(best|worst|rank(ed|ing|s)?|score[sd]?|scoring|predict\w*|likel(y|iest)|succe(ed|ss|ssful)|"
+                        r"promising|winners?|top \d+|top (founders|people|funds|companies))\b", re.I)
+SORT_WORDS = re.compile(r"\b(sort(ed|ing)?|order(ed)? by|highest|lowest|largest|biggest|most active)\b[^,.;]{0,40}", re.I)
+AMOUNT = re.compile(r"(?:€|\$|\b(?:eur|usd|sek|nok|dkk)\s?)?\b\d+(?:[.,]\d+)?\s?(?:m|mn|million|k|bn|billion|"
+                    r"meur|musd|m€|€m)\b(?:\s?(?:eur|euros?|usd|dollars?|sek|nok))?|(?:€|\$)\s?\d+(?:[.,]\d+)?", re.I)
+SECTORS = ("fintech", "healthtech", "medtech", "biotech", "saas", "ai", "climate", "climate tech", "cleantech",
+           "gaming", "edtech", "proptech", "insurtech", "deeptech", "deep tech", "foodtech", "mobility", "e-commerce",
+           "ecommerce", "crypto", "web3", "robotics", "energy", "logistics", "cybersecurity", "security", "quantum",
+           "space", "agritech", "legaltech", "hrtech", "martech", "b2b", "b2c", "consumer", "hardware", "software",
+           "marketplace", "defence", "defense", "semiconductor", "batteries")
+SECTOR_RX = re.compile(r"\b(" + "|".join(re.escape(x) for x in sorted(SECTORS, key=len, reverse=True)) + r")\b", re.I)
+# Filters that hold an amount, per page view: a money phrase is matched only when one of these was set
+AMOUNT_KEYS = {"funds": ("round",), "companies": ("last_amount", "raised"), "founders": ()}
 _lock = threading.Lock()
 _cache: dict = {}
 
@@ -48,7 +64,7 @@ def views() -> dict:
         exits_file = xa._load_json(xa.EXITS_PATH)
         caveat = exits_file.get("caveat") if isinstance(exits_file, dict) and exits_file.get("caveat") else xs.EXITS_CAVEAT
         people_json = xa._load_json(xa.PEOPLE_PATH) or {}
-        founders, founder_details = xs.build_founders(people_json, TAG_LABELS, pp.org_key, asof)
+        founders, founder_details = xs.build_founders(people_json, TAG_LABELS, pp.org_key, asof, pp.merge_roles)
         by_company: dict[str, list] = {}
         for p in founders:
             if p["company_key"]:
@@ -116,6 +132,59 @@ class UiAi(BaseModel):
     view: Literal["funds", "companies", "founders"] = "funds"
 
 
+def _span(lo, hi, unit: str = "") -> str:
+    if lo is not None and hi is not None:
+        return f"{lo} to {hi}{unit}"
+    return f"at least {lo}{unit}" if lo is not None else f"at most {hi}{unit}"
+
+
+def _stage(st: str) -> str:
+    return {"pre-seed": "Pre-seed", "seed": "Seed", "growth": "Growth"}.get(st) or st.title()
+
+
+UI_TEXT = {
+    "country": lambda v, view: ("Has rounds in " if view == "funds" else "Country ") + " or ".join(v),
+    "stage": lambda v, view: ("Led at stage " if view == "funds" else "Last stage ") + " or ".join(map(_stage, v)),
+    "lead_share": lambda v, view: f"Lead share {_span(v['min'], v['max'], '%')}",
+    "lead_known": lambda v, view: f"At least {v} lead-known rounds",
+    "round": lambda v, view: f"Median led round {_span(v['min'], v['max'])} M EUR",
+    "last_lead": lambda v, view: f"Last lead within {v} months",
+    "downturn": lambda v, view: "Led a round in 2022 to 2023",
+    "exits": lambda v, view: "Has an exit receipt",
+    "co_investor": lambda v, view: "Co-invested with " + ", ".join(v),
+    "last_round_after": lambda v, view: f"Last round on or after {v}",
+    "last_amount": lambda v, view: f"Last round size {_span(v['min'], v['max'])} M EUR",
+    "months_since": lambda v, view: f"Months since last round {_span(v['min'], v['max'])}",
+    "investor": lambda v, view: "Investors include " + ", ".join(v),
+    "lead": lambda v, view: "Led a round: " + ", ".join(v),
+    "founder_tags": lambda v, view: "Founder background " + ", ".join(v),
+    "repeat": lambda v, view: "Repeat founder",
+    "tags": lambda v, view: "Background " + ", ".join(v),
+    "tenure": lambda v, view: f"Average years per role {_span(v['min'], v['max'])}",
+    "ups": lambda v, view: f"Title level-ups per year {_span(v['min'], v['max'])}",
+    "prior_exit": lambda v, view: "Prior exit",
+}
+
+
+def explain(view: str, filters: dict) -> str:
+    """The explanation the page shows, built only from the filters that were set, never from the model's prose."""
+    parts = [UI_TEXT[k](v, view) for k, v in filters.items() if k in UI_TEXT]
+    return ("Set from your sentence: " + "; ".join(parts) + ".") if parts else "No filter could be set from your sentence."
+
+
+def sentence_gaps(text: str, view: str, filters: dict) -> tuple[list[str], str | None]:
+    """What the sentence asks for that no filter holds: amounts, sectors, sort orders. Plus the fixed line when it
+    asks to rank, score or predict. Read from the sentence itself, so nothing unasked shows up here."""
+    out = []
+    if not any(k in filters for k in AMOUNT_KEYS[view]):
+        out += [f"amount ({m.group(0).strip()})" for m in AMOUNT.finditer(text)]
+    out += [f"sector ({m.group(1)}): Recount has no sector data" for m in SECTOR_RX.finditer(text)]
+    ranks = bool(RANK_WORDS.search(text))
+    if not ranks:
+        out += [f"sort ({m.group(0).strip()}): sort with the column headers" for m in SORT_WORDS.finditer(text)]
+    return list(dict.fromkeys(out)), NO_RANKING if ranks else None
+
+
 def _countries(f: dict, known: list[str]) -> list[str] | None:
     if f.get("country"):
         return [f["country"]]
@@ -133,8 +202,10 @@ def to_ui(out: dict, known_countries: list[str], text: str = "") -> dict:
     """explore_api.clamp_filters output -> {view, filters} with the keys explore.js understands. On companies,
     founder fields need founder words in the sentence: the model adds a background tag unasked, which empties the list."""
     f, t = out["filters"], out["target"]
+    about_founders = bool(FOUNDER_WORDS.search(text))
+    # founder tags the model adds unasked are noise, not something the sentence asked for
     unmatched = [DROPPED_LABEL.get(k, k.replace("_", " ")) for k in out.get("dropped") or []
-                 if not (t == "funds" and k == "tags")]  # the model adds founder tags to fund searches unasked
+                 if not (k == "tags" and (t == "funds" or not about_founders))]
     ui: dict = {}
     countries = _countries(f, known_countries)
     if countries and t != "people":
@@ -145,7 +216,7 @@ def to_ui(out: dict, known_countries: list[str], text: str = "") -> dict:
         else:
             ui["stage"] = [f["stage"]]
     for k, val in f.items():
-        if val == "no":
+        if val == "no" and NEGATION.search(text):  # a "no" the sentence did not say is the model's guess
             unmatched.append(f"{k.replace('_', ' ')}: no")
     if t == "funds":
         if f.get("lead_share_min") is not None:
@@ -175,13 +246,10 @@ def to_ui(out: dict, known_countries: list[str], text: str = "") -> dict:
             ui["investor"] = [f["investor"]]
         if f.get("lead"):
             ui["lead"] = [f["lead"]]
-        about_founders = bool(FOUNDER_WORDS.search(text))
         if f.get("tags") and about_founders:
             ui["founder_tags"] = [TAG_LABELS[x] for x in f["tags"]]
         if f.get("repeat_founder") == "yes" and about_founders:
             ui["repeat"] = True
-        if (f.get("tags") or f.get("repeat_founder")) and not about_founders:
-            unmatched.append("founder background (not in your sentence)")
         return {"view": "companies", "filters": ui, "unmatched": unmatched}
     if f.get("tags"):
         ui["tags"] = [TAG_LABELS[x] for x in f["tags"]]
@@ -198,8 +266,10 @@ def to_ui(out: dict, known_countries: list[str], text: str = "") -> dict:
 
 @router.post("/ai-filters")
 def ai_filters(body: UiAi, request: Request):
-    out = xa.ai_filters(xa.AiFilters(text=body.text, role=body.role), request)
+    out = xa.ai_filters(xa.AiFilters(text=body.text, role=body.role, view=VIEW_TARGET[body.view]), request)
     res = to_ui(out, views()["meta"]["countries"], body.text)
+    gaps, refusal = sentence_gaps(body.text, res["view"], res["filters"])
     engine = f"Gemini ({out['model']})" if out["via"] == "gemini" else "Keyword rules"
-    return {**res, "engine": engine, "explanation": out.get("explanation") or "", "notice": out.get("notice"),
+    return {**res, "unmatched": list(dict.fromkeys(res["unmatched"] + gaps)), "refusal": refusal,
+            "explanation": explain(res["view"], res["filters"]), "engine": engine, "notice": out.get("notice"),
             "filled_by_keywords": out.get("filled_by_keywords") or []}

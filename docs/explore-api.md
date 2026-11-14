@@ -27,7 +27,7 @@ list still gets a detail page, so Check can link any fund it shows.
 
 ## GET /api/explore/ui/companies and /companies/{key}
 Company: `key, name, country, rounds, last_round, last_stage, last_amount_eur_m, months_since_last_round,
-total_known_eur_m, investors[], leads[], last_leads[], founders[{id, name}], founder_tags[], repeat_founder`.
+total_known_eur_m, investors[] (every investor), leads[] (every lead), last_leads[], founders[{id, name}], founder_tags[], repeat_founder`.
 The detail adds `timeline`, a list of rounds with the oldest first.
 
 ## GET /api/explore/ui/founders and /founders/{id}
@@ -50,7 +50,12 @@ metric: the founders table sorts by name or company only. Every person view show
 ## POST /api/explore/ui/ai-filters
 Request `{role: founder|investor, view: funds|companies|founders, text}`. Runs explore_api's Gemini step (same
 rate limits, enums and keyword fallback) and renames its query params to the page's filter keys. Response
-`{view, filters, unmatched[], engine, explanation, notice, filled_by_keywords}`.
+`{view, filters, unmatched[], refusal, engine, explanation, notice, filled_by_keywords}`.
+
+`view` stays the tab the user typed on unless the sentence names exactly one other list ("founders", "funds",
+"companies") or the tab would hold fewer of the sentence's filters. `explanation` is built from `filters`, never from
+the model's prose. `unmatched` lists only what the sentence asked for and no filter holds: names that are not in our
+data, amounts, sectors and sort requests. `refusal` is a fixed line when the sentence asks to rank, score or predict.
 
 | view | key | value |
 |---|---|---|

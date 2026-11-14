@@ -107,6 +107,29 @@ def test_home_company_gives_no_tag_and_orgs_dedupe():
     assert rec["metrics"]["years_before_company"] == 7.8
 
 
+def test_merged_roles_keep_the_title_and_counts_agree():
+    """Bug 5: duplicate Cala entities collapse to one row that keeps its title; counts and gaps use merged rows."""
+    raw = _person([_job("Sana Labs", "First employee and Engineer", "2016-01-01", "2019-12-31", oid="s1"),
+                   _job("Lovable", "Co-Founder & CEO", "2023-11-01", oid="lov"),
+                   _job("CERN", "", oid="c2"),
+                   _job("Lovable", "CEO", oid="lov2"),
+                   _job("Organización Europea para la Investigación Nuclear (CERN)", "Particle Physicist", oid="c1"),
+                   _job("Sana Labs AB", "", oid="s2"),
+                   _job("Aiven", "CPO", until="2024-01-01", oid="a1"), _job("Aiven", "Engineer", "2015-01-01", oid="a2")])
+    rec = pp.person_record(raw, ["lovable"], {"lovable": "lov"}, {}, 1, ["lovable"])
+    rows = [(r["org"], r["role"]) for r in rec["roles"]]
+    assert ("Organización Europea para la Investigación Nuclear (CERN)", "Particle Physicist") in rows
+    assert ("CERN", "") not in rows and ("Sana Labs AB", "") not in rows and ("Lovable", "CEO") not in rows
+    assert ("Aiven", "CPO") in rows  # a different title at the same org is a different role
+    m = rec["metrics"]
+    assert m["roles"] == len(rows) == 5 and m["roles_outside_company"] == 4 <= m["roles"]
+    assert "2 of 5 roles have no start date" in rec["gaps"]
+    assert "2 dated roles have no end date (current, or end unknown)" in rec["gaps"]
+    one = pp.person_record(_person([_job("A", "Engineer", "2020-01-01"), _job("B", "")]), [], {}, {}, 1)
+    assert "1 of 2 roles has no start date" in one["gaps"]
+    assert "1 dated role has no end date (current, or end unknown)" in one["gaps"]
+
+
 def test_per_year_needs_a_year_of_span():
     raw = _person([_job("A", "Engineer", "2020-01-01"), _job("B", "Director", "2020-06-01")])
     rec = pp.person_record(raw, [], {}, {}, 1)
