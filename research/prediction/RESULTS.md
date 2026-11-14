@@ -7,8 +7,8 @@ Harness: `harness.py`. Test: 558 rounds found company-first (2021-2026), each pr
 
 | Question | Top 1 | Top 5 | Top 20 | Simple baseline | Random |
 |---|---|---|---|---|---|
-| Who leads the next round (current investors allowed) | 16% | 26-27% | 30-33% | "last lead again" (previous lead, then other current investors) 25% top 5; previous lead only 17% | about 0% |
-| Which NEW outside fund leads | 1% | 4-5% | 11-12% | stage popularity 2% top 5 | 0.15% top 5 |
+| Who leads the next round (current investors allowed, n=558) | 16% | 26-27% | 30-33% | "last lead again" (previous lead, then other current investors) 25% top 5; previous lead only 17% | about 0% |
+| Which NEW outside fund leads (n=462) | 1% | 4-5% | 11-12% | stage popularity 2% top 5 | 0.15% top 5 |
 
 - Best methods: learning-to-rank (OUTSIDE top 5 6.9%, audit found no leak in the code) and the co-investment graph
   (6.3%, 5.0% after the crawl fix, 3.8% on the 2024-26 holdout).

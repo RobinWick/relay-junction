@@ -852,6 +852,136 @@
    "type": "entity_graph_label_noise",
    "severity": "low",
    "description": "One is_lead participant on a SEED round (Solarock, 2022) is the entity 'Renewable Energy industry', an industry rather than an investor."
+  },
+  {
+   "type": "disagrees_with_press",
+   "severity": "medium",
+   "description": "We checked the rounds behind one fund's 'does the lead come back?' record (Lifeline Ventures, 10 cases) and four Creandum seed leads from Oct 2026 against press releases and the fund's own portfolio page. Most rows hold. These five do not: a round label and amount that mix equity and debt, an investor listed in a round no source puts it in, a round no public source mentions, a wrong company country, and a co-lead returned as a participant. Each example gives the raw Cala row and the source URL. Checked 2026-11-14 by web search, no LLM judging.",
+   "count": 5,
+   "examples": [
+    {
+     "company": "Verda (DataCrunch)",
+     "issue": "Round label and amount: the USD 117m round of Apr 2026 was equity led by Lifeline Ventures plus debt from Nordic lenders, with no series label in the announcement. Cala returns it as 'Series A (follow-on)' in one investor-first row and as 'Other Equity' dated 'Dec 2025' in another, both with the full USD 117m. Lifeline's own portfolio page labels its 2026 Verda investment 'Series B'.",
+     "cala": [
+      {
+       "query_path": "investor_first",
+       "raw_row": {
+        "company": "Verda (DataCrunch)",
+        "country": "Finland",
+        "date": "Apr 2026",
+        "round_type": "Series A (follow-on)",
+        "amount": "$117M",
+        "lead_investor": "Lifeline Ventures",
+        "participating_investors": "byFounders, Tesi, Varma",
+        "byFounders_led": "No"
+       }
+      },
+      {
+       "query_path": "investor_first",
+       "raw_row": {
+        "company": "Verda (DataCrunch)",
+        "country": "Finland",
+        "date": "Dec 2025",
+        "round_type": "Other Equity",
+        "amount": "$117M",
+        "lead_investor": "Lifeline Ventures",
+        "participating_investors": "Not disclosed",
+        "lifeline_led": "Yes"
+       }
+      }
+     ],
+     "sources": [
+      "https://thenextweb.com/news/verda-117m-funding-lifeline-ventures-ai-cloud",
+      "https://www.lifelineventures.com/companies/"
+     ]
+    },
+    {
+     "company": "Oura",
+     "issue": "Participant not supported: Cala lists Lifeline Ventures among the investors of the Nov 2016 EUR 5m Series A. TechCrunch and tech.eu name only Joi Ito and Jaan Tallinn; Lifeline's own portfolio page says the 2016 Series A was led by David Shuman and Harpreet Rai and lists Lifeline again only from the 2021 Series C. Cala also returns no lead for this round while Lifeline's page names two.",
+     "cala": [
+      {
+       "query_path": "company_first",
+       "raw_row": {
+        "round_type": "Series A",
+        "announcement_date": "November 2016",
+        "amount": "€5 million (~$5.3 million)",
+        "lead_investor": null,
+        "other_investors": "Lifeline Ventures, Joi Ito, Nat Turner, Jaan Tallinn (Future of Life Institute)"
+       }
+      }
+     ],
+     "sources": [
+      "https://techcrunch.com/2016/11/29/oura-ring-raises-e5-million-to-take-its-smart-jewelry-mainstream/",
+      "https://tech.eu/2016/11/30/ouraring-raises-5million/",
+      "https://www.lifelineventures.com/companies/"
+     ]
+    },
+    {
+     "company": "Ambio",
+     "issue": "Round with no public source: Cala returns a seed round dated 'January 1, 2024 (approximate)', amount and investors 'Not publicly disclosed'; Cala's own knowledge answer attributes it to PitchBook. We found no press for it, and Lifeline's portfolio page lists only a 2023 pre-seed and the Oct 2026 seed (led by b2venture, with Lifeline). For a 'did the lead come back?' count, this placeholder round becomes the 'next round' and the fund is counted as not returning.",
+     "cala": [
+      {
+       "query_path": "company_first",
+       "raw_row": {
+        "announcement_date": "January 1, 2024 (approximate)",
+        "round_type": "Seed",
+        "amount": "Undisclosed",
+        "lead_investor": "Not publicly disclosed",
+        "participating_investors": "Not publicly disclosed"
+       }
+      }
+     ],
+     "sources": [
+      "https://www.lifelineventures.com/companies/",
+      "https://tech.eu/2026/10/15/from-slush-to-sustainable-materials-ambio-raises-eur51m-for-ai-powered-plastics-procurement/"
+     ]
+    },
+    {
+     "company": "Atlas Bio",
+     "issue": "Country: Cala returns 'UK'. The company is based in Basel, Switzerland (tech.eu: 'Swiss startup Atlas Bio'). The lead (Creandum) and the USD 10m seed amount are correct.",
+     "cala": [
+      {
+       "query_path": "investor_first",
+       "raw_row": {
+        "company": "Atlas Bio",
+        "country": "UK",
+        "date": "Oct 27, 2026",
+        "round_type": "Seed",
+        "amount": "$10M",
+        "lead_investor": "Creandum",
+        "participating_investors": null,
+        "creandum_led": "Yes"
+       }
+      }
+     ],
+     "sources": [
+      "https://tech.eu/2026/10/27/swiss-startup-atlas-bio-secures-125m-to-tackle-drug-developments-70-failure-rate-and-move-beyond-animal-testing/"
+     ]
+    },
+    {
+     "company": "Ares Intelligence",
+     "issue": "Co-lead returned as participant: the investor-first row has lead 'Creandum' and participant 'Lakestar'. Press reports the round as co-led by Creandum and Lakestar, and Cala's own /v1/knowledge/search answer for the same round also names both as leads.",
+     "cala": [
+      {
+       "query_path": "investor_first",
+       "raw_row": {
+        "company": "Ares Intelligence",
+        "country": "UK",
+        "date": "Oct 30, 2026",
+        "round_type": "Seed",
+        "amount": "~$2.9M",
+        "lead_investor": "Creandum",
+        "participating_investors": "Lakestar",
+        "creandum_led": "Yes"
+       }
+      }
+     ],
+     "sources": [
+      "https://www.startupmag.co.uk/funding/ares-intelligence-2026-seed-funding/",
+      "https://nordic9.com/news/ares-intelligence-closed-a-25-million-pre-see/"
+     ]
+    }
+   ]
   }
  ],
  "note_on_counts": "The example counts in each finding were measured on the snapshot available when the finding was written (about 43 funds asked investor-first). The patterns hold on the larger final snapshot; the live app shows current totals."

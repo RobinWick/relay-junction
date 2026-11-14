@@ -1,6 +1,6 @@
 # Lead accuracy spot-check
 
-Checked 14 Nov 2026 against `cala/data/snapshot.json` (1,828 rounds). Raw results: `research/accuracy.json`.
+Checked 14 Nov 2026 against an early snapshot (1,828 rounds, before the investor-first crawl). Raw results: `accuracy.json` next to this file. Each round is keyed by company + date + stage, so it can be found again in the current snapshot (5,200 rounds). A later press check of the sample lead card, ties and Creandum seeds is in `lifeline-check.md`.
 
 ## Headline
 
@@ -22,7 +22,6 @@ Pitch-safe line: "We spot-checked 41 Cala lead calls against press releases: 31 
   - **wrong**: the source contradicts the lead.
   - **unverifiable**: no public source names a lead.
 - `error_source` says whether the error came from Cala's row (`cala`) or from our own parsing of it (`pipeline`).
-- Side note: `snapshot.json` stats say `funds_queried: 16`. If the pitch says "~200 funds", make sure it matches the data the app actually ships.
 
 ## Random 30
 
