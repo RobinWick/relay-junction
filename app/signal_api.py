@@ -949,7 +949,20 @@ def chat(body: Chat, request: Request):
 # ---------------------------------------------------------------- page
 @pages.get("/signal")
 def signal_page():
-    for p in (HERE / "static" / "signal.html", HERE / "static" / "signal" / "index.html"):
-        if p.exists():
-            return FileResponse(p)
+    # Stamp asset URLs with a content hash so every deploy busts browser caches;
+    # a fixed ?v= kept serving old JS to anyone who had loaded the page before.
+    page = HERE / "static" / "signal.html"
+    if page.exists():
+        import hashlib
+        from fastapi.responses import HTMLResponse
+        html = page.read_text(encoding="utf-8")
+        for name in ("signal.js", "signal.css"):
+            asset = HERE / "static" / name
+            if asset.exists():
+                ver = hashlib.sha256(asset.read_bytes()).hexdigest()[:10]
+                html = html.replace(f"/static/{name}?v=3", f"/static/{name}?v={ver}")
+        return HTMLResponse(html, headers={"Cache-Control": "no-cache"})
+    alt = HERE / "static" / "signal" / "index.html"
+    if alt.exists():
+        return FileResponse(alt)
     return JSONResponse({"error": "The Signal page is not built yet. The API is under /api/signal."}, status_code=503)
