@@ -10,7 +10,7 @@ Key facts:
 - Where both query paths name a lead for the same round, they share it in 172 of 191 rounds.
 - Validation: the investor with the stronger earlier lead record is the real lead 50% vs 36% random in 1,599 rounds (95% CI 47 to 52%); hand check against press 22 of 26 sourced leads correct; entity graph agrees 6 of 6 where it marks a lead.
 - Disputed rounds: 12 of 211 sourced rounds have source text naming a different lead; they are marked and left out of every count.
-- Way in: investor co-round ties from Cala rounds (one of your investors and the fund in the same round with at most 6 investors), plus the founder's LinkedIn Connections export, parsed in the browser and matched by company name to companies each fund led or joined. Nothing is uploaded. A same-company match is a lead to check, not proof of a relationship.
+- Way in: investor co-round ties from Cala rounds (one of your investors and the fund in the same round with at most 6 investors), plus the founder's LinkedIn Connections export, parsed in the browser and matched by company name to companies each fund led or joined. Nothing is uploaded. A same-company match is a lead to check, not proof of a relationship. The Map view draws these ways in as lines from you, through the person, to each fund (solid: the fund led that company's round; dashed: it only joined; dotted: your investor's shared round), with funds in the list's groups and order.
 - Prediction tested on 558 held-out rounds with 8 methods and a leakage audit: a current investor leads about 1 in 4 next rounds; the previous round's lead itself about 1 in 6 (17%). A new outside lead is in the top 5 only 4 to 5% of the time (random 0.15%, 462 rounds), so the product shows evidence, not odds.
 - Need: the lead of a round came back in the company's next round 60% of the time but led it again only 17% (1,489 cases), so most founders need a new lead each round.
 - Stack: Cala, Aiven for PostgreSQL (system of record and spending caps), Modal (FastAPI app and background live lookups), Gemini only for reading messy pasted lines.
@@ -18,7 +18,7 @@ Key facts:
 ## Check us in 60 seconds
 1. Open https://robin-81988--recount.us-east.modal.run and click "Try a sample" (or open it with #demo). Sample: seed round, EUR 3m, Lifeline Ventures as an investor, Lovable as a competitor, 14 pasted lines.
 2. Summary line: "8 of 14 mostly lead Seed rounds, 5 of them at a size like your EUR 3m. 2 lead, but a different size. 2 backed Lovable. You have a way in to 2." If Gemini is unavailable, the messy last line is not recognised and it reads 7 of 13, 4, and way in to 1.
-3. Click "Try with a sample network" (made-up, every match marked "Sample"): way in goes from 2 to 8.
+3. Click "Try with a sample network" (made-up, every match marked "Sample"): way in goes from 2 to 8. Click Map to see those ways in as lines from you to each fund.
 4. Open Voima Ventures: "Led 13 of 13" rounds with a named lead near your stage, 7 more with no named lead; "How to get in" says your investor Lifeline Ventures and Voima were both in Reduciner's round of May 2026, with 4 investors in total.
 5. Click Reduciner to open the round record: how it was found (both query paths agree), Cala entity IDs, source documents from Cala search, raw Cala rows.
 

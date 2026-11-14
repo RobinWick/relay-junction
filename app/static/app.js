@@ -61,13 +61,12 @@ async function api(path, opts = {}) {
 }
 
 function announce(msg) { const st = $("#status"); st.textContent = ""; setTimeout(() => { st.textContent = msg; }, 50); }
-/* Only the visible screen animates: the first-run strip on paste, the map's sweep on results. */
+/* Only the visible screen animates: the first-run strip on paste, the map's lines on results. */
 function setScreen(s) {
   const was = document.body.dataset.screen;
   document.body.dataset.screen = s;
   hideTip();
-  if (s !== "results") stopMap();
-  else if (was !== "results" && state.resultView === "map" && MAP?.wrap.isConnected) ambient(0);
+  if (s !== "results") stopFlow();
   if (s === "paste" && was !== "paste") runProof();
 }
 
@@ -80,7 +79,7 @@ function route() {
   $("#nav-find").toggleAttribute("aria-current", !isMethod && state.mode === "find");
   $("#nav-method").toggleAttribute("aria-current", isMethod);
   ["#nav-check", "#nav-find", "#nav-method"].forEach((id) => { if ($(id).hasAttribute("aria-current")) $(id).setAttribute("aria-current", "page"); });
-  if (isMethod) { renderMethod(); stopMap(); hideTip(); if ($("#tour-root").firstChild) tourClose("done"); }
+  if (isMethod) { renderMethod(); stopFlow(); hideTip(); if ($("#tour-root").firstChild) tourClose("done"); }
 }
 function go(path) { if (location.pathname !== path) history.pushState({}, "", path); route(); window.scrollTo(0, 0); }
 document.addEventListener("click", (e) => {
@@ -277,6 +276,7 @@ function clearNetwork() { state.network = null; paintNetStatus(); rerenderKeepFo
 /* Re-rendering the results removes the control that had focus; put focus on the new network bar instead of <body>. */
 function rerenderKeepFocus() {
   if (!state.view) return;
+  state.mapRevealed = false;  // new ways in: draw the lines again
   const wasInResults = $("#results").contains(document.activeElement);
   renderResults();
   if (wasInResults) ($("#netbar [data-net-clear]") || $("#li-file-2"))?.focus();
@@ -821,7 +821,7 @@ function renderResults() {
     </div>
     ${ranked.length ? netbarHtml() : ""}
     ${ranked.length ? `<div class="listview${isMap ? " hidden" : ""}" id="listview">${readLine(req, showWay)}<div class="cols" aria-hidden="true"><span>Fund</span><span>Lead record, oldest first</span><span>Round size${req.target_eur_m ? ` vs your ${fmtM(req.target_eur_m)}m` : " it leads"}</span><span class="c-last">Last lead</span>${showWay ? "<span>Way in</span>" : ""}</div>${list}</div>
-      <div class="mapview${isMap ? "" : " hidden"}" id="mapview"><div class="radar-wrap"><div class="radar" id="radar"><div class="rsweep" aria-hidden="true"></div><svg viewBox="-320 -320 640 640" role="group" aria-label="Fund map. Closer to You means the fund leads rounds like yours more often. Around the dial is when it last led, newest at the top."></svg></div><p class="map-note" id="map-note"></p></div><div class="rail" id="rail"></div></div>`
+      <div class="mapview${isMap ? "" : " hidden"}" id="mapview">${mapviewHtml()}</div>`
       : `<p class="empty">None of the pasted lines matched a fund in our Cala data.</p>`}
     <div class="after">${afterHtml(d)}</div>`;
   $("#csv").onclick = () => copyCsv(ranked);
@@ -833,15 +833,27 @@ function renderResults() {
   $$("[data-open]", out).forEach((b) => b.addEventListener("click", () => openFund(+b.dataset.open, b)));
   $$("[data-view]", out).forEach((b) => b.addEventListener("click", () => setResultView(b.dataset.view)));
   setupCounting(out);
-  if (isMap) drawMap({reveal: !state.mapRevealed, linesIn: state.mapRevealed});
-  else stopMap();
+  if (isMap) drawFlow({animate: !state.mapRevealed});
+  else stopFlow();
   announce(`${plural(ranked.length, "fund", "funds")}. ${out.querySelector(".summary")?.textContent || ""}`);
   tourAfterResults();
 }
 
 const viewToggleHtml = (isMap) => `<div class="viewtog" role="group" aria-label="View">
   <button type="button" data-view="list" aria-pressed="${!isMap}"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 4.5h10M3 8h10M3 11.5h10"/></svg>List</button>
-  <button type="button" data-view="map" aria-pressed="${isMap}"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6"/><circle cx="8" cy="8" r="3"/><path d="M8 8 12.2 3.8"/></svg>Map</button></div>`;
+  <button type="button" data-view="map" aria-pressed="${isMap}"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="3.5" cy="8" r="1.8"/><circle cx="12.5" cy="4" r="1.8"/><circle cx="12.5" cy="12" r="1.8"/><path d="M5.3 8c3 0 3.4-4 5.4-4M5.3 8c3 0 3.4 4 5.4 4"/></svg>Map</button></div>`;
+
+/* The Map: who can introduce you, then the flow, the line legend and what a line means, in plain words. */
+const mapviewHtml = () => `<div class="say" id="say"></div>
+  <div class="flow-scroll"><div class="flow" id="flow"></div></div>
+  <p class="flow-legend" id="flow-legend"></p>
+  <section class="explain" aria-labelledby="explain-h"><h2 id="explain-h">What a line means</h2><ul>
+    <li><b>A line</b> means this person can introduce you to this fund.</li>
+    <li><b>Where it comes from:</b> your investor was in a round with the fund, or someone in your LinkedIn works at a company the fund backed. Counted from Cala round data and your LinkedIn file, read in your browser.</li>
+    <li><b>Solid</b> means the fund led that company's round, <b>dashed</b> that it only joined it. <b>Dotted</b> is a round your investor shared with it.</li>
+    <li><b>No way in found</b> means no path yet, not a bad fund.</li>
+    <li>A line is a lead to check, not proof they know the partner.</li>
+  </ul></section>`;
 
 /* How to read a row's dots, said once above the list. Rings only show once there is something to ring. */
 function readLine(req, showWay) {
@@ -857,8 +869,8 @@ function setResultView(v) {
   $("#listview")?.classList.toggle("hidden", isMap);
   $("#mapview")?.classList.toggle("hidden", !isMap);
   hideTip();
-  if (isMap) { drawMap({reveal: !state.mapRevealed}); announce("Map view. Closer to You means the fund leads rounds like yours more often."); }
-  else { stopMap(); announce("List view."); }
+  if (isMap) { drawFlow({animate: !state.mapRevealed}); announce("Map view. Each line is someone who can introduce you to a fund."); }
+  else { stopFlow(); announce("List view."); }
 }
 
 function afterHtml(d) {
@@ -1209,462 +1221,475 @@ function runProof() {
   }, total + 3600);
 }
 
-/* ---------------- map: the shortlist as a radar ----------------
-   Ring: the group, same as the list. Inside a ring, closer to You = higher lead score (the list's ranking).
-   Around the dial: months since it last led a round (log scale), Now at 12 o'clock. Dot area: rounds it led.
-   Orange ring: backed your competitor. Green line: a way in, from You through your investor or a contact. */
+/* ---------------- map: the way-in flow ----------------
+   You on the left. In the middle, who can introduce you: your investors, and your LinkedIn contacts grouped by
+   the company they work at. On the right, the funds in the list's own groups and order. Each line is one way in,
+   drawn in the order the list ranks ways in: someone at a company the fund led (thick, solid), someone at a
+   company it only joined (dashed), your investor in a small round with it (thin, dotted). A fund with no way in
+   keeps its place in its group and says so. */
 const SVGNS = "http://www.w3.org/2000/svg";
-const R_YOU = 22, R_VIA = 70, R_IN = 98, R_OUT = 282;
-const RING = {pitch: [R_IN, 172], size: [172, 214], few: [214, 248], avoid: [248, R_OUT]};
-const RING_LABEL = {pitch: "PITCH FIRST", size: "DIFFERENT SIZE", few: "TOO LITTLE DATA", avoid: "FOLLOWS OR SOMETIMES LEADS"};
-const DIAL_MAX = 300, NONE_A = 328;
-const TICKS = [[0, "Now"], [1, "1 mo"], [3, "3 mo"], [6, "6 mo"], [12, "1 yr"], [24, "2 yrs"], [36, "3+ yrs"]];
-const angleOf = (months) => (DIAL_MAX * Math.log1p(Math.min(months, 36))) / Math.log1p(36);
-const polar = (r, deg) => [r * Math.sin((deg * Math.PI) / 180), -r * Math.cos((deg * Math.PI) / 180)];
-const blipR = (led) => 5 + 2.05 * Math.sqrt(Math.min(led, 80));
-let MAP = null, mapRaf = 0, arcId = 0;
+const FLOW_PEOPLE = 15;  // more people or companies than this collapse into one "+N more" node
+const LINK_KIND = {5: "led", 4: "led", 3: "joined", 2: "tie"};
+let FLOW = null, flowRaf = 0;
 
-function nowT() {
-  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(state.meta?.retrieved || "");
-  return m ? +m[1] + (+m[2] - 1 + +m[3] / 30) / 12 : 2026.87;
-}
 function svgEl(tag, attrs, parent) {
   const n = document.createElementNS(SVGNS, tag);
   for (const [k, v] of Object.entries(attrs || {})) n.setAttribute(k, v);
   if (parent) parent.appendChild(n);
   return n;
 }
-function arcPath(r0, r1, a0, a1) {
-  const [x0, y0] = polar(r1, a0), [x1, y1] = polar(r1, a1), [x2, y2] = polar(r0, a1), [x3, y3] = polar(r0, a0);
-  const large = a1 - a0 > 180 ? 1 : 0;
-  return `M${x0} ${y0}A${r1} ${r1} 0 ${large} 1 ${x1} ${y1}L${x2} ${y2}A${r0} ${r0} 0 ${large} 0 ${x3} ${y3}Z`;
-}
-/* Text that follows a ring, centred on angle a, flipped on the lower half so it never reads upside down. */
-function arcText(g, defs, r, a, span, text, cls, fs) {
-  const lower = a > 90 && a < 270;
-  const [s, e] = lower ? [a + span, a - span] : [a - span, a + span];
-  const [x0, y0] = polar(r, s), [x1, y1] = polar(r, e);
-  const id = `arc${arcId++}`;
-  svgEl("path", {id, d: `M${x0} ${y0}A${r} ${r} 0 0 ${lower ? 0 : 1} ${x1} ${y1}`, fill: "none"}, defs);
-  const t = svgEl("text", {class: cls, "font-size": fs, dy: lower ? fs * 0.75 : fs * 0.1}, g);
-  svgEl("textPath", {href: `#${id}`, startOffset: "50%", "text-anchor": "middle"}, t).textContent = text;
-}
-/* Ring names go in the widest empty stretch of the dial, so they never sit under a fund; inside that stretch,
-   as close to the bottom as they fit, where the text runs flat. */
-function quietAngle(items) {
-  const as = items.map((P) => (P.a + 360) % 360).sort((x, y) => x - y);
-  if (!as.length) return 200;
-  let lo = 0, hi = 360, gap = -1;
-  as.forEach((a, i) => {
-    const b = i + 1 < as.length ? as[i + 1] : as[0] + 360;
-    if (b - a > gap) { gap = b - a; lo = a; hi = b; }
-  });
-  if (hi - lo < 100) return ((lo + hi) / 2) % 360;
-  const want = [190, 550].find((x) => x > lo + 50 && x < hi - 50);
-  return (want ?? Math.max(lo + 50, Math.min(hi - 50, 190 + (lo > 190 ? 360 : 0)))) % 360;
-}
+const possessive = (s) => (/s$/i.test(s) ? `${s}'` : `${s}'s`);
+const stageWord = (s) => (!s || /not stated/i.test(s) ? "" : /^(pre-)?seed$/i.test(s) ? s.toLowerCase() : s);
+const roundOf = (company, stage) => `${possessive(company)} ${stageWord(stage) ? `${stageWord(stage)} round` : "round"}`;
+const whoList = (people) => (people.length === 1 ? personName(people[0])
+  : people.length === 2 ? `${personName(people[0])} and ${personName(people[1])}` : `${personName(people[0])} and ${people.length - 1} others`);
 
-function drawField(svg, k, items) {
-  const defs = svgEl("defs", {}, svg);
-  const f = svgEl("filter", {id: "glow", x: "-20%", y: "-20%", width: "140%", height: "140%"}, defs);
-  svgEl("feGaussianBlur", {stdDeviation: 3.2}, f);
-  const g = svgEl("g", {class: "rfield", "aria-hidden": "true"}, svg);
-  svgEl("circle", {class: "band-few", r: RING.few[1]}, g);
-  svgEl("circle", {class: "band-size", r: RING.size[1]}, g);
-  svgEl("circle", {class: "band-pitch", r: RING.pitch[1]}, g);
-  svgEl("path", {class: "stale-arc", d: arcPath(R_IN, R_OUT, angleOf(24), DIAL_MAX)}, g);
-  svgEl("path", {class: "none-arc", d: arcPath(R_IN, R_OUT, DIAL_MAX + 5, 354)}, g);
-  for (const [m] of TICKS) {
-    const [x0, y0] = polar(R_IN, angleOf(m)), [x1, y1] = polar(R_OUT, angleOf(m));
-    svgEl("line", {class: "spoke", x1: x0, y1: y0, x2: x1, y2: y1}, g);
-  }
-  svgEl("circle", {class: "ring pitch", r: RING.pitch[1]}, g);
-  svgEl("circle", {class: "ring dash", r: RING.size[1]}, g);
-  svgEl("circle", {class: "ring dash", r: RING.few[1]}, g);
-  svgEl("circle", {class: "ring", r: R_OUT}, g);
-  svgEl("circle", {class: "ring dash", r: R_IN}, g);
-  const fs = 10.5 * k;
-  for (const [m, label] of TICKS) {
-    const a = angleOf(m), [x0, y0] = polar(R_OUT, a), [x1, y1] = polar(R_OUT + 5, a), [lx, ly] = polar(R_OUT + 9 + fs * 0.6, a);
-    svgEl("line", {class: "tick", x1: x0, y1: y0, x2: x1, y2: y1}, g);
-    svgEl("text", {class: `tick-l${m === 0 ? " now" : ""}`, x: lx, y: ly, "font-size": fs, "text-anchor": Math.abs(lx) < 8 ? "middle" : lx > 0 ? "start" : "end", "dominant-baseline": "central"}, g).textContent = label;
-  }
-  const zfs = 9 * k;
-  arcText(g, defs, R_OUT + 10, (angleOf(24) + DIAL_MAX) / 2, 30, "OVER 2 YRS", "dial-l stale", zfs);
-  arcText(g, defs, R_OUT + 10, (DIAL_MAX + 5 + 354) / 2, 30, "NO LEAD FOUND", "dial-l", zfs);
-  const qa = quietAngle(items), bl = 9 * k;
-  for (const [grp, [lo, hi]] of Object.entries(RING)) {
-    arcText(g, defs, (lo + hi) / 2 - 3, qa, grp === "avoid" ? 52 : 40, RING_LABEL[grp], `band-l ${grp}`, bl);
-  }
-}
-function drawYou(svg, k) {
-  const you = svgEl("g", {class: "youg", "aria-hidden": "true"}, svg);
-  svgEl("circle", {class: "you-halo", r: R_YOU + 12}, you);
-  svgEl("circle", {class: "you", r: R_YOU}, you);
-  svgEl("text", {class: "you-t", "font-size": Math.min(11.5 * k, 15), y: 0.5}, you).textContent = "You";
-}
-
-/* Each fund sits on its own ring at its last-lead angle; overlapping dots push apart a little, never off their ring. */
-function layoutBlips(rows) {
-  const now = nowT();
-  const items = rows.map((r, idx) => {
-    const months = r.last_lead ? Math.max(0, (now - r.last_lead.t) * 12) : null;
-    const a0 = months == null ? NONE_A : angleOf(months);
-    const [lo0, hi0] = RING[r.group] || RING.avoid;
-    const lo = lo0 + 6, hi = hi0 - 6;
-    const rb = blipR(r.led), score = Math.max(0, leadScore(r));
-    const rad = lo + rb * 0.4 + (1 - score) * Math.max(0, hi - lo - rb * 0.8);
-    return {r, idx, a0, a: a0, rad, rb, lo, hi, months};
-  });
-  const SLACK = 13;
-  for (let it = 0; it < 240; it++) {
-    for (let i = 0; i < items.length; i++) for (let j = i + 1; j < items.length; j++) {
-      const A = items[i], B = items[j];
-      const [ax, ay] = polar(A.rad, A.a), [bx, by] = polar(B.rad, B.a);
-      const dx = bx - ax, dy = by - ay, d = Math.hypot(dx, dy) || 0.01, need = A.rb + B.rb + 8;
-      if (d >= need) continue;
-      const push = (need - d) / 2, ux = dx / d, uy = dy / d;
-      const move = (P, s) => {
-        const [px, py] = polar(P.rad, P.a), nx = px + ux * s, ny = py + uy * s;
-        P.rad = Math.hypot(nx, ny);
-        P.a = ((Math.atan2(nx, -ny) * 180) / Math.PI + 360) % 360;
-        if (P.a > 350 && P.a0 < 40) P.a -= 360;
-      };
-      move(A, -push); move(B, push);
-    }
-    for (const P of items) {
-      P.a = Math.max(Math.max(P.a0 - SLACK, 4), Math.min(P.a0 + SLACK, P.a));
-      P.rad = Math.max(P.lo + P.rb * 0.4, Math.min(P.hi - P.rb * 0.4, P.rad));
-    }
-  }
-  for (const P of items) [P.x, P.y] = polar(P.rad, P.a);
-  return items;
-}
-
-/* Who stands between you and a fund: your investor (a small round together), or people at a company it backed.
-   One node per investor or company, strongest first, at most 12 so the middle stays readable. */
-function viaNodes(items) {
+/* One node per investor and one per company your contacts work at. Same-name-only matches draw no line. */
+function flowPeople(rows) {
   const nodes = new Map();
-  const add = (key, kind, label, P, strength, detail) => {
-    if (!nodes.has(key)) nodes.set(key, {key, kind, label, links: [], people: new Set()});
-    const n = nodes.get(key);
-    if (!n.links.some((l) => l.item === P)) n.links.push({item: P, strength, detail});
-    if (detail?.person) n.people.add(personName(detail.person));
+  const add = (key, make, link) => {
+    if (!nodes.has(key)) nodes.set(key, {key, ...make(), links: []});
+    nodes.get(key).links.push(link);
   };
-  for (const P of items) {
-    const r = P.r;
-    if (r.tie) add(`inv:${r.tie.investor}`, "inv", r.tie.investor, P, 2, r.tie);
-    for (const m of r.way.matches) if (m.strength > 2) add(`co:${m.round.ckey}`, "person", m.round.company, P, m.strength, m);
+  rows.forEach((r, i) => {
+    if (r.tie) add(`inv:${r.tie.investor}`, () => ({kind: "inv", title: r.tie.investor, sub: "Your investor"}), {i, r, s: 2, tie: r.tie});
+    const byCo = new Map();
+    for (const m of r.way.matches) {
+      if (m.strength < 3) continue;
+      if (!byCo.has(m.round.ckey)) byCo.set(m.round.ckey, {round: m.round, people: [], s: 0});
+      const v = byCo.get(m.round.ckey);
+      v.people.push(m.person);
+      v.s = Math.max(v.s, m.strength);
+    }
+    for (const [k, v] of byCo) add(`co:${k}`, () => ({kind: "co", title: v.round.company, people: v.people}), {i, r, s: v.s, round: v.round, people: v.people});
+  });
+  const all = [...nodes.values()];
+  for (const n of all) {
+    n.s = Math.max(...n.links.map((l) => l.s));
+    if (n.kind === "co") n.sub = whoList(n.people);
   }
-  const top = (n) => Math.max(...n.links.map((l) => l.strength));
-  const all = [...nodes.values()].sort((p, q) => (q.kind === "inv") - (p.kind === "inv") || top(q) - top(p) || q.links.length - p.links.length);
-  const list = all.slice(0, 12);
-  list.extra = all.length - list.length;
-  for (const n of list) {
-    let sx = 0, sy = 0;
-    for (const l of n.links) { sx += l.strength * Math.sin((l.item.a * Math.PI) / 180); sy += l.strength * Math.cos((l.item.a * Math.PI) / 180); }
-    n.a0 = ((Math.atan2(sx, sy) * 180) / Math.PI + 360) % 360;
-    n.a = n.a0; n.rad = R_VIA;
+  all.sort((a, b) => (b.kind === "inv") - (a.kind === "inv") || b.s - a.s || b.links.length - a.links.length);
+  if (all.length <= FLOW_PEOPLE) return all;
+  const shown = all.slice(0, FLOW_PEOPLE - 1), rest = all.slice(FLOW_PEOPLE - 1);
+  const best = new Map();
+  for (const n of rest) for (const l of n.links) if (!best.has(l.i) || l.s > best.get(l.i).s) best.set(l.i, {...l, via: n});
+  shown.push({key: "more", kind: "more", title: `+${rest.length} more`, sub: `Ways in to ${plural(best.size, "fund", "funds")}`,
+    links: [...best.values()], s: Math.max(...rest.map((n) => n.s)), rest});
+  return shown;
+}
+
+function stopFlow() { cancelAnimationFrame(flowRaf); flowRaf = 0; if (FLOW) FLOW.playing = false; }
+
+function textW(svg, str, cls) {
+  const t = svgEl("text", {class: cls, x: -9999, y: -9999}, svg);
+  t.textContent = str;
+  const w = t.getComputedTextLength();
+  t.remove();
+  return w;
+}
+/* Shortens a label until it fits, so a long company or fund name never runs into the next column. */
+function fitText(svg, str, cls, max) {
+  if (textW(svg, str, cls) <= max) return str;
+  let s = str;
+  while (s.length > 3 && textW(svg, `${s}…`, cls) > max) s = s.slice(0, -1);
+  return `${s.trimEnd()}…`;
+}
+const bez = (x0, y0, x1, y1) => {
+  const dx = (x1 - x0) * 0.55;
+  return `M${x0} ${y0}C${x0 + dx} ${y0} ${x1 - dx} ${y1} ${x1} ${y1}`;
+};
+
+function drawFlow({animate = false} = {}) {
+  const host = $("#flow");
+  if (!host) return;
+  stopFlow();
+  const W = Math.round(host.clientWidth);
+  if (!W) return;
+  flowW = W;
+  const rows = state.ranked;
+  const people = flowPeople(rows);
+  const reach = new Set(people.flatMap((n) => n.links.map((l) => l.i)));
+  const phone = W < 600;
+  $("#mapview").classList.toggle("phone", phone);
+  FLOW = null;
+  if (phone) paintFlowPhone(host, rows, people);
+  else drawFlowSvg(host, W, rows, people, reach);
+  paintFlowLegend();
+  state.mapRevealed = true;
+  if (!FLOW) return;
+  reserveSay();
+  if (animate && !reduceMotion()) revealFlow();
+  else { FLOW.clip.setAttribute("width", FLOW.W); paintSay(); }
+}
+
+function drawFlowSvg(host, W, rows, people, reach) {
+  host.innerHTML = "";
+  const svg = svgEl("svg", {class: "flow-svg", role: "group", "aria-label": "Who can introduce you to each fund. Funds are in the same groups and order as the list."}, host);
+  const TOP = 30, SEC = 34, ROW = 42, PILL_H = 40, PITCH = PILL_H + 10;
+  const YOU_R = 24, YOU_X = 46;
+  const PILL_W = Math.round(Math.min(214, Math.max(150, W * 0.19)));
+  const PILL_X = Math.round(Math.max(YOU_X + YOU_R + 46, W * 0.13));
+  const FUND_X = Math.round(Math.max(PILL_X + PILL_W + 100, W * 0.5));
+  const wide = W - FUND_X > 430;
+  const BAR_W = 46, LED_X = W - 4, BAR_X = LED_X - 96 - BAR_W;
+
+  let y = TOP;
+  const secs = [], fy = [];
+  for (const g of GROUPS) {
+    const n = rows.filter((r) => r.group === g).length;
+    if (!n) continue;
+    secs.push({g, y, n});
+    y += SEC;
+    rows.forEach((r, i) => { if (r.group === g) { fy[i] = y + ROW / 2; y += ROW; } });
   }
-  for (let it = 0; it < 200; it++) {
-    for (let i = 0; i < list.length; i++) for (let j = i + 1; j < list.length; j++) {
-      const A = list[i], B = list[j];
-      const [ax, ay] = polar(A.rad, A.a), [bx, by] = polar(B.rad, B.a);
-      const dx = bx - ax, dy = by - ay, d = Math.hypot(dx, dy) || 0.01;
-      if (d >= 21) continue;
-      const s = (21 - d) / 2, ux = dx / d, uy = dy / d;
-      for (const [P, sg] of [[A, -s], [B, s]]) {
-        const [px, py] = polar(P.rad, P.a), nx = px + ux * sg, ny = py + uy * sg;
-        P.rad = Math.hypot(nx, ny);
-        P.a = ((Math.atan2(nx, -ny) * 180) / Math.PI + 360) % 360;
+  /* People sit at the average height of the funds they open, then spread so none overlap. */
+  for (const n of people) n.y = n.links.reduce((s, l) => s + fy[l.i], 0) / n.links.length;
+  people.sort((a, b) => a.y - b.y || (a.kind === "inv" ? -1 : 1));
+  const minY = TOP + SEC + PILL_H / 2 - 6;
+  for (let it = 0; it < 80; it++) {
+    for (let i = 1; i < people.length; i++) {
+      const d = people[i].y - people[i - 1].y;
+      if (d < PITCH) { const s = (PITCH - d) / 2; people[i].y += s; people[i - 1].y -= s; }
+    }
+    if (people.length && people[0].y < minY) { const s = minY - people[0].y; people.forEach((n) => { n.y += s; }); }
+  }
+  const H = Math.ceil(Math.max(y, people.length ? people[people.length - 1].y + PILL_H / 2 : 0) + 10);
+  const youY = people.length ? (people[0].y + people[people.length - 1].y) / 2 : Math.min(H / 2, TOP + 120);
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  svg.setAttribute("width", W);
+  svg.setAttribute("height", H);
+
+  const heads = svgEl("g", {class: "colh-g", "aria-hidden": "true"}, svg);
+  svgEl("text", {class: "colh", x: PILL_X, y: 13}, heads).textContent = "WHO CAN INTRODUCE YOU";
+  svgEl("text", {class: "colh", x: FUND_X - 8, y: 13}, heads).textContent = "FUNDS, IN LIST ORDER";
+  svgEl("text", {class: "colh", x: LED_X, y: 13, "text-anchor": "end"}, heads).textContent = "LEAD RECORD";
+  const secG = svgEl("g", {class: "secs", "aria-hidden": "true"}, svg);
+  for (const s of secs) {
+    svgEl("line", {class: "secrule", x1: FUND_X - 14, x2: W, y1: s.y + 0.5, y2: s.y + 0.5}, secG);
+    svgEl("text", {class: `sech ${s.g}`, x: FUND_X - 8, y: s.y + 21}, secG).textContent = `${GROUP_NAME[s.g].toUpperCase()}  ${s.n}`;
+  }
+
+  const defs = svgEl("defs", {}, svg);
+  const clip = svgEl("rect", {x: 0, y: -20, width: 0, height: H + 40}, svgEl("clipPath", {id: "flow-clip"}, defs));
+  const edgesG = svgEl("g", {class: "edges", "clip-path": "url(#flow-clip)", "aria-hidden": "true"}, svg);
+  const edges = [];
+  const edge = (d, kind, owners) => {
+    const g = svgEl("g", {class: "eg"}, edgesG);
+    if (kind === "led") svgEl("path", {class: "e-glow", d}, g);
+    svgEl("path", {class: `e ${kind}`, d}, g);
+    edges.push({g, owners});
+  };
+  for (const n of people) {
+    edge(bez(YOU_X + YOU_R + 2, youY, PILL_X - 1, n.y), LINK_KIND[n.s], new Set([`p:${n.key}`, ...n.links.map((l) => `f:${l.i}`)]));
+    for (const l of n.links) edge(bez(PILL_X + PILL_W + 1, n.y, FUND_X - 12, fy[l.i]), LINK_KIND[l.s], new Set([`p:${n.key}`, `f:${l.i}`]));
+  }
+
+  const you = svgEl("g", {class: "you-g", transform: `translate(${YOU_X} ${youY})`, "aria-hidden": "true"}, svg);
+  svgEl("circle", {class: "you-halo", r: YOU_R + 9}, you);
+  svgEl("circle", {class: "you", r: YOU_R}, you);
+  svgEl("text", {class: "you-t", y: 0.5}, you).textContent = "You";
+  const req = state.req || {};
+  const youSub = [state.view?.stage, req.target_eur_m ? `EUR ${fmtM(req.target_eur_m)}m` : ""].filter(Boolean).join(", ");
+  if (youSub) svgEl("text", {class: "you-sub", y: YOU_R + 24}, you).textContent = youSub;
+
+  const pillsG = svgEl("g", {class: "pills"}, svg);
+  for (const n of people) {
+    const funds = andList(n.links.map((l) => l.r.name));
+    const label = n.kind === "inv" ? `${n.title}, your investor. A way in to ${funds}.`
+      : n.kind === "co" ? `${n.sub} at ${n.title}${sampleNet() ? ", made-up sample" : ""}. A way in to ${funds}.`
+      : `${n.title} people or companies. Ways in to ${funds}.`;
+    const g = svgEl("g", {class: `fl-p ${n.kind}`, transform: `translate(${PILL_X} ${n.y - PILL_H / 2})`, tabindex: 0, role: "button", "aria-label": label}, pillsG);
+    n.g = g;
+    svgEl("rect", {class: "box", width: PILL_W, height: PILL_H, rx: 10}, g);
+    const ic = svgEl("g", {transform: `translate(21 ${PILL_H / 2})`}, g);
+    if (n.kind === "inv") {
+      svgEl("rect", {class: "ic-sq", x: -11, y: -11, width: 22, height: 22, rx: 6}, ic);
+      svgEl("text", {class: "ic-t", y: 0.5}, ic).textContent = n.title[0].toUpperCase();
+    } else if (n.kind === "co") {
+      svgEl("circle", {class: "ic-c", r: 11}, ic);
+      svgEl("circle", {class: "ic-p", cy: -2.6, r: 3}, ic);
+      svgEl("path", {class: "ic-p", d: "M-5 5.6c.9-2.9 2.7-4.1 5-4.1s4.1 1.2 5 4.1"}, ic);
+    } else {
+      svgEl("circle", {class: "ic-c", r: 11}, ic);
+      svgEl("path", {class: "ic-p", d: "M-4.5 0h9M0 -4.5v9"}, ic);
+    }
+    svgEl("text", {class: "t1", x: 41, y: 17}, g).textContent = fitText(svg, n.title, "t1", PILL_W - 50);
+    svgEl("text", {class: "t2", x: 41, y: 31}, g).textContent = fitText(svg, n.sub, "t2", PILL_W - 50);
+    svgEl("circle", {class: "port", cx: PILL_W, cy: PILL_H / 2, r: 3}, g);
+    svgEl("circle", {class: "port", cx: 0, cy: PILL_H / 2, r: 3}, g);
+    const hit = {type: "p", n};
+    g.addEventListener("mouseenter", () => setFlowHover(hit));
+    g.addEventListener("mouseleave", () => setFlowHover(null));
+    g.addEventListener("focus", () => setFlowHover(hit));
+    g.addEventListener("blur", () => setFlowHover(null));
+    g.addEventListener("click", (e) => { e.stopPropagation(); toggleFlowSel(hit); });
+    g.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleFlowSel(hit); } });
+  }
+  if (!people.length) {
+    const note = document.createElement("p");
+    note.className = "flow-empty";
+    note.textContent = askedForPaths() ? "No one among your investors or connections links to these funds yet." : "Add your investors or LinkedIn connections to see who can introduce you.";
+    note.style.left = `${PILL_X}px`;
+    note.style.top = `${TOP + SEC}px`;
+    note.style.width = `${PILL_W + 40}px`;
+    host.appendChild(note);
+  }
+
+  const fundsG = svgEl("g", {class: "funds"}, svg);
+  const comps = req.competitors || [];
+  const fundEls = [];
+  rows.forEach((r, i) => {
+    const has = reach.has(i);
+    const weak = !has && r.way.strength === 1;
+    const g = svgEl("g", {class: `fl-f v-${r.verdict}${has ? "" : " noway"}`, transform: `translate(0 ${fy[i]})`, tabindex: 0, role: "button", "aria-haspopup": "dialog",
+      "aria-label": `${r.name}. ${GROUP_NAME[r.group]}. ${r.known ? `Led ${r.led} of ${r.known} rounds with a named lead.` : "No rounds with a named lead."}${has ? "" : weak ? " Same company name only, check it." : " No way in found."}${hasConflict(r) ? ` Backed ${r.conflicts[0].competitor}.` : ""} Opens the rounds behind it.`}, fundsG);
+    fundEls[i] = g;
+    svgEl("rect", {class: "bg", x: FUND_X - 14, y: -ROW / 2 + 2, width: W - FUND_X + 14, height: ROW - 4, rx: 7}, g);
+    svgEl("circle", {class: "ping", cx: FUND_X, r: 6}, g);
+    const dot = svgEl("g", {class: "dot", transform: `translate(${FUND_X} 0)`}, g);
+    if (r.verdict === "stale") svgEl("rect", {class: "dotc", x: -5.5, y: -5.5, width: 11, height: 11, rx: 2.5}, dot);
+    else svgEl("circle", {class: "dotc", r: 5.5}, dot);
+    if (r.verdict === "leads_size") svgEl("path", {class: "half", d: "M0 -5.5A5.5 5.5 0 0 0 0 5.5Z"}, dot);
+    if (hasConflict(r)) svgEl("circle", {class: "conf", r: 9.5}, dot);
+    const nx = FUND_X + 18, ledLeft = (wide ? BAR_X : LED_X - 96) - 12;
+    const nm = svgEl("text", {class: "nm", x: nx, y: -3}, g);
+    nm.textContent = fitText(svg, r.name, "nm", ledLeft - nx);
+    const conflict = hasConflict(r) ? `Backed ${r.conflicts[0].competitor}` : "";
+    let tagInline = false;
+    if (conflict) {
+      const x = nx + nm.getComputedTextLength() + 9, w = textW(svg, conflict, "tag-t") + 14;
+      if (x + w < ledLeft) {
+        svgEl("rect", {class: "tag", x, y: -16, width: w, height: 15, rx: 7.5}, g);
+        svgEl("text", {class: "tag-t", x: x + 7, y: -4.5}, g).textContent = conflict;
+        tagInline = true;
       }
     }
-    for (const n of list) {
-      const da = Math.max(-28, Math.min(28, ((n.a - n.a0 + 540) % 360) - 180));
-      n.a = (n.a0 + da + 360) % 360;
-      n.rad = Math.max(R_YOU + 26, Math.min(R_IN - 10, n.rad));
-    }
-  }
-  for (const n of list) [n.x, n.y] = polar(n.rad, n.a);
-  return list;
-}
-function curve(n, P) {
-  const da = ((P.a - n.a + 540) % 360) - 180;
-  const [cx, cy] = polar(n.rad + (P.rad - n.rad) * 0.5, n.a + da * 0.2);
-  return `M${n.x} ${n.y}Q${cx} ${cy} ${P.x} ${P.y}`;
-}
-
-const boxHit = (a, b) => !(a.x > b.x + b.w || a.x + a.w < b.x || a.y > b.y + b.h || a.y + a.h < b.y);
-const circleHit = (box, x, y, r) => x + r > box.x && x - r < box.x + box.w && y + r > box.y && y - r < box.y + box.h;
-
-/* Labels use their measured width and try eight spots around the dot, most important funds first.
-   A label that fits nowhere is hidden and shows on hover or focus, so two names never print over each other. */
-function placeLabels(items, nodes, fs, sfs) {
-  const placed = [];
-  const free = (box, self) => !placed.some((b) => boxHit(box, b))
-    && !items.some((Q) => Q !== self && circleHit(box, Q.x, Q.y, Q.rb + (Q.r.conflicts?.length ? 6 : 2)))
-    && !nodes.some((m) => circleHit(box, m.x, m.y, 11))
-    && !circleHit(box, 0, 0, R_YOU + 10)
-    && Math.hypot(box.x + box.w / 2, box.y + box.h / 2) < R_OUT + 4
-    && box.x > -318 && box.x + box.w < 318;
-  for (const n of nodes.filter((x) => x.labelEl)) {
-    const t = n.labelEl, w = t.getComputedTextLength(), h = fs * 1.2;
-    const ox = n.x >= 0 ? 1 : -1, oy = n.y >= 0 ? 1 : -1;
-    const spots = [[ox, oy], [0, oy], [ox, 0], [-ox, 0], [0, -oy], [-ox, -oy]];
-    let pick = null;
-    for (const [cx, cy] of spots) {
-      const box = {x: cx > 0 ? n.x + 13 : cx < 0 ? n.x - 13 - w : n.x - w / 2, y: cy > 0 ? n.y + 12 : cy < 0 ? n.y - 12 - h : n.y - h / 2, w, h};
-      if (free(box, null)) { pick = box; break; }
-    }
-    if (!pick) { t.classList.add("off"); continue; }
-    placed.push(pick);
-    t.setAttribute("x", pick.x); t.setAttribute("y", pick.y + h * 0.8);
-  }
-  const order = [...items].sort((a, b) => (a.r.group === "pitch" ? 0 : 1) - (b.r.group === "pitch" ? 0 : 1) || b.r.led - a.r.led);
-  for (const P of order) {
-    const t = P.labelEl, s = P.subEl;
-    const w = Math.max(t.getComputedTextLength(), s ? s.getComputedTextLength() : 0), lh = fs * 1.15, h = lh + (s ? sfs * 1.25 : 0);
-    const pad = P.rb + (P.r.conflicts?.length ? 7 : 5), out = P.x >= 0 ? 1 : -1, d = pad * 0.72;
-    const spots = [[out, 0], [-out, 0], [0, -1], [0, 1], [out, -1], [out, 1], [-out, -1], [-out, 1]];
-    let pick = null;
-    for (const [sx, sy] of spots) {
-      const diag = sx && sy;
-      const bx = sx > 0 ? (diag ? d : pad) : sx < 0 ? -(diag ? d : pad) - w : -w / 2;
-      const by = sy < 0 ? -(diag ? d : pad) - h : sy > 0 ? (diag ? d : pad) : -h / 2;
-      const box = {x: P.x + bx, y: P.y + by, w, h};
-      if (free(box, P)) { pick = {box, bx, by, sx}; break; }
-    }
-    if (!pick) {  // hidden until hover or focus, then shown on the outer side
-      const bx = out > 0 ? pad : -pad - w;
-      pick = {box: null, bx, by: -h / 2, sx: out};
-      t.classList.add("off"); s?.classList.add("off");
-    } else placed.push(pick.box);
-    const anchor = pick.sx > 0 ? "start" : pick.sx < 0 ? "end" : "middle";
-    const tx = pick.sx > 0 ? pick.bx : pick.sx < 0 ? pick.bx + w : 0;
-    t.setAttribute("x", tx); t.setAttribute("y", pick.by + lh * 0.8); t.setAttribute("text-anchor", anchor);
-    if (s) { s.setAttribute("x", tx); s.setAttribute("y", pick.by + lh * 0.8 + sfs * 1.25); s.setAttribute("text-anchor", anchor); }
-  }
-}
-
-function blipLabel(r) {
-  const parts = [`${r.name}. ${GROUP_NAME[r.group]}.`, r.known ? `Led ${r.led} of ${r.known} rounds with a named lead.` : "No rounds with a named lead.",
-    r.last_lead ? `Last lead ${r.last_lead.date}.` : "No lead found."];
-  if (r.way.strength > 1) parts.push(`Way in: ${r.way.text}.`);
-  if (r.conflicts?.length) parts.push(`Backed ${r.conflicts[0].competitor}.`);
-  return `${parts.join(" ")} Opens the rounds behind it.`;
-}
-
-function stopMap() { cancelAnimationFrame(mapRaf); mapRaf = 0; }
-
-function drawMap({reveal = false, linesIn = false} = {}) {
-  const wrap = $("#radar");
-  if (!wrap) return;
-  stopMap();
-  const svg = $("svg", wrap);
-  svg.innerHTML = "";
-  arcId = 0;
-  const width = wrap.clientWidth || 640, compact = width < 520;
-  const k = 640 / Math.max(300, width);
-  wrap.classList.toggle("compact", compact);
-  const items = layoutBlips(state.ranked);
-  const nodes = viaNodes(items);
-  drawField(svg, k, items);
-  const pathsG = svgEl("g", {class: "paths", "aria-hidden": "true"}, svg);
-  const viaG = svgEl("g", {class: "vias", "aria-hidden": "true"}, svg);
-  drawYou(svg, k);
-  const blipsG = svgEl("g", {class: "blips"}, svg);
-  const fs = 12 * k, sfs = 10.5 * k;
-  for (const n of nodes) {
-    n.g = svgEl("g", {class: "pg"}, pathsG);
-    const [sx, sy] = polar(R_YOU + 3, n.a);
-    const segs = [`M${sx} ${sy}L${n.x} ${n.y}`, ...n.links.map((l) => curve(n, l.item))];
-    n.segEls = segs.map((d, i) => {
-      const weak = i > 0 && n.links[i - 1].strength === 3;
-      const sg = svgEl("g", {class: "sg"}, n.g);
-      svgEl("path", {class: "path-glow", d, "stroke-width": weak ? 3 : 6}, sg);
-      svgEl("path", {class: `path${weak ? " weak" : ""}`, d, ...(weak ? {} : {pathLength: 1})}, sg);
-      return sg;
+    /* Second line: the verdict, then whatever fits of the way-in state and the last lead. */
+    const parts = [[verdictText(r), "vd"]];
+    if (!has) parts.push([weak ? "same name only, check it" : "no way in found", "nw"]);
+    if (conflict && !tagInline) parts.push([conflict, "cf"]);
+    if (r.last_lead && r.verdict !== "public") parts.push([`last lead ${r.last_lead.date}`, "dt"]);
+    const sub = svgEl("text", {class: "sub", x: nx, y: 14}, g);
+    let used = 0;
+    parts.forEach(([t, cls], k) => {
+      const s = k ? `  ·  ${t}` : t, w = textW(svg, s, "sub");
+      if (k && used + w > ledLeft - nx) return;
+      svgEl("tspan", {class: cls}, sub).textContent = s;
+      used += w;
     });
-    n.links.forEach((l) => { (l.item.links = l.item.links || []).push(n); });
-    const vg = svgEl("g", {class: `via ${n.kind}`, transform: `translate(${n.x} ${n.y})`}, viaG);
-    n.vg = vg;
-    if (n.kind === "inv") {
-      svgEl("rect", {x: -10, y: -10, width: 20, height: 20, rx: 6}, vg);
-      svgEl("text", {"font-size": 11, y: 0.5}, vg).textContent = n.label[0].toUpperCase();
-      if (!compact) { n.labelEl = svgEl("text", {class: "via-l", "font-size": fs}, viaG); n.labelEl.textContent = shortFund(n.label); }
-    } else {
-      svgEl("circle", {r: 8}, vg);
-      svgEl("circle", {class: "person", cy: -2, r: 2.3}, vg);
-      svgEl("path", {class: "person", d: "M-3.9 4.4c.7-2.3 2.1-3.2 3.9-3.2s3.2.9 3.9 3.2"}, vg);
+    const pct = r.known ? r.led / r.known : 0;
+    if (wide) {
+      svgEl("rect", {class: "barbg", x: BAR_X, y: -3, width: BAR_W, height: 6, rx: 3}, g);
+      if (pct > 0) svgEl("rect", {class: "barfg", x: BAR_X, y: -3, width: Math.max(3, BAR_W * pct), height: 6, rx: 3}, g);
     }
-  }
-  for (const P of items) {
-    const r = P.r;
-    P.links = P.links || [];
-    const kind = r.verdict === "public" ? "public" : r.group;
-    const g = svgEl("g", {class: `blip ${kind}`, transform: `translate(${P.x} ${P.y})`, tabindex: 0, role: "button", "aria-label": blipLabel(r)}, blipsG);
-    P.g = g;
-    svgEl("circle", {class: "hit", r: Math.max(P.rb + 6, 14)}, g);
-    svgEl("circle", {class: "ping", r: P.rb}, g);
-    const core = svgEl("g", {class: "core"}, g);
-    svgEl("circle", {class: "dotc", r: P.rb}, core);
-    if (r.conflicts?.length) svgEl("circle", {class: "cfr", r: P.rb + 4}, core);
-    svgEl("circle", {class: "sel", r: P.rb + (r.conflicts?.length ? 8 : 5)}, g);
-    const lg = svgEl("g", {class: "labels"}, blipsG);
-    P.lg = lg;
-    lg.setAttribute("transform", `translate(${P.x} ${P.y})`);
-    P.labelEl = svgEl("text", {class: "bl", "font-size": fs}, lg);
-    P.labelEl.textContent = r.name;
-    if (r.conflicts?.length) { P.subEl = svgEl("text", {class: "bl-sub", "font-size": sfs}, lg); P.subEl.textContent = `Backed ${r.conflicts[0].competitor}`; }
-    if (compact) { P.labelEl.classList.add("off"); P.subEl?.classList.add("off"); }
-    g.addEventListener("click", () => openFund(P.idx, g));
-    g.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openFund(P.idx, g); } });
-    g.addEventListener("mouseenter", () => focusOn(P));
-    g.addEventListener("mouseleave", () => focusOn(null));
-    g.addEventListener("focus", () => focusOn(P));
-    g.addEventListener("blur", () => focusOn(null));
-  }
-  if (!compact) placeLabels(items, nodes, fs, sfs);
-  MAP = {items, nodes, wrap};
-  paintRail(nodes);
-  $("#map-note").textContent = compact
-    ? "Tap a dot to open the fund. Turn your phone sideways to see names, or use List."
-    : "Hover a fund to light its way in. Click it to see the rounds behind it.";
-  if (reveal && !reduceMotion()) revealMap();
-  else {
-    for (const n of nodes) n.g.querySelectorAll("path:not(.weak)").forEach((p) => p.classList.add("drawn"));
-    if (linesIn && !reduceMotion()) drawPaths();
-    ambient(0);
-  }
-  state.mapRevealed = true;
-}
-
-/* One pass of the sweep (about 1.15 s) shows each fund as it passes, then the ways in draw from You outward. */
-function ping(P, strong) {
-  if (reduceMotion() || !P.g) return;
-  $(".ping", P.g).animate([{opacity: strong ? 0.55 : 0.2, transform: "scale(1)"}, {opacity: 0, transform: `scale(${1 + (strong ? 16 : 10) / P.rb})`}], {duration: strong ? 650 : 900, easing: "cubic-bezier(.2,.7,.2,1)"});
-}
-function revealMap() {
-  const {items, nodes, wrap} = MAP;
-  const sweep = $(".rsweep", wrap);
-  wrap.classList.remove("ambient");
-  wrap.classList.add("revealing");
-  items.forEach((P) => { P.g.classList.add("pre"); P.lg.classList.add("pre"); P.shown = false; });
-  nodes.forEach((n) => [n.g, n.vg, n.labelEl].forEach((x) => x?.classList.add("pre")));
-  const T = 1150, t0 = performance.now();
-  const ease = (x) => 1 - Math.pow(1 - x, 2.2);
-  const step = (now) => {
-    const x = Math.min(1, (now - t0) / T), th = ease(x) * 360;
-    sweep.style.transform = `rotate(${th}deg)`;
-    for (const P of items) {
-      if (!P.shown && ((P.a + 360) % 360) <= th + 1) { P.shown = true; P.g.classList.remove("pre"); P.lg.classList.remove("pre"); ping(P, true); }
-    }
-    if (x < 1) { mapRaf = requestAnimationFrame(step); return; }
-    items.forEach((P) => { P.g.classList.remove("pre"); P.lg.classList.remove("pre"); });
-    wrap.classList.remove("revealing");
-    drawPaths();
-    ambient(360);
-  };
-  mapRaf = requestAnimationFrame(step);
-}
-function drawPaths() {
-  MAP.nodes.forEach((n, i) => {
-    [n.g, n.vg, n.labelEl].forEach((x) => x?.classList.remove("pre"));
-    n.labelEl?.animate([{opacity: 0}, {opacity: 1}], {duration: 300, delay: 250, fill: "backwards"});
-    n.vg.animate([{opacity: 0}, {opacity: 1}], {duration: 260, delay: i * 40, fill: "backwards"});
-    n.segEls.forEach((sg, j) => sg.querySelectorAll("path").forEach((p) => {
-      const delay = (j === 0 ? 0 : 200) + i * 45;
-      if (p.classList.contains("weak")) { p.animate([{opacity: 0}, {opacity: 1}], {duration: 400, delay, fill: "backwards"}); return; }
-      p.classList.add("drawn");
-      p.animate([{strokeDashoffset: 1}, {strokeDashoffset: 0}], {duration: j === 0 ? 220 : 380, delay, easing: "cubic-bezier(.3,.6,.2,1)", fill: "backwards"});
-    }));
+    const bt = svgEl("text", {class: "led-t", x: LED_X, y: 4.5}, g);
+    if (r.known) {
+      bt.append("Led ");
+      svgEl("tspan", {class: "b"}, bt).textContent = r.led;
+      bt.append(` of ${r.known}`);
+    } else bt.textContent = "No named leads";
+    const hit = {type: "f", i};
+    g.addEventListener("mouseenter", () => setFlowHover(hit));
+    g.addEventListener("mouseleave", () => setFlowHover(null));
+    g.addEventListener("focus", () => setFlowHover(hit));
+    g.addEventListener("blur", () => setFlowHover(null));
+    g.addEventListener("click", (e) => { e.stopPropagation(); openFund(i, g); });
+    g.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openFund(i, g); } });
   });
+
+  FLOW = {svg, W, rows, people, reach, edges, fundEls, clip, you, PILL_X, FUND_X, comps, hover: null, sel: null, playing: false};
 }
-/* After the reveal a faint sweep keeps turning, 12 s a lap, and touches each fund it passes. */
-function ambient(start) {
-  if (reduceMotion() || !MAP) return;
-  const wrap = MAP.wrap, sweep = $(".rsweep", wrap);
-  wrap.classList.add("ambient");
-  let last = performance.now(), th = start % 360;
+
+/* ---------------- hover, select and the sentence above the flow ---------------- */
+function setFlowHover(h) { if (!FLOW) return; FLOW.hover = h; applyFlowFocus(); paintSay(); }
+function toggleFlowSel(s) {
+  const same = FLOW.sel && FLOW.sel.type === s.type && (s.type === "f" ? FLOW.sel.i === s.i : FLOW.sel.n === s.n);
+  FLOW.sel = same ? null : s;
+  applyFlowFocus(); paintSay();
+}
+const flowActive = () => FLOW && (FLOW.hover || FLOW.sel);
+function applyFlowFocus() {
+  if (!FLOW || FLOW.playing) return;
+  const a = flowActive(), sel = FLOW.sel;
+  const key = a ? (a.type === "f" ? `f:${a.i}` : `p:${a.n.key}`) : null;
+  FLOW.svg.classList.toggle("focus", !!a);
+  for (const e of FLOW.edges) e.g.classList.toggle("lit", !!key && e.owners.has(key));
+  for (const n of FLOW.people) {
+    n.g.classList.toggle("lit", !!a && (a.type === "p" ? a.n === n : n.links.some((l) => l.i === a.i)));
+    n.g.classList.toggle("on", !!sel && sel.type === "p" && sel.n === n);
+  }
+  FLOW.fundEls.forEach((g, i) => g.classList.toggle("lit", !!a && (a.type === "f" ? a.i === i : a.n.links.some((l) => l.i === i))));
+}
+document.addEventListener("click", (e) => { if (FLOW?.sel && !e.target.closest?.(".fl-p")) { FLOW.sel = null; applyFlowFocus(); paintSay(); } });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && FLOW?.sel) { FLOW.sel = null; applyFlowFocus(); paintSay(); } });
+
+/* Every sentence comes from one record: the round your investor shared with the fund, or the fund's round at the
+   company your contact works at. */
+const tieLine = (tie, fund) => `${esc(shortFund(tie.investor))} and ${esc(shortFund(fund))} were both in ${esc(roundOf(tie.round.company, tie.round.stage))}, ${esc(tie.round.date)}.`;
+const contactLine = (people, round, fund) => `${esc(whoList(people))} ${people.length === 1 ? "works" : "work"} at ${esc(round.company)}${sampleNet() ? " (made-up sample)" : ""}. ${esc(shortFund(fund))} ${round.led ? "led" : "joined, but did not lead,"} its ${esc(stageWord(round.stage) ? `${stageWord(round.stage)} round` : "round")}, ${esc(round.date)}.`;
+const fundRoundLine = (l) => `${esc(shortFund(l.r.name))} ${l.round.led ? "led" : "joined, but did not lead,"} ${esc(roundOf(l.round.company, l.round.stage))}, ${esc(l.round.date)}.`;
+function conflictLine(r) {
+  const c = r.conflicts.find((x) => x.level === "led") || r.conflicts[0], more = r.conflicts.length - 1;
+  return `${esc(shortFund(r.name))} ${c.level === "led" ? "led" : "joined"} ${esc(roundOf(c.competitor, c.round.stage))}, ${esc(c.round.date)}${more > 0 ? `, and was in ${more} more ${esc(c.competitor)} ${more > 1 ? "rounds" : "round"}` : ""}.`;
+}
+const sayLi = (k, cls, html) => `<li class="${cls}"><span class="k">${k}</span><span>${html}</span></li>`;
+const SAY_IC = {
+  path: `<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="3" cy="8" r="1.6"/><path d="M4.6 8c3.2 0 3.6-4.5 7.4-4.5M4.6 8c3.2 0 3.6 4.5 7.4 4.5"/></svg>`,
+  none: `<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5.5"/><path d="M4.2 11.8 11.8 4.2"/></svg>`,
+};
+
+function sayIdle() {
+  const n = FLOW.reach.size, total = FLOW.rows.length;
+  if (!FLOW.people.length) {
+    return {cls: "", html: `<span class="say-ic">${SAY_IC.path}</span><div class="say-body"><p class="say-main">${askedForPaths() ? "No way in found to these funds yet." : "Add your investors or LinkedIn connections to see who can introduce you."}</p>
+      <p class="say-sub">The funds stay in the list's groups and order. Hover one for its lead record, click it for the rounds.</p></div>`};
+  }
+  const inv = state.req?.investors || [], net = state.network;
+  const via = [inv.length ? esc(andList(inv)) : "", net ? (net.sample ? "a made-up sample network" : "your LinkedIn connections") : ""].filter(Boolean).join(" or ");
+  return {cls: "", html: `<span class="say-ic">${SAY_IC.path}</span><div class="say-body"><p class="say-main">Follow a line from you to a fund: that is who can introduce you.</p>
+    <p class="say-sub"><b>${n} of ${total}</b> funds have a way in, through ${via}. Hover a fund or a person for the round behind the line.</p></div>`};
+}
+function sayFund(i) {
+  const r = FLOW.rows[i];
+  const items = [];
+  for (const n of FLOW.people) for (const l of n.links) {
+    if (l.i !== i) continue;
+    if (l.tie) items.push([l.s, sayLi("Investor", "tie", tieLine(l.tie, r.name))]);
+    else if (l.round) items.push([l.s, sayLi("Contact", l.round.led ? "" : "j", contactLine(l.people, l.round, r.name))]);
+  }
+  items.sort((a, b) => b[0] - a[0]);
+  const lines = items.slice(0, 3).map((x) => x[1]);  // the strongest three; the fund's pane lists every one
+  if (items.length > 3) lines.push(`<li class="j"><span class="k"></span><span>And ${plural(items.length - 3, "more way in", "more ways in")}. Click the fund for all of them.</span></li>`);
+  if (hasConflict(r)) lines.push(sayLi("Conflict", "w", conflictLine(r)));
+  const facts = `${r.known ? `Led <b>${r.led} of ${r.known}</b> rounds with a named lead.` : "No rounds with a named lead."} ${r.last_lead && r.verdict !== "public" ? `Last lead: ${esc(r.last_lead.company)}, ${esc(r.last_lead.date)}.` : ""} Click for the rounds.`;
+  if (FLOW.reach.has(i)) {
+    return {cls: "on", html: `<span class="say-ic">${ICON.link}</span><div class="say-body"><ul class="say-lines">${lines.join("")}</ul><p class="say-sub"><b>${esc(r.name)}</b>, ${esc(verdictText(r).toLowerCase())}. ${facts}</p></div>`};
+  }
+  const nNet = state.network?.people.length || 0, inv = state.req?.investors || [];
+  const why = [inv.length ? `none of your investors was in a small round with it` : "", nNet ? `none of your ${plural(nNet, "connection", "connections")} works at a company it backed` : ""].filter(Boolean).join(", and ");
+  const weak = r.way.strength === 1 ? ` One connection works at a company with the same name as one it backed: check it in the fund's rounds.` : "";
+  return {cls: "cold", html: `<span class="say-ic">${SAY_IC.none}</span><div class="say-body"><p class="say-main"><b>${esc(r.name)}</b>: no way in found yet.${why ? ` ${why[0].toUpperCase()}${why.slice(1)}.` : " Add your investors or LinkedIn connections to look."}${weak}</p>
+    ${hasConflict(r) ? `<ul class="say-lines">${sayLi("Conflict", "w", conflictLine(r))}</ul>` : ""}<p class="say-sub">${esc(verdictText(r))}. ${facts}</p></div>`};
+}
+function sayPerson(n) {
+  const shown = n.links.slice(0, 3);
+  const lines = shown.map((l) => {
+    if (l.tie) return sayLi("Investor", "tie", tieLine(l.tie, l.r.name));
+    const who = l.via ? `${esc(l.via.sub)} at ${esc(l.via.title)}: ` : "";
+    return sayLi(l.round.led ? "Led" : "Joined", l.round.led ? "" : "j", who + fundRoundLine(l));
+  });
+  const moreFunds = n.links.length - shown.length;
+  const funds = andList(n.links.map((l) => `<b>${esc(l.r.name)}</b>`));
+  const sub = n.kind === "inv" ? `${esc(n.title)}, your investor, can introduce you to ${funds}.`
+    : n.kind === "co" ? `${esc(n.sub)} ${n.people.length === 1 ? "works" : "work"} at ${esc(n.title)}${sampleNet() ? " (made-up sample)" : ""}, a way in to ${funds}. A lead to check, not proof they know the partner.`
+    : `${n.rest.length} more people and companies are ways in to ${funds}. Each fund's rounds list all of them.`;
+  return {cls: "on", html: `<span class="say-ic">${ICON.link}</span><div class="say-body"><ul class="say-lines">${lines.join("")}${moreFunds > 0 ? `<li class="j"><span class="k"></span><span>And ${plural(moreFunds, "more fund", "more funds")}.</span></li>` : ""}</ul><p class="say-sub">${sub}</p></div>`};
+}
+function sayFor(a) { return !a ? sayIdle() : a.type === "f" ? sayFund(a.i) : sayPerson(a.n); }
+function paintSay() {
+  const box = $("#say");
+  if (!box || !FLOW) return;
+  const {cls, html} = sayFor(flowActive());
+  box.className = `say ${cls}`;
+  box.innerHTML = html;
+  if (!reduceMotion()) $(".say-body", box)?.classList.add("say-in");
+}
+/* The box keeps the height of its longest sentence, so the flow under it never jumps while you hover. */
+function reserveSay() {
+  const box = $("#say");
+  if (!box || !FLOW) return;
+  box.style.minHeight = "0px";
+  let h = 0;
+  const all = [null, ...FLOW.rows.map((_, i) => ({type: "f", i})), ...FLOW.people.map((n) => ({type: "p", n}))];
+  for (const a of all) {
+    const {cls, html} = sayFor(a);
+    box.className = `say ${cls}`;
+    box.innerHTML = html;
+    h = Math.max(h, box.offsetHeight);
+  }
+  box.style.minHeight = `${h}px`;
+}
+
+/* ---------------- motion: the lines draw from you to the funds, left to right, in about 1.5 s ---------------- */
+function revealFlow() {
+  const F = FLOW;
+  F.playing = true;
+  F.svg.classList.remove("focus");
+  F.svg.classList.add("playing");
+  const T0 = 120, SWEEP = 1250, END = 1600;
+  F.clip.setAttribute("width", 0);
+  $(".you", F.you).animate([{transform: "scale(.4)"}, {transform: "scale(1)"}], {duration: 380, easing: "cubic-bezier(.2,.9,.25,1.2)"});
+  $(".you-halo", F.you).animate([{transform: "scale(.4)", opacity: 0}, {transform: "scale(1)", opacity: 0.1}], {duration: 520, easing: "cubic-bezier(.2,.8,.2,1)"});
+  F.people.forEach((n) => n.g.classList.add("pre"));
+  F.fundEls.forEach((g, i) => g.animate([{opacity: 0}, {opacity: 1}], {duration: 240, delay: 30 + Math.min(i, 30) * 14, easing: "ease-out", fill: "backwards"}));
+  const popped = new Set();
+  const start = performance.now();
+  const ease = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
   const step = (now) => {
-    if (!wrap.isConnected) { mapRaf = 0; return; }
-    const prev = th;
-    th = (th + ((now - last) / 12000) * 360) % 360; last = now;
-    sweep.style.transform = `rotate(${th}deg)`;
-    for (const P of MAP.items) {
-      const a = (P.a + 360) % 360;
-      if ((prev < a && th >= a) || (th < prev && (a > prev || a <= th))) ping(P, false);
+    if (!F.svg.isConnected) { F.playing = false; flowRaf = 0; return; }
+    const t = now - start, x = ease(Math.max(0, Math.min(1, (t - T0) / SWEEP))) * F.W;
+    F.clip.setAttribute("width", x);
+    for (const n of F.people) if (n.g.classList.contains("pre") && x >= F.PILL_X - 4) {
+      n.g.classList.remove("pre");
+      n.g.animate([{opacity: 0}, {opacity: 1}], {duration: 220, easing: "ease-out"});
     }
-    mapRaf = requestAnimationFrame(step);
+    if (x >= F.FUND_X - 14) for (const i of F.reach) if (!popped.has(i)) {
+      popped.add(i);
+      $(".ping", F.fundEls[i]).animate([{opacity: 0.6, transform: "scale(1)"}, {opacity: 0, transform: "scale(3)"}], {duration: 700, easing: "cubic-bezier(.2,.7,.2,1)"});
+    }
+    if (t < END) { flowRaf = requestAnimationFrame(step); return; }
+    F.clip.setAttribute("width", F.W);
+    F.playing = false;
+    flowRaf = 0;
+    F.svg.classList.remove("playing");
+    applyFlowFocus();
   };
-  mapRaf = requestAnimationFrame(step);
+  paintSay();
+  flowRaf = requestAnimationFrame(step);
 }
 
-/* Hover lights a fund and every route into it; everything else steps back. */
-function focusOn(P) {
-  if (!MAP) return;
-  MAP.wrap.classList.toggle("focus", !!P);
-  for (const Q of MAP.items) {
-    Q.g.classList.toggle("lit", Q === P);
-    Q.lg.classList.toggle("lit", Q === P);
+/* ---------------- phones: one fund per row, with who can introduce you under it ---------------- */
+function paintFlowPhone(host, rows, people) {
+  const byFund = new Map();
+  for (const n of people) for (const l of n.links) {
+    if (!byFund.has(l.i)) byFund.set(l.i, []);
+    byFund.get(l.i).push({n, l});
   }
-  for (const n of MAP.nodes) {
-    const on = !!P && n.links.some((l) => l.item === P);
-    n.g.classList.toggle("lit", on); n.vg.classList.toggle("lit", on); n.labelEl?.classList.toggle("lit", on);
-    n.segEls.forEach((s, i) => s.classList.toggle("off", on && i > 0 && n.links[i - 1].item !== P));
-  }
-  $$("#rail [data-node]").forEach((b) => b.classList.toggle("on", !!P && MAP.nodes[+b.dataset.node].links.some((l) => l.item === P)));
-}
-function focusNode(n) {
-  if (!MAP) return;
-  MAP.wrap.classList.toggle("focus", !!n);
-  for (const m of MAP.nodes) {
-    m.g.classList.toggle("lit", m === n); m.vg.classList.toggle("lit", m === n); m.labelEl?.classList.toggle("lit", m === n);
-    m.segEls.forEach((s) => s.classList.remove("off"));
-  }
-  for (const Q of MAP.items) {
-    const on = !!n && n.links.some((l) => l.item === Q);
-    Q.g.classList.toggle("lit", on); Q.lg.classList.toggle("lit", on);
-  }
+  const sw = (kind) => `<svg class="sw" viewBox="0 0 26 10" aria-hidden="true"><path class="e ${kind}" d="M1 5h24"/></svg>`;
+  const wayLi = ({n, l}) => {
+    const v = l.via || n;
+    const who = l.tie ? `${esc(l.tie.investor)}, your investor` : `${esc(v.sub)} at ${esc(v.title)}`;
+    return `<li>${sw(LINK_KIND[l.s])}<span>${who}</span></li>`;
+  };
+  const groups = GROUPS.map((g) => [g, rows.map((r, i) => [r, i]).filter(([r]) => r.group === g)]).filter(([, rs]) => rs.length);
+  host.innerHTML = `<div class="vflow"><p class="vf-note">${people.length ? "Each fund with who can introduce you." : askedForPaths() ? "No way in found to these funds yet." : "Add your investors or LinkedIn connections to see who can introduce you."} Turn your phone sideways for the full map.</p>
+    ${groups.map(([g, rs]) => `<section><h3 class="vf-g ${g}">${esc(GROUP_NAME[g])} <span>${rs.length}</span></h3><ul class="vf-list">${rs.map(([r, i]) => {
+      const ways = (byFund.get(i) || []).sort((a, b) => b.l.s - a.l.s), extra = ways.length - 3;
+      return `<li><button type="button" class="vf-fund" data-i="${i}" aria-haspopup="dialog"><span class="vline v-${esc(r.verdict)}"><span class="g" aria-hidden="true"></span></span><span class="vf-nm">${esc(r.name)}</span>${hasConflict(r) ? `<span class="vf-cf">Backed ${esc(r.conflicts[0].competitor)}</span>` : ""}<span class="vf-led num">${r.known ? `Led ${r.led} of ${r.known}` : "No named leads"}</span></button>
+        ${ways.length ? `<ul class="vf-ways">${ways.slice(0, 3).map(wayLi).join("")}${extra > 0 ? `<li class="vf-more">And ${plural(extra, "more way in", "more ways in")}</li>` : ""}</ul>` : `<p class="vf-none">${r.way.strength === 1 ? "Same name only, check it" : "No way in found"}</p>`}</li>`;
+    }).join("")}</ul></section>`).join("")}</div>`;
+  $$(".vf-fund", host).forEach((b) => b.addEventListener("click", () => openFund(+b.dataset.i, b)));
 }
 
-const PERSON = `<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="5.5" r="2.5"/><path d="M3.5 13.5c.8-2.8 2.4-4 4.5-4s3.7 1.2 4.5 4"/></svg>`;
-function paintRail(nodes) {
+function paintFlowLegend() {
   const comps = state.req?.competitors || [];
-  const funds = new Set(nodes.flatMap((n) => n.links.map((l) => l.item))).size;
-  const fake = sampleNet();
-  const ways = nodes.length
-    ? `<ul class="ways">${nodes.map((n, i) => {
-        const names = andList(n.links.map((l) => esc(l.item.r.name)));
-        const who = n.kind === "inv" ? `<b>${esc(n.label)}</b>, your investor, was in a small round with ${names}`
-          : `<b>${n.people.size > 1 ? `${n.people.size} people` : "Someone"} at ${esc(n.label)}</b>${fake ? " (made-up sample)" : ""}, backed by ${names}`;
-        return `<li><button type="button" data-node="${i}"><span class="ic${n.kind === "inv" ? " inv" : ""}">${n.kind === "inv" ? esc(n.label[0].toUpperCase()) : PERSON}</span><span>${who}</span></button></li>`;
-      }).join("")}</ul>${nodes.extra > 0 ? `<p class="rail-more">And ${plural(nodes.extra, "more way in", "more ways in")}. The list shows the best one per fund.</p>` : ""}`
-    : `<p class="rail-none">${askedForPaths() ? "No one among your investors or connections links to these funds yet." : "Add your investors or LinkedIn connections to see who can introduce you."}</p>`;
-  const legend = `<ul class="legend-map">
-    <li><svg viewBox="0 0 28 20" aria-hidden="true"><circle cx="4" cy="10" r="3" class="lg-ink"/><path d="M10 10a10 10 0 0 1 16 -6" class="lg-ring"/><path d="M10 10a10 10 0 0 1 16 6" class="lg-dash"/></svg><span><b>Closer to You</b> means it leads rounds like yours more often. Rings are the list's groups.</span></li>
-    <li><svg viewBox="0 0 28 20" aria-hidden="true"><path d="M14 2a8 8 0 1 1 -8 8" class="lg-arc"/><path d="M14 0v5" class="lg-now"/></svg><span><b>Around the dial</b> is when it last led a round. Newest at the top.</span></li>
-    <li><svg viewBox="0 0 28 20" aria-hidden="true"><circle cx="6" cy="10" r="3.5" class="lg-pitch"/><circle cx="19" cy="10" r="7" class="lg-pitch"/></svg><span><b>Bigger dot</b> means more rounds led.</span></li>
-    <li><svg viewBox="0 0 40 20" aria-hidden="true"><circle cx="5" cy="10" r="4.5" class="lg-pitch"/><circle cx="15" cy="10" r="4.5" class="lg-size"/><circle cx="25" cy="10" r="4.5" class="lg-few"/><circle cx="35" cy="10" r="4.5" class="lg-avoid"/></svg><span><b>Green</b> leads at your stage, <b>pale green</b> at another size, <b>dashed</b> too little data or a public funder, <b>grey</b> rarely leads.</span></li>
-    <li><svg viewBox="0 0 28 20" aria-hidden="true"><path d="M2 14Q12 2 26 8" class="lg-line"/></svg><span><b>Green line</b> is a way in, through your investor or someone you know.</span></li>
-    ${comps.length ? `<li><svg viewBox="0 0 28 20" aria-hidden="true"><circle cx="14" cy="10" r="4.5" class="lg-pitch"/><circle cx="14" cy="10" r="8" class="lg-conf"/></svg><span><b>Orange ring</b> means it backed ${esc(comps.join(" or "))}.</span></li>` : ""}
-  </ul>`;
-  $("#rail").innerHTML = `<section class="panel"><h2>Ways in ${funds ? `<span class="n">${plural(funds, "fund", "funds")}</span>` : ""}</h2>${ways}</section>
-    <section class="panel"><h2>How to read it</h2>${legend}</section>`;
-  $$("#rail [data-node]").forEach((b) => {
-    const n = nodes[+b.dataset.node];
-    b.addEventListener("mouseenter", () => focusNode(n));
-    b.addEventListener("focus", () => focusNode(n));
-    b.addEventListener("mouseleave", () => focusOn(null));
-    b.addEventListener("blur", () => focusOn(null));
-    b.addEventListener("click", () => openFund(n.links[0].item.idx, b));
-  });
+  const sw = (kind) => `<svg viewBox="0 0 30 12" aria-hidden="true">${kind === "led" ? `<path class="e-glow" d="M2 6h26"/>` : ""}<path class="e ${kind}" d="M2 6h26"/></svg>`;
+  $("#flow-legend").innerHTML = `<span class="lg-h">Strongest way in first, the order the list uses:</span>
+    <span class="it">${sw("led")}Someone at a company it led</span>
+    <span class="it">${sw("joined")}Someone at a company it only joined</span>
+    <span class="it">${sw("tie")}Your investor, in a small round with it</span>
+    ${comps.length ? `<span class="it"><svg viewBox="0 0 30 12" aria-hidden="true"><circle class="lg-dot" cx="15" cy="6" r="4"/><circle class="lg-conf" cx="15" cy="6" r="6.5"/></svg>Backed ${esc(comps.join(" or "))}</span>` : ""}`;
 }
 
-let mapResizeT = 0;
+let flowW = 0, flowResizeT = 0;
 window.addEventListener("resize", () => {
-  clearTimeout(mapResizeT);
-  mapResizeT = setTimeout(() => { if (state.resultView === "map" && $("#mapview:not(.hidden)")) drawMap(); }, 200);
+  clearTimeout(flowResizeT);
+  flowResizeT = setTimeout(() => {
+    const host = $("#mapview:not(.hidden) #flow");
+    if (!host || state.resultView !== "map" || host.clientWidth === flowW) return;
+    flowW = host.clientWidth;
+    drawFlow();
+  }, 150);
 });
 
 /* ---------------- green-dot guide: four short steps on the first visit ---------------- */
@@ -1678,7 +1703,7 @@ const TOUR = [
     anchor: () => $(".round-fields")},
   {screen: "paste", title: "Who can introduce you", text: "Optional: add your investors or LinkedIn connections. We show who can introduce you to each fund.",
     anchor: () => $("#opt > summary")},
-  {screen: "results", title: "Read your shortlist", text: "Funds come in groups, best first. Click a fund to see the rounds behind every number. Try Map for the big picture.",
+  {screen: "results", title: "Read your shortlist", text: "Funds come in groups, best first. Click a fund to see the rounds behind every number. Map shows who can introduce you to each fund.",
     anchor: () => [$("#results .grp"), $("#results .grp-list .row"), innerWidth >= 600 ? $("#results .viewtog") : null]},
 ];
 const tour = {i: -1, back: null, raf: 0, dotAt: null};
@@ -1823,7 +1848,8 @@ function renderMethod() {
     <section><h2>How the list is ordered</h2>
       <p>Funds are grouped by verdict (leads rounds like yours first, then leads a different size, then too little data to tell, then mostly follows, sometimes leads, no recent lead or public funder), a fund that led or joined a competitor's round sinks to the bottom of its group, and inside a group a stronger way in comes first (a founder at a company the fund led, then anyone at a company it led, then anyone at a company it joined, then one of your investors in a small round with it, then a same-name match on a short or ordinary-word company), then, when finding funds, more led rounds like yours, then the share of rounds led, judged by its lower bound (Wilson, z = 1) so 3 of 3 does not beat 31 of 36.</p></section>
     <section><h2>Your network</h2>
-      <p>Your LinkedIn connections file is read in your browser. Only first name, last name, company and position are kept, in memory, for this page; URLs and emails are never read, and nothing is uploaded or stored. Each connection's company is matched by name to the companies a fund led or joined in our data. Very short or generic company names are skipped. Names of 5 letters or fewer and ordinary words (Junction, Bolt, Garage) are shown as "same name" only, never as founder level, because a stranger's employer can share them. A title counts as founder level only when it starts with founder, co-founder, CEO, CTO, managing director or general or managing partner; assistants and associates do not count. A match is a person at a company, not a promise they know the partner.</p></section>
+      <p>Your LinkedIn connections file is read in your browser. Only first name, last name, company and position are kept, in memory, for this page; URLs and emails are never read, and nothing is uploaded or stored. Each connection's company is matched by name to the companies a fund led or joined in our data. Very short or generic company names are skipped. Names of 5 letters or fewer and ordinary words (Junction, Bolt, Garage) are shown as "same name" only, never as founder level, because a stranger's employer can share them. A title counts as founder level only when it starts with founder, co-founder, CEO, CTO, managing director or general or managing partner; assistants and associates do not count. A match is a person at a company, not a promise they know the partner.</p>
+      <p>The Map draws the same ways in as lines from you, through the person, to each fund, with the funds in the list's groups and order. A thick solid line is someone at a company the fund led, a dashed line someone at a company it only joined, a dotted line your investor in a small round with it, the same order the list ranks by. "No way in found" means no path yet, not a bad fund.</p></section>
     <section><h2>What we tested</h2>
       ${v ? `<table class="simple"><thead><tr><th>Test</th><th>Result</th><th>n</th></tr></thead><tbody>${v.rows.map((r) => `<tr><td>${esc(r.test)}</td><td>${esc(r.result)}</td><td class="num">${esc(r.n)}</td></tr>`).join("")}</tbody></table><p class="muted">${esc(v.note || "")}</p>` : `<p class="muted">Validation numbers are being recomputed on the full data.</p>`}
       ${v?.accuracy?.length ? `<details class="fold-raw"><summary>Every hand check, with its source (${v.accuracy.length})</summary><table class="simple"><thead><tr><th>Round</th><th>Lead in Cala</th><th>Check</th></tr></thead><tbody>${v.accuracy.map((a) => `<tr><td>${esc(a.company)} <span class="muted">${esc(a.date)} ${esc(a.stage || "")}</span></td><td>${esc((a.cala_leads || []).join(", "))}</td><td>${esc(a.verdict)}${a.source_url && /^https:\/\//.test(a.source_url) ? `, <a href="${esc(a.source_url)}" target="_blank" rel="noopener noreferrer">source</a>` : ""}</td></tr>`).join("")}</tbody></table></details>` : ""}

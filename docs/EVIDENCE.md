@@ -36,6 +36,7 @@ All numbers come from snapshot `20261114102039` (built 14 November 2026) and `ap
 | LinkedIn connections are read in the browser | `Connections.csv` is parsed client-side; only first name, last name, company and position are kept, in memory; URLs and emails are never read | `app/static/app.js` (`parseConnections`, `setNetwork`) |
 | Nothing is uploaded | No API route receives the file: `/api/check` gets the fund list and round settings, returns each fund's portfolio, and the match runs in the browser | `app/main.py` (routes), `app/static/app.js` (`networkMatches`) |
 | Matching rule | Company name match to companies the fund led or joined; short or ordinary-word names shown only as "same name"; a match is a lead to check, not proof of a relationship | `app/engine.py` (`portfolio`, `weak_name`), `app/static/app.js` (`wayIn`) |
+| Map view | Each line is one way in already counted for the list, from the same data: no new source. Line style follows the list's way-in order (contact at a company the fund led, then joined, then investor co-round). Funds keep the list's groups and order | `app/static/app.js` (`flowPeople`, `drawFlow`, `rankRows`) |
 | Sample summary | "way in to 2" without a network, "way in to 8" with the made-up sample network (14 funds, Gemini reading the last line) | run the sample in the app |
 
 ## Prediction (why the product shows evidence, not odds)
