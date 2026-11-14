@@ -1159,7 +1159,7 @@ function showFund(i) {
     ${r.rounds_joined.length ? `<details class="fold"><summary>Joined, did not lead (${r.rounds_joined.length})</summary>${roundTable(r.rounds_joined)}</details>` : ""}
     ${r.rounds_unknown.length ? `<details class="fold"><summary>Lead not named (${r.rounds_unknown.length})</summary>${roundTable(r.rounds_unknown)}</details>` : ""}
     ${r.rounds_disputed?.length ? `<details class="fold"><summary>Disputed by the source, not counted (${r.rounds_disputed.length})</summary>${roundTable(r.rounds_disputed)}</details>` : ""}
-    <p class="pnote">Counted over the last four years, at your stage and the stages next to it. ${esc(counts)}. Click any company to see the Cala record behind it.</p>`;
+    <p class="pnote">Counted over the last four years, at your stage and the stages next to it. ${esc(counts)}. Click any company to see the Cala record behind it. <a href="/explore#/fund/${encodeURIComponent(r.key)}">Open ${esc(r.name)} in Explore</a> for its yearly lead pace and co-investors.</p>`;
   $(".pane .x").focus();
   loadReceipts(r);
 }

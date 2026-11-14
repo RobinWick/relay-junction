@@ -13,9 +13,9 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Recount","applicationCategory":"BusinessApplication","operatingSystem":"Web","description":"Checks whether venture capital funds actually lead funding rounds at a founder's stage and size or mostly follow, when they last led, whether they backed a competitor, and which of the founder's investors can introduce them. Deterministic counting over 5,200 funding rounds from Cala, with source records behind every number.","isAccessibleForFree":true,"creator":{"@type":"Organization","name":"Team Wicflow, Junction 2026"},"about":["venture capital","lead investor","fundraising","Cala"]}</script>
 <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
 <link rel="preload" href="/static/fonts/geist-variable.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/static/styles.css?v=13">
-<script src="/static/brand.js?v=13" defer></script>
-<script src="/static/app.js?v=13" defer></script>
+<link rel="stylesheet" href="/static/styles.css?v=14">
+<script src="/static/brand.js?v=14" defer></script>
+<script src="/static/app.js?v=14" defer></script>
 </head>
 <body data-screen="paste">
 <div class="app">
@@ -24,6 +24,7 @@
     <nav class="nav" aria-label="Main">
       <a href="/" id="nav-check"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 4.5h10M3 8h10M3 11.5h6"/></svg>Check a list</a>
       <button type="button" id="nav-find"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><path d="m10.5 10.5 3 3"/></svg>Find funds for me</button>
+      <a href="/explore" id="nav-explore"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 3.5h11l-4.2 5v4.5l-2.6-1.3V8.5z"/></svg>Explore</a>
       <a href="/method" id="nav-method"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 2.5h7.5L13 5v8.5H3z"/><path d="M5.5 7h5M5.5 9.5h5"/></svg><span>Method<span class="m-hide"> and limits</span></span></a>
       <button type="button" id="nav-tour"><svg viewBox="0 0 16 16" aria-hidden="true"><circle class="gd" cx="8" cy="8" r="3.2"/><circle cx="8" cy="8" r="6"/></svg>Show me how</button>
     </nav>
@@ -42,6 +43,19 @@
       <section class="compose only-paste" aria-labelledby="h-main">
         <h1 id="h-main">Funds say they lead. <span>We recount.</span></h1>
         <p class="sub">Counted from Cala round data. Not AI.</p>
+
+        <nav class="role-pick" aria-label="Choose how to start">
+          <div class="role-card">
+            <b>I'm a founder</b>
+            <span>Check the funds on your list, or explore funds that lead rounds like yours.</span>
+            <span class="role-acts"><label class="btn primary" for="funds">Check my list</label><a class="btn line" href="/explore#/funds">Explore funds</a></span>
+          </div>
+          <div class="role-card">
+            <b>I'm an investor</b>
+            <span>Filter companies by stage and time since their last round, and read founder careers as facts.</span>
+            <span class="role-acts"><a class="btn line" href="/explore#/companies">Explore companies and founders</a></span>
+          </div>
+        </nav>
 
         <div class="proof hidden" id="proof" aria-labelledby="proof-h">
           <div class="proof-h"><b id="proof-h"></b><span class="sp"></span><span class="legend" aria-hidden="true"><span><i class="l"></i>Led</span><span><i></i>Joined</span></span></div>

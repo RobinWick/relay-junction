@@ -63,8 +63,6 @@ h1,h2,h3{letter-spacing:-.02em;margin:0}
 .side-foot{margin-top:auto;padding:14px 8px 0;font-size:13px;color:var(--ink-3);display:flex;flex-direction:column;gap:2px}
 .side-foot .live{display:flex;align-items:center;gap:7px;color:var(--ink-2)}
 .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);flex:none}
-.mode{font-size:12px}
-.mode.fixtures{color:var(--amber)}
 
 /* ---------- common ---------- */
 .page{padding:22px 24px 40px}
@@ -219,7 +217,7 @@ table.grid{width:100%;border-collapse:collapse;font-size:13px}
 .receipt{padding:10px 0;border-top:1px solid var(--line-soft)}
 .receipt:first-child{border-top:0;padding-top:0}
 .receipt b{font-weight:600}
-.receipt .src{font-size:12px;margin-top:2px}
+.receipt .src{font-size:12px;margin-top:2px;display:flex;flex-wrap:wrap;gap:2px 12px}
 .list{list-style:none;margin:0;padding:0}
 .list li{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-top:1px solid var(--line-soft);font-size:13px}
 .list li:first-child{border-top:0}
@@ -253,3 +251,12 @@ table.grid{width:100%;border-collapse:collapse;font-size:13px}
   .tiles{grid-template-columns:repeat(2,minmax(0,1fr))}
   .tile dd{font-size:18px;overflow-wrap:anywhere}
 }
+
+/* background cohorts and role sources */
+details.cohort{border-top:1px solid var(--line);padding:10px 0}
+details.cohort:first-of-type{border-top:0}
+details.cohort>summary{cursor:pointer;font-size:14px;list-style-position:outside}
+details.cohort>summary .muted{font-weight:400}
+details.cohort .table-wrap{margin-top:10px}
+details.cohort .list .src{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px}
+.section-h+.neutral+details.cohort{border-top:0}

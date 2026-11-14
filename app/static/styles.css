@@ -753,3 +753,12 @@ table.simple th{font-size:13px;color:var(--ink-3);font-weight:540}
   .m-hide{display:none}
   .nav a,.nav button{white-space:nowrap;padding:0 8px}
 }
+
+/* landing role choice: founder checks a list or explores funds, investor explores companies and founders */
+.role-pick{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:22px 0 18px}
+.role-card{display:flex;flex-direction:column;gap:6px;padding:14px 16px;border:1px solid var(--line);border-radius:var(--r-lg,10px);background:var(--panel)}
+.role-card b{font-size:15px;font-weight:620;color:var(--ink)}
+.role-card>span:not(.role-acts){font-size:13px;color:var(--ink-3);line-height:1.45}
+.role-acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:auto;padding-top:6px}
+.role-acts .btn{cursor:pointer;white-space:normal;text-align:center}
+@media (max-width:640px){.role-pick{grid-template-columns:1fr}}

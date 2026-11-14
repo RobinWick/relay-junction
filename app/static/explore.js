@@ -2,13 +2,11 @@
 /* Recount Explore: role picker, AI-described filters, Dealroom-style filter rail + sortable tables, detail pages
    with hand-built SVG charts. No inline styles or scripts (CSP). All text from data goes in via textContent.
 
-   Data source flag: ?data=fixtures (default until /api/explore/* ships) or ?data=api.
-   Fixtures live in /static/explore-fixtures/ and have the exact shape of the API (see API.md there). */
+   Data: /api/explore/ui/* (app/explore_views.py; contract in docs/explore-api.md). Lists come whole and are
+   filtered and sorted here. Founder careers come from people.json (Cala entity graph) and are facts, never scores. */
 
 (() => {
-  const DEFAULT_SOURCE = "fixtures";
-  const SOURCE = new URLSearchParams(location.search).get("data") || DEFAULT_SOURCE;
-  const FIX = "/static/explore-fixtures/";
+  const API = "/api/explore/ui/";
   const PAGE = 50;
   const SVGNS = "http://www.w3.org/2000/svg";
   const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -56,6 +54,7 @@
     const y = Math.floor(m / 12), r = Math.round(m % 12);
     return r ? `${y} y ${r} mo` : `${y} y`;
   };
+  const fmtYears = (y, n) => (y === null || y === undefined ? "n/a" : `${y} y${n ? ` (n=${n})` : ""}`);
   const ymToNum = (ym) => { const [y, m] = ym.split("-"); return +y + ((+m || 1) - 1) / 12; };
   const plural = (n, one, many) => `${n.toLocaleString("en")} ${n === 1 ? one : many || one + "s"}`;
 
@@ -72,23 +71,12 @@
     return p;
   }
   const api = {
-    meta: () => (SOURCE === "api" ? getJson("/api/explore/meta") : getJson(FIX + "meta.json")),
-    list: (view) => (SOURCE === "api" ? getJson(`/api/explore/${view}`) : getJson(`${FIX}${view}.json`)),
-    async detail(kind, key) {
-      if (SOURCE === "api") return getJson(`/api/explore/${kind}/${encodeURIComponent(key)}`);
-      const file = { funds: "fund-details", companies: "company-details", founders: "founder-details" }[kind];
-      const all = await getJson(`${FIX}${file}.json`);
-      if (!all[key]) throw new Error(`No ${kind} record "${key}" in the fixtures`);
-      return all[key];
-    },
-    async aiFilters(body) {
-      if (SOURCE === "api") {
-        return getJson("/api/explore/ai-filters", {
-          method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
-        });
-      }
-      return localAiFilters(body, await api.meta(), await api.list("funds"));
-    },
+    meta: () => getJson(API + "meta"),
+    list: (view) => getJson(API + view),
+    detail: (kind, key) => getJson(`${API}${kind}/${encodeURIComponent(key)}`),
+    aiFilters: (body) => getJson(API + "ai-filters", {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+    }),
   };
 
   /* ---------- filter definitions ---------- */
@@ -122,18 +110,28 @@
       { key: "months_since", label: "Months since last round", type: "range", step: 1, test: (c, v) => inRange(c.months_since_last_round, v) },
       { key: "investor", label: "Investors include", type: "multi", opts: "investors", free: true, ph: "Type an investor",
         test: (c, v) => v.every((q) => anyName(c.investors, q)) },
+      { key: "lead", label: "Led a round", type: "multi", opts: "investors", free: true, ph: "Type a fund",
+        hint: "A fund named as lead in any of its rounds.", test: (c, v) => v.every((q) => anyName(c.leads, q)) },
       { key: "rounds", label: "Rounds on record, at least", type: "number", test: (c, v) => c.rounds >= v },
+      { key: "last_amount", label: "Last round size, €M", type: "range", step: 1, test: (c, v) => inRange(c.last_amount_eur_m, v) },
       { key: "raised", label: "Known raised in total, €M", type: "range", step: 1, test: (c, v) => inRange(c.total_known_eur_m, v) },
+      { key: "founder_tags", label: "Founder background", type: "multi", opts: "founder_tags",
+        hint: "Only companies whose founders have Cala career records.", test: (c, v) => v.every((t) => c.founder_tags.includes(t)) },
+      { key: "repeat", label: "Repeat founder", type: "check", text: "A founder founded a company before", test: (c) => c.repeat_founder },
     ],
     founders: [
       { key: "q", label: "Name or company", type: "text", ph: "Search people", test: (p, v) => `${p.name} ${p.company}`.toLowerCase().includes(v.toLowerCase()) },
-      { key: "tags", label: "Background", type: "multi", opts: "founder_tags", hint: "Employer types before founding.", test: (p, v) => v.every((t) => p.tags.includes(t)) },
+      { key: "tags", label: "Background", type: "multi", opts: "founder_tags", hint: "Employer types outside their own company, from hand lists.",
+        test: (p, v) => v.every((t) => p.tags.includes(t)) },
       { key: "country", label: "Country", type: "multi", opts: "countries", test: (p, v) => v.includes(p.country) },
       { key: "stage", label: "Company stage", type: "multi", opts: "stages", fmt: fmtStage, test: (p, v) => v.includes(p.company_stage) },
-      { key: "tenure", label: "Median time per employer, months", type: "range", step: 6, test: (p, v) => inRange(p.metrics.median_tenure_months, v) },
-      { key: "step", label: "Months per title step", type: "range", step: 3, hint: "Time from first job to last title step, divided by steps.",
-        test: (p, v) => inRange(p.metrics.months_per_title_step, v) },
-      { key: "repeat", label: "Repeat founder", type: "check", text: "Founded 2 or more companies", test: (p) => p.metrics.repeat_founder },
+      { key: "career", label: "Career record", type: "check", text: "Has a role outside their own company", test: (p) => p.metrics.roles_outside_company > 0 },
+      { key: "dated", label: "Roles with dates, at least", type: "number", test: (p, v) => p.metrics.roles_dated >= v },
+      { key: "tenure", label: "Average years per dated role", type: "range", step: 0.5, hint: "Only roles with both a start and an end date count.",
+        test: (p, v) => inRange(p.metrics.avg_tenure_years, v) },
+      { key: "ups", label: "Title level-ups per year", type: "range", step: 0.1, hint: "Steps up in title level, divided by the years between the first and last dated role.",
+        test: (p, v) => inRange(p.metrics.level_ups_per_year, v) },
+      { key: "repeat", label: "Repeat founder", type: "check", text: "Founded a company before this one", test: (p) => p.metrics.repeat_founder },
       { key: "prior_exit", label: "Prior exit", type: "check", text: "An earlier company was acquired", test: (p) => p.metrics.prior_exit },
     ],
   };
@@ -166,19 +164,22 @@
       { key: "last_round", label: "Last round", r: true, get: (c) => c.last_round, cell: (c) => fmtYm(c.last_round) },
       { key: "months_since", label: "Months since", r: true, get: (c) => c.months_since_last_round, cell: (c) => c.months_since_last_round },
       { key: "rounds", label: "Rounds", r: true, get: (c) => c.rounds, cell: (c) => c.rounds },
+      { key: "last_amount", label: "Last round", r: true, get: (c) => c.last_amount_eur_m ?? -1, cell: (c) => fmtEur(c.last_amount_eur_m) },
       { key: "raised", label: "Known raised", r: true, get: (c) => c.total_known_eur_m ?? -1, cell: (c) => fmtEur(c.total_known_eur_m) },
       { key: "leads", label: "Last round leads", cls: "small", get: (c) => (c.last_leads[0] || {}).name || "", cell: (c) => c.last_leads.map((l) => l.name).join(", ") || "Lead unknown" },
     ],
+    /* People: only name and company sort. Metric columns are facts to read, never an ordering of people. */
     founders: [
       { key: "name", label: "Person", cls: "name", get: (p) => p.name.toLowerCase(),
-        cell: (p) => [h("a", { href: `#/person/${encodeURIComponent(p.id)}` }, p.name), p.sample ? [" ", h("span", { class: "badge sample" }, "Sample")] : null] },
-      { key: "company", label: "Company", get: (p) => p.company.toLowerCase(), cell: (p) => p.company },
+        cell: (p) => h("a", { href: `#/person/${encodeURIComponent(p.id)}` }, p.name) },
+      { key: "company", label: "Company", get: (p) => p.company.toLowerCase(),
+        cell: (p) => (p.company_key ? h("a", { href: `#/company/${encodeURIComponent(p.company_key)}` }, p.company) : p.company) },
       { key: "country", label: "Country", get: (p) => p.country, cell: (p) => p.country },
-      { key: "stage", label: "Stage", get: (p) => p.company_stage || "", cell: (p) => fmtStage(p.company_stage) },
-      { key: "tenure", label: "Median per employer", r: true, get: (p) => p.metrics.median_tenure_months ?? -1, cell: (p) => fmtMonths(p.metrics.median_tenure_months) },
-      { key: "step", label: "Months per title step", r: true, get: (p) => p.metrics.months_per_title_step ?? 9999, cell: (p) => p.metrics.months_per_title_step ?? "No steps" },
-      { key: "founded", label: "Founded", r: true, get: (p) => p.metrics.companies_founded, cell: (p) => p.metrics.companies_founded },
-      { key: "tags", label: "Background", cls: "small", get: (p) => p.tags.join(","), cell: (p) => p.tags.join(", ") },
+      { key: "roles", label: "Roles on file", r: true, nosort: true, cell: (p) => (p.metrics.roles ? `${p.metrics.roles}, ${p.metrics.roles_dated} dated` : "None") },
+      { key: "tenure", label: "Avg years per role", r: true, nosort: true, cell: (p) => fmtYears(p.metrics.avg_tenure_years, p.metrics.avg_tenure_n) },
+      { key: "ups", label: "Level-ups per year", r: true, nosort: true, cell: (p) => (p.metrics.level_ups_per_year ?? "n/a") },
+      { key: "founded", label: "Founded", r: true, nosort: true, cell: (p) => p.metrics.companies_founded },
+      { key: "tags", label: "Background", cls: "small", nosort: true, cell: (p) => p.tags.join(", ") || "None on file" },
     ],
   };
 
@@ -229,7 +230,7 @@
     const meta = await api.meta();
     m.replaceChildren(h("section", { class: "start", "aria-labelledby": "start-h" },
       h("h1", { id: "start-h" }, "Explore the receipts"),
-      h("p", { class: "sub" }, "Filter funds, companies and founder careers counted from Cala data. Every number links to the rounds behind it."),
+      h("p", { class: "sub" }, "Filter funds, companies and founder careers counted from Cala data. Describe what you want and the filters set themselves. Every number links to the rounds behind it."),
       h("div", { class: "roles" },
         h("a", { class: "role", href: "#/funds", "data-role": "founder" },
           h("b", {}, "I am a founder"),
@@ -242,6 +243,7 @@
       h("div", { class: "start-facts num" },
         h("span", {}, plural(meta.counts.funds, "fund")),
         h("span", {}, plural(meta.counts.companies, "company", "companies")),
+        h("span", {}, `${plural(meta.counts.founders, "founder")} with Cala career records`),
         h("span", {}, `${meta.source.name}, retrieved ${meta.source.retrieved}`))));
   }
 
@@ -273,9 +275,13 @@
         h("a", { href: "#/companies", role: "tab", "aria-selected": String(view === "companies") }, "Companies"),
         h("a", { href: "#/founders", role: "tab", "aria-selected": String(view === "founders") }, "Founders")));
     }
-    if (view === "founders" && list.items.some((p) => p.sample)) {
-      page.append(h("p", { class: "banner" }, h("span", { class: "badge sample" }, "Sample"),
-        h("span", {}, "These are invented profiles that show the layout. Live profiles will come from Cala career records, with the source on every person.")));
+    if (view === "founders" && list.coverage) {
+      const cv = list.coverage;
+      const hv = (n) => `${n} ${n === 1 ? "has" : "have"}`;
+      page.append(h("p", { class: "banner" }, h("span", { class: "badge" }, "Coverage"),
+        h("span", {}, `Cala career records for ${cv.founders_fetched} founders of ${cv.companies_with_founder_edge} Nordic companies. ` +
+          `${hv(cv.founders_with_any_role)} any role on file, ${hv(cv.founders_with_role_outside_company)} a role outside their own company and ` +
+          `${hv(cv.founders_with_dated_role)} dated roles, so tenure and title-pace values rest on very few people. Fetched ${cv.generated}.`)));
     }
     page.append(askBox(view, t.ph));
     const aiOut = h("div", { id: "ai-out" });
@@ -337,7 +343,7 @@
         ? h("span", {}, `Set ${plural(keys.length, "filter")}: ${labels.join("; ")}. Edit any of them in the filter rail.`)
         : h("span", {}, "No filter matched that description. Try naming a stage, a country, a round size or a background."),
       ai.unmatched && ai.unmatched.length ? h("span", { class: "muted" }, `Not used: ${ai.unmatched.join(", ")}.`) : null,
-      ai.engine ? h("span", { class: "muted" }, ai.engine === "fixture-rules" ? "Offline rules (fixtures)" : `Engine: ${ai.engine}`) : null,
+      ai.engine ? h("span", { class: "muted" }, `Read by ${ai.engine}${ai.notice ? ` (${ai.notice})` : ""}`) : null,
       h("span", { class: "sp" }),
       keys.length ? h("button", { class: "linkbtn", type: "button", onclick: () => {
         for (const k of keys) delete state.filters[view][k];
@@ -472,12 +478,14 @@
     const parts = [head];
     if (view === "founders" && rows.length) parts.push(founderScatter(rows));
     if (!rows.length) {
-      parts.push(h("div", { class: "table-wrap" }, h("p", { class: "empty" }, "Nothing matches these filters. Remove one to widen the search.")));
+      parts.push(h("div", { class: "table-wrap" }, h("p", { class: "empty" }, "Nothing matches these filters. Remove one to widen the search.",
+        view === "founders" ? " Cala has career records for only a few founders in this sample, so career filters often come back empty." : "")));
     } else {
       const shown = rows.slice(0, state.shown[view]);
       const table = h("table", { class: "grid" },
         h("caption", { class: "sr" }, `${VIEW_TEXT[view].title}, sortable by column`),
         h("thead", {}, h("tr", {}, COLUMNS[view].map((c) => {
+          if (c.nosort) return h("th", { scope: "col", class: c.r ? "plain r" : "plain" }, c.label);
           const on = c.key === sort.key;
           return h("th", { scope: "col", class: c.r ? "r" : null, "aria-sort": on ? (sort.dir > 0 ? "ascending" : "descending") : null },
             h("button", { type: "button", onclick: () => {
@@ -493,41 +501,63 @@
       }
     }
     parts.push(h("p", { class: "note" }, sourceLine(list.source)));
+    // Below the table: a different list (Cala's previous-employer queries), not a filter result
+    if (view === "founders" && list.cohorts && list.cohorts.length) parts.push(cohortPanel(list.cohorts));
     el.replaceChildren(...parts);
   }
 
   const sourceLine = (src) => (src ? `Source: ${src.name}, retrieved ${src.retrieved}. ${src.note || ""}` : "");
 
   /* ---------- founders cohort scatter (facts, not scores) ---------- */
+  /* Below 3 people with both values a scatter would only decorate one or two dots, so the panel says so instead. */
   function founderScatter(rows) {
-    const pts = rows.filter((p) => p.metrics.median_tenure_months != null && p.metrics.months_per_title_step != null);
+    const pts = rows.filter((p) => p.metrics.avg_tenure_years != null && p.metrics.level_ups_per_year != null);
+    const head = h("div", { class: "section-h" }, h("h2", {}, "Years per role and title pace"),
+      h("span", { class: "muted" }, `${plural(pts.length, "person", "people")} of ${rows.length} with both values`));
+    if (pts.length < 3) {
+      return h("div", { class: "panel section", "aria-label": "Career pace" }, head,
+        h("p", { class: "neutral" }, `Cala has dated roles for too few people in this set to chart. ${pts.map((p) => `${p.name}: ${fmtYears(p.metrics.avg_tenure_years, p.metrics.avg_tenure_n)} per role, ${p.metrics.level_ups_per_year} level-ups per year.`).join(" ")} Open a person for their timeline.`));
+    }
     const W = chartW(640), H = 220, L = 46, R = 14, T = 12, B = 34;
-    const nice = (v) => { const st = Math.ceil(v / 4 / 6) * 6; return st * 4; }; // 4 ticks on multiples of 6 months
-    const xMax = nice(Math.max(60, ...pts.map((p) => p.metrics.median_tenure_months)) * 1.05);
-    const yMax = nice(Math.max(24, ...pts.map((p) => p.metrics.months_per_title_step)) * 1.05);
+    const xMax = Math.max(4, ...pts.map((p) => p.metrics.avg_tenure_years)) * 1.1;
+    const yMax = Math.max(1, ...pts.map((p) => p.metrics.level_ups_per_year)) * 1.1;
     const X = (v) => L + (v / xMax) * (W - L - R);
     const Y = (v) => T + (1 - v / yMax) * (H - T - B);
     const svg = s("svg", { class: "chart", viewBox: `0 0 ${W} ${H}`, role: "img",
-      "aria-label": `Median months per employer against months per title step for ${pts.length} people` });
+      "aria-label": `Average years per role against title level-ups per year for ${pts.length} people` });
     for (let i = 0; i <= 4; i++) {
       const yv = (yMax / 4) * i, xv = (xMax / 4) * i;
       svg.append(s("line", { class: "gridl", x1: L, x2: W - R, y1: Y(yv), y2: Y(yv) }),
-        s("text", { x: L - 6, y: Y(yv) + 4, "text-anchor": "end" }, Math.round(yv)),
-        s("text", { x: X(xv), y: H - B + 16, "text-anchor": "middle" }, Math.round(xv)));
+        s("text", { x: L - 6, y: Y(yv) + 4, "text-anchor": "end" }, yv.toFixed(1)),
+        s("text", { x: X(xv), y: H - B + 16, "text-anchor": "middle" }, xv.toFixed(1)));
     }
-    svg.append(s("text", { x: (L + W - R) / 2, y: H - 4, "text-anchor": "middle" }, "Median months per employer"),
-      s("text", { x: 12, y: (T + H - B) / 2, transform: `rotate(-90 12 ${(T + H - B) / 2})`, "text-anchor": "middle" }, "Months per title step"));
+    svg.append(s("text", { x: (L + W - R) / 2, y: H - 4, "text-anchor": "middle" }, "Average years per dated role"),
+      s("text", { x: 12, y: (T + H - B) / 2, transform: `rotate(-90 12 ${(T + H - B) / 2})`, "text-anchor": "middle" }, "Level-ups per year"));
     for (const p of pts) {
-      const link = s("a", { href: `#/person/${encodeURIComponent(p.id)}` },
-        s("circle", { class: "c-pt", cx: X(p.metrics.median_tenure_months), cy: Y(p.metrics.months_per_title_step), r: 6 },
-          svgTitle(`${p.name}: ${fmtMonths(p.metrics.median_tenure_months)} per employer, ${p.metrics.months_per_title_step} months per title step`)));
-      svg.append(link);
+      svg.append(s("a", { href: `#/person/${encodeURIComponent(p.id)}` },
+        s("circle", { class: "c-pt", cx: X(p.metrics.avg_tenure_years), cy: Y(p.metrics.level_ups_per_year), r: 6 },
+          svgTitle(`${p.name}: ${p.metrics.avg_tenure_years} years per role, ${p.metrics.level_ups_per_year} level-ups per year`))));
     }
-    return h("div", { class: "panel section", "aria-label": "Career pace chart" },
-      h("div", { class: "section-h" }, h("h2", {}, "Time per employer and title steps"),
-        h("span", { class: "muted" }, `${plural(pts.length, "person", "people")} with both values`)),
-      svg,
+    return h("div", { class: "panel section", "aria-label": "Career pace chart" }, head, svg,
       h("p", { class: "neutral" }, "Each dot is one person in the filtered set. Position shows two facts from the career record. No position is better than another, and Recount does not rank people."));
+  }
+
+  /* ---------- background cohorts: Cala's "founder previously worked at X" lists ---------- */
+  function cohortPanel(cohorts) {
+    return h("section", { class: "panel section", "aria-labelledby": "coh-h" },
+      h("div", { class: "section-h" }, h("h2", { id: "coh-h" }, "Where founders worked before"),
+        h("span", { class: "muted" }, "Companies Cala lists for a founder's previous employer")),
+      h("p", { class: "neutral" }, "Each list is one Cala query. Rows carry no source links, so a stated prior job is a claim to check, not a fact. Some rows are companies the employer funded or bought, and each row says which."),
+      cohorts.map((c) => h("details", { class: "cohort" },
+        h("summary", {}, h("b", {}, c.employer),
+          h("span", { class: "muted num" }, c.n ? ` ${plural(c.n, "company", "companies")}, ${c.n_worked_at_stated} say a founder worked there, ${c.n_in_snapshot} in our round data` : " No companies returned")),
+        c.rows.length ? h("div", { class: "table-wrap" }, h("table", { class: "grid" },
+          plainHead(["Company", "Founders", "Founded", "Tie to employer", "What the row says"], -1),
+          h("tbody", {}, c.rows.map((r) => h("tr", {},
+            h("td", { class: "name" }, r.ckey ? h("a", { href: `#/company/${encodeURIComponent(r.ckey)}` }, r.company) : r.company),
+            h("td", { class: "small" }, r.founders || "Not named"), h("td", {}, r.founded || "n/a"),
+            h("td", { class: "small" }, r.relation_label), h("td", { class: "small" }, r.evidence || r.about || "")))))) : null,
+        h("p", { class: "note" }, `Source: ${c.source}, fetched ${c.fetched}.`))));
   }
 
   /* ---------- fund detail ---------- */
@@ -637,6 +667,11 @@
         h("div", { class: "section-h" }, h("h2", { id: "tl-h" }, "Rounds timeline"),
           h("span", { class: "legend" }, h("span", {}, h("i", { class: "l-led" }), "Lead named"), h("span", {}, h("i", { class: "l-unknown" }), "Lead unknown"))),
         roundsTimeline(c.timeline)),
+      c.founders.length ? h("section", { class: "section panel", "aria-labelledby": "fo-h" },
+        h("div", { class: "section-h" }, h("h2", { id: "fo-h" }, "Founders with a Cala record"),
+          c.founder_tags.length ? h("span", { class: "muted" }, `Background: ${c.founder_tags.join(", ")}`) : null),
+        h("ul", { class: "list" }, c.founders.map((p) => h("li", {}, h("a", { href: `#/person/${encodeURIComponent(p.id)}` }, p.name),
+          h("span", { class: "muted" }, "Career facts and source"))))) : null,
       h("section", { class: "section", "aria-labelledby": "rl-h" },
         h("div", { class: "section-h" }, h("h2", { id: "rl-h" }, "Rounds and leads")),
         h("div", { class: "table-wrap" }, h("table", { class: "grid" },
@@ -672,56 +707,74 @@
 
   /* ---------- person detail ---------- */
   async function renderPerson(m, id) {
-    const p = await api.detail("founders", id);
+    const [p, meta] = await Promise.all([api.detail("founders", id), api.meta()]);
     const mt = p.metrics;
+    const src = p.source;
+    const dated = p.roles.length > 0;
     m.replaceChildren(h("div", { class: "page detail" },
       h("p", { class: "crumbs" }, h("a", { href: "#/founders" }, "Founders"), " / ", p.name),
-      h("div", { class: "source", role: "note" },
-        p.sample ? h("span", { class: "badge sample" }, "Sample") : h("span", { class: "dot", "aria-hidden": "true" }),
-        h("span", {}, h("b", {}, "Source: "), `${p.source.name}, retrieved ${p.source.retrieved}. `, p.source.note || "")),
+      h("div", { class: "source", role: "note" }, h("span", { class: "dot", "aria-hidden": "true" }),
+        h("span", {}, h("b", {}, "Source: "), `${src.name}, fetched ${src.retrieved}. Cala entity ${src.entity_id}. ${src.note}`,
+          p.linkedin_url ? [" ", h("a", { href: p.linkedin_url, rel: "noopener noreferrer", target: "_blank" }, "Public profile")] : null)),
       h("div", { class: "d-h" }, h("div", {}, h("h1", {}, p.name),
-        h("p", { class: "meta" }, `${p.company} · ${fmtStage(p.company_stage)} · ${p.country}`)),
-        h("div", { class: "tags" }, p.tags.map((t) => h("span", { class: "tag" }, t)))),
+        h("p", { class: "meta" }, p.company_key ? h("a", { href: `#/company/${encodeURIComponent(p.company_key)}` }, p.company) : p.company,
+          ` · ${fmtStage(p.company_stage)} · ${p.country}`),
+        p.description ? h("p", { class: "muted" }, p.description) : null),
+        h("div", { class: "tags" }, p.tags.map((t) => h("span", { class: "tag", title: (p.tag_evidence[t] || []).join(", ") || null }, t)))),
       tiles([
-        ["Roles on record", mt.roles],
-        ["Employers before founding", mt.employers],
-        ["Median time per employer", fmtMonths(mt.median_tenure_months)],
-        ["Shortest stint", fmtMonths(mt.shortest_tenure_months)],
-        ["Title steps", mt.title_steps, `${mt.internal_title_steps} inside one employer`],
-        ["Months per title step", mt.months_per_title_step ?? "No steps"],
-        ["Months to head or director", mt.months_to_head_level ?? "Not reached"],
-        ["Companies founded", mt.companies_founded],
+        ["Roles on file", mt.roles, `${mt.roles_dated} with dates`],
+        ["Organisations", mt.employers ?? "n/a"],
+        ["Average years per role", mt.avg_tenure_years ?? "n/a", mt.avg_tenure_n ? `over ${plural(mt.avg_tenure_n, "dated role")}` : "needs start and end dates"],
+        ["Shortest and longest", mt.shortest_tenure_years == null ? "n/a" : `${mt.shortest_tenure_years} to ${mt.longest_tenure_years} y`],
+        ["Title level-ups", mt.level_ups ?? "n/a", mt.level_ups_per_year != null ? `${mt.level_ups_per_year} per year` : ""],
+        ["Years before this company", mt.years_before_company ?? "n/a"],
+        ["Companies founded", mt.companies_founded, mt.repeat_founder ? "founded one before" : ""],
       ]),
       h("section", { class: "section panel", "aria-labelledby": "career-h" },
         h("div", { class: "section-h" }, h("h2", { id: "career-h" }, "Career timeline"),
-          h("span", { class: "legend" }, h("span", {}, h("i", { class: "l-joined" }), "Employed"), h("span", {}, h("i", { class: "l-led" }), "Own company"))),
-        careerChart(p)),
-      h("section", { class: "section panel", "aria-labelledby": "level-h" },
+          dated ? h("span", { class: "legend" }, h("span", {}, h("i", { class: "l-joined" }), "Employed"), h("span", {}, h("i", { class: "l-led" }), "Own company")) : null),
+        dated ? careerChart(p, src.retrieved) : h("p", { class: "muted" }, "Cala has no dated roles for this person, so there is no timeline to draw."),
+        dated ? roleSources(p.roles) : null),
+      p.roles.filter((r) => r.level != null).length > 1 ? h("section", { class: "section panel", "aria-labelledby": "level-h" },
         h("div", { class: "section-h" }, h("h2", { id: "level-h" }, "Title level over time"),
-          h("span", { class: "muted" }, "Dots mark a change of title")),
-        levelChart(p)),
+          h("span", { class: "muted" }, "Dots mark a dated role")),
+        levelChart(p, meta.levels, src.retrieved),
+        h("p", { class: "neutral" }, "Levels come from a keyword map of job titles (intern to founder). They describe a title, not the person.")) : null,
+      p.undated_roles.length ? h("section", { class: "section", "aria-labelledby": "und-h" },
+        h("div", { class: "section-h" }, h("h2", { id: "und-h" }, "Roles without dates")),
+        h("ul", { class: "list panel" }, p.undated_roles.map((r) => h("li", {}, h("span", {}, h("b", {}, r.org), r.title !== "Title not stated" ? `, ${r.title}` : ""),
+          h("span", { class: "muted" }, r.org_type))))) : null,
       h("section", { class: "section", "aria-labelledby": "founded-h" },
         h("div", { class: "section-h" }, h("h2", { id: "founded-h" }, "Companies founded")),
-        h("ul", { class: "list panel" }, p.founded.map((f) => h("li", {}, h("span", {}, h("b", {}, f.company), ` since ${fmtYm(f.start)}`),
-          h("span", { class: "muted" }, f.status === "acquired" ? `Acquired by ${f.acquirer}` : f.status === "closed" ? "Closed" : "Active"))))),
-      h("p", { class: "neutral" }, "These are facts from the career record: dates, titles and employers. Recount does not score, rank or predict people.")));
+        h("ul", { class: "list panel" }, p.founded.map((f) => h("li", {}, h("span", {}, h("b", {}, f.company), ` · ${f.how}`),
+          f.exit ? h("span", { class: "muted" }, f.exit) : null)))),
+      p.gaps.length ? h("section", { class: "section", "aria-labelledby": "gaps-h" },
+        h("div", { class: "section-h" }, h("h2", { id: "gaps-h" }, "What Cala does not have")),
+        h("ul", { class: "list panel" }, p.gaps.map((g) => h("li", {}, h("span", {}, g))))) : null,
+      h("p", { class: "neutral" }, "These are facts from Cala's career record: dates, titles and employers. Recount does not score, rank or predict people.")));
     m.focus();
   }
 
-  function careerRange(p) {
-    const end = ymToNum(p.source.retrieved.slice(0, 7));
-    const t0 = Math.floor(ymToNum(p.roles[0].start));
-    return { t0, t1: Math.ceil(end + 0.01), end };
+  function roleSources(roles) {
+    return h("details", { class: "cohort" }, h("summary", {}, "Where each dated role comes from"),
+      h("ul", { class: "list" }, roles.map((r) => h("li", {}, h("span", {}, h("b", {}, r.org), `, ${r.title}`),
+        h("span", { class: "src" }, r.sources.length ? r.sources.map((x) => h("a", { href: x.url, rel: "noopener noreferrer", target: "_blank" }, `${x.name}${x.date ? `, ${x.date}` : ""}`)) : "No source link in Cala")))));
   }
 
-  function careerChart(p) {
-    const { t0, t1, end } = careerRange(p);
+  function careerRange(p, retrieved) {
+    const end = ymToNum(retrieved.slice(0, 7));
+    return { t0: Math.floor(ymToNum(p.roles[0].start)), t1: Math.ceil(end + 0.01), end };
+  }
+
+  function careerChart(p, retrieved) {
+    const { t0, t1, end } = careerRange(p, retrieved);
     const W = chartW(760), narrow = W < 560;
     const rowH = narrow ? 48 : 30, L = narrow ? 4 : 210, R = 16, T = 8;
     const H = T + p.roles.length * rowH + 26;
     const X = (t) => L + ((t - t0) / (t1 - t0)) * (W - L - R);
+    const until = (r) => (r.end ? fmtYm(r.end) : r.current ? "now" : "end not known");
     const svg = s("svg", { class: "chart", viewBox: `0 0 ${W} ${H}`, role: "img",
-      "aria-label": "Career timeline: " + p.roles.map((r) => `${r.title} at ${r.org}, ${fmtYm(r.start)} to ${r.end ? fmtYm(r.end) : "now"}, ${fmtMonths(r.months)}`).join("; ") });
+      "aria-label": "Career timeline: " + p.roles.map((r) => `${r.title} at ${r.org}, ${fmtYm(r.start)} to ${until(r)}, ${fmtMonths(r.months)}`).join("; ") });
     const yStep = Math.max(1, Math.ceil((t1 - t0) / Math.floor((W - L - R) / 48)));
     for (let y = t0; y <= t1; y += yStep) svg.append(s("line", { class: "gridl", x1: X(y), x2: X(y), y1: T, y2: H - 22 }), s("text", { x: X(y), y: H - 6, "text-anchor": narrow && y === t0 ? "start" : "middle" }, y));
     let lastOrg = null, alt = false;
@@ -731,13 +784,13 @@
       const a = X(ymToNum(r.start)), b = X(r.end ? ymToNum(r.end) : end);
       const own = r.org_type === "Own company";
       const w = Math.max(3, b - a);
-      svg.append(s("g", {}, svgTitle(`${r.title}, ${r.org} (${r.org_type}): ${fmtYm(r.start)} to ${r.end ? fmtYm(r.end) : "now"}, ${fmtMonths(r.months)}`),
+      const len = r.end || r.current ? fmtMonths(r.months) : `${fmtMonths(r.months)}+`;
+      svg.append(s("g", {}, svgTitle(`${r.title}, ${r.org} (${r.org_type}): ${fmtYm(r.start)} to ${until(r)}, ${fmtMonths(r.months)}`),
         narrow ? s("text", { class: "lbl", x: 0, y: y - 2 }, s("tspan", { class: "lbl-b" }, trunc(r.title, 26)), ` · ${trunc(r.org, 22)}`) : null,
         narrow ? null : s("text", { class: "lbl-b", x: 0, y: y + 13 }, trunc(r.title, 30)),
         narrow ? null : s("text", { x: 0, y: y + 26 }, trunc(r.org, 34)),
         s("rect", { class: own ? "c-own" : "c-role" + (alt ? "" : " alt"), x: a, y: y + 5, width: w, height: 18, rx: 3 }),
-        w > 46 ? s("text", { class: "c-bar-txt", x: a + 6, y: y + 18 }, fmtMonths(r.months))
-          : s("text", { x: a + w + 4, y: y + 18 }, fmtMonths(r.months))));
+        w > 46 ? s("text", { class: "c-bar-txt", x: a + 6, y: y + 18 }, len) : s("text", { x: a + w + 4, y: y + 18 }, len)));
     });
     return svg;
   }
@@ -745,113 +798,33 @@
   const chartW = (max) => Math.max(320, Math.min(max, (main().clientWidth || max) - 60));
   const trunc = (t, n) => (t.length > n ? t.slice(0, n - 1) + "…" : t);
 
-  function levelChart(p) {
-    const { t0, t1, end } = careerRange(p);
-    const W = chartW(760), narrow = W < 560, H = 210, L = narrow ? 64 : 150, R = 16, T = 12, B = 26;
+  /* levels: {"0": "Intern, trainee or analyst", ... "4": "Founder, C-level or partner"} from people.py */
+  function levelChart(p, levels, retrieved) {
+    const { t0, t1, end } = careerRange(p, retrieved);
+    const roles = p.roles.filter((r) => r.level != null);
+    const lvls = Object.keys(levels).map(Number).sort((a, b) => a - b);
+    const lo = lvls[0], hi = lvls[lvls.length - 1];
+    const W = chartW(760), narrow = W < 560, H = 200, L = narrow ? 70 : 210, R = 16, T = 12, B = 26;
     const X = (t) => L + ((t - t0) / (t1 - t0)) * (W - L - R);
-    const Y = (lv) => T + (1 - (lv - 1) / 5) * (H - T - B);
-    const levels = { 1: "Individual contributor", 2: "Senior", 3: "Lead or manager", 4: "Head or director", 5: "VP", 6: "C-level or founder" };
+    const Y = (lv) => T + (1 - (lv - lo) / (hi - lo)) * (H - T - B);
     const svg = s("svg", { class: "chart", viewBox: `0 0 ${W} ${H}`, role: "img",
-      "aria-label": "Title level over time: " + p.roles.map((r) => `${fmtYm(r.start)} ${levels[r.level]}`).join(", ") });
-    const short = { 1: "IC", 2: "Senior", 3: "Lead", 4: "Head", 5: "VP", 6: "C-level" };
-    for (let lv = 1; lv <= 6; lv++) svg.append(s("line", { class: "gridl", x1: L, x2: W - R, y1: Y(lv), y2: Y(lv) }), s("text", { x: L - 8, y: Y(lv) + 4, "text-anchor": "end" }, narrow ? short[lv] : levels[lv]));
+      "aria-label": "Title level over time: " + roles.map((r) => `${fmtYm(r.start)} ${levels[r.level]}`).join(", ") });
+    for (const lv of lvls) svg.append(s("line", { class: "gridl", x1: L, x2: W - R, y1: Y(lv), y2: Y(lv) }), s("text", { x: L - 8, y: Y(lv) + 4, "text-anchor": "end" }, trunc(levels[lv].split(",")[0], narrow ? 9 : 30)));
     const yStep = Math.max(1, Math.ceil((t1 - t0) / Math.floor((W - L - R) / 48)));
     for (let y = t0; y <= t1; y += yStep) svg.append(s("text", { x: X(y), y: H - 6, "text-anchor": "middle" }, y));
     let d = "";
-    p.roles.forEach((r, i) => {
+    roles.forEach((r, i) => {
       const a = X(ymToNum(r.start)), b = X(r.end ? ymToNum(r.end) : end), y = Y(r.level);
-      d += i ? ` V${y} H${b}` : `M${a} ${y} H${b}`;
+      d += i ? ` H${a} V${y} H${b}` : `M${a} ${y} H${b}`;
     });
     svg.append(s("path", { class: "c-line", d }));
-    p.roles.forEach((r) => {
-      svg.append(s("circle", { class: "c-dot", cx: X(ymToNum(r.start)), cy: Y(r.level), r: 4.5 },
-        svgTitle(`${fmtYm(r.start)}: ${r.title} at ${r.org}`)));
-    });
+    roles.forEach((r) => svg.append(s("circle", { class: "c-dot", cx: X(ymToNum(r.start)), cy: Y(r.level), r: 4.5 },
+      svgTitle(`${fmtYm(r.start)}: ${r.title} at ${r.org} (${levels[r.level]})`))));
     return svg;
-  }
-
-  /* ---------- offline stand-in for POST /api/explore/ai-filters (fixtures only) ---------- */
-  function localAiFilters({ role, view, text }, meta, fundsList) {
-    const q = ` ${text.toLowerCase().replace(/[^\p{L}\p{N}€%.\- ]+/gu, " ")} `;
-    const filters = {};
-    const want = (re) => re.test(q);
-    let target = view;
-    if (role === "investor" || view !== "funds") {
-      if (want(/founder|people|person|background|consult|career|promot|tenure|ceo|team|repeat|serial|phd|mckinsey|bcg|bain/)) target = "founders";
-      else if (want(/compan|startup|raised|round/)) target = "companies";
-    }
-    const regions = { nordic: ["Finland", "Sweden", "Denmark", "Norway", "Iceland"], nordics: ["Finland", "Sweden", "Denmark", "Norway", "Iceland"],
-      dach: ["Germany", "Austria", "Switzerland"], baltic: ["Estonia", "Latvia", "Lithuania"], baltics: ["Estonia", "Latvia", "Lithuania"],
-      uk: ["United Kingdom"], britain: ["United Kingdom"], usa: ["United States"], us: ["United States"], america: ["United States"] };
-    const countries = new Set();
-    for (const c of meta.countries) if (q.includes(` ${c.toLowerCase()} `) || q.includes(` ${c.toLowerCase()}`)) countries.add(c);
-    for (const [w, cs] of Object.entries(regions)) if (new RegExp(` ${w} `).test(q)) cs.forEach((c) => countries.add(c));
-    if (countries.size) filters.country = [...countries];
-
-    const stages = new Set();
-    if (/pre-?seed/.test(q)) stages.add("pre-seed");
-    if (/(^|[^-])\bseed\b/.test(q.replace(/pre-?seed/g, ""))) stages.add("seed");
-    for (const m of q.matchAll(/series ([a-f])\b/g)) stages.add(`series ${m[1]}`);
-    if (/\bgrowth\b/.test(q)) stages.add("growth");
-    if (stages.size) filters.stage = [...stages];
-
-    const amt = (n, u) => (u && u.startsWith("k") ? n / 1000 : u && u.startsWith("b") ? n * 1000 : n);
-    const range = q.match(/(?:€|eur )?\s*(\d+(?:\.\d+)?)\s*(m|k|b)?\s*(?:to|-|and)\s*(?:€)?\s*(\d+(?:\.\d+)?)\s*(m|million|k|b)/);
-    const around = q.match(/(?:around|about|~|of|at)\s*€?\s*(\d+(?:\.\d+)?)\s*(m|million|k)\b/) || q.match(/€\s*(\d+(?:\.\d+)?)\s*(m|million|k)\b/);
-    const amountKey = target === "funds" ? "round" : target === "companies" ? "raised" : null;
-    if (amountKey && range) filters[amountKey] = { min: amt(+range[1], range[2] || range[4]), max: amt(+range[3], range[4]) };
-    else if (amountKey && around) { const v = amt(+around[1], around[2]); filters[amountKey] = { min: Math.round(v * 0.5 * 10) / 10, max: Math.round(v * 2 * 10) / 10 }; }
-
-    const months = (() => {
-      const mm = q.match(/(\d+)\s*months?/); if (mm) return +mm[1];
-      const yy = q.match(/(\d+)\s*years?/); if (yy) return +yy[1] * 12;
-      if (/last year|past year|this year/.test(q)) return 12;
-      return null;
-    })();
-    if (target === "funds") {
-      const pct = q.match(/(\d+)\s*%/);
-      if (pct) filters.lead_share = { min: +pct[1], max: null };
-      else if (/actually lead|that lead|who lead|lead rounds|leads rounds|lead investor/.test(q)) filters.lead_share = { min: 50, max: null };
-      if (filters.lead_share) filters.lead_known = 5;
-      if (months) filters.last_lead = [6, 12, 18, 24, 36].find((x) => x >= months) || 36;
-      else if (/recent|still lead|active/.test(q)) filters.last_lead = 12;
-      if (/downturn|2022|2023|hard times|bad market|crisis|when the market turned/.test(q)) filters.downturn = true;
-      if (/exit|acquired|acquisition|bought/.test(q)) filters.exits = true;
-      const co = fundsList.items.filter((f) => f.name.length >= 5 && q.includes(` ${f.name.toLowerCase()}`)).map((f) => f.name);
-      if (co.length) filters.co_investor = co.slice(0, 3);
-    } else if (target === "companies") {
-      if (months && /no round|not raised|haven.t raised|without|since|ago|stale|due/.test(q)) filters.months_since = { min: months, max: null };
-      else if (months) filters.months_since = { min: null, max: months };
-      const inv = fundsList.items.filter((f) => f.name.length >= 5 && q.includes(` ${f.name.toLowerCase()}`)).map((f) => f.name);
-      if (inv.length) filters.investor = inv.slice(0, 3);
-    } else {
-      const tags = new Set();
-      if (/consult|mckinsey|bcg|bain/.test(q)) tags.add("Strategy consulting");
-      if (/big tech|google|faang|meta|microsoft/.test(q)) tags.add("Big tech");
-      if (/research|phd|academ|doctoral/.test(q)) tags.add("Research");
-      if (/bank|finance|investment banking/.test(q)) tags.add("Finance");
-      if (/scale-?up|startup alumni|unicorn/.test(q)) tags.add("Scale-up");
-      if (/corporate/.test(q)) tags.add("Corporate");
-      if (/doctor|physician|clinic|hospital/.test(q)) tags.add("Healthcare");
-      const known = new Set(meta.founder_tags);
-      const tagList = [...tags].filter((t) => known.has(t));
-      if (tagList.length) filters.tags = tagList;
-      if (/repeat|serial|second.time|founded before|2nd time/.test(q)) filters.repeat = true;
-      if (/prior exit|previous exit|exited|sold a company|acquired/.test(q)) filters.prior_exit = true;
-      if (/quick|fast|rapid|climb|moved up|promot/.test(q)) filters.step = { min: null, max: 18 };
-      if (/short (stint|tenure)|job.?hop|moves? often|short time/.test(q)) filters.tenure = { min: null, max: 30 };
-      if (/long (stint|tenure)|stayed long|loyal/.test(q)) filters.tenure = { min: 48, max: null };
-    }
-    const ok = new Set(FILTERS[target].map((d) => d.key));
-    for (const k of Object.keys(filters)) if (!ok.has(k)) delete filters[k];
-    return { view: target, filters, engine: "fixture-rules", unmatched: [] };
   }
 
   /* ---------- boot ---------- */
   async function boot() {
-    const mode = document.getElementById("side-mode");
-    mode.textContent = SOURCE === "api" ? "Live API" : "Fixtures mode";
-    mode.classList.toggle("fixtures", SOURCE !== "api");
     try {
       const meta = await api.meta();
       document.getElementById("side-source").textContent = meta.source.name;

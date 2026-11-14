@@ -22,6 +22,8 @@ import threading
 import time
 
 import auth
+import explore_api
+import explore_views
 import gemini
 import live
 import receipt_exits
@@ -213,7 +215,14 @@ def method_page():
     return FileResponse(STATIC / "index.html")
 
 
+@app.get("/explore", response_class=HTMLResponse)
+def explore_page():
+    return FileResponse(STATIC / "explore.html")
+
+
 app.mount("/static", StaticFiles(directory=STATIC), name="static")
+app.include_router(explore_api.router)
+app.include_router(explore_views.router)
 
 
 @app.get("/api/meta")
