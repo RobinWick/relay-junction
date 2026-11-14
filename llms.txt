@@ -1,44 +1,83 @@
 # Recount
 
-> Funds say they lead. Cala shows whether they did. Recount checks the funds a founder plans to pitch against Cala's funding-round records. For each fund it counts how many rounds it led at your stage, out of those where Cala names a lead, what size those rounds were, when it last led, and whether it backed a competitor. Then it looks for a way in: one of your investors who sat with that fund in a small round, or a LinkedIn connection at a company the fund backed, matched in your browser. Every number opens the Cala record behind it. Counting, not AI.
+> The right investors for founders, the right companies for investors, all from Cala. Recount counts Cala's funding-round, M&A and people records: which funds actually lead rounds like yours, how each fund led year by year, who bought the companies it backed, and a way in. Every number opens the Cala record behind it.
 
-Built at Junction 2026 for Cala's "Make Unicorns Real" challenge. Live demo: https://robin-81988--recount.us-east.modal.run (no login).
+Built at Junction 2026 (Espoo, 13 to 15 November 2026) for Cala's "Make Unicorns Real" challenge by team Wicflow. Pitch video and deck: in the Junction submission.
 
-Key facts:
-- Data: 5,146 rounds, 3,390 companies, 194 funds asked investor-first, 421 companies asked company-first, 4,414 Cala entity IDs. Cala is the only data source.
-- Cala layers used: POST /v1/knowledge/query (investor-first and company-first), POST /v1/knowledge/search (source documents for 209 rounds), /v1/entities (FundingRound entities with is_lead, as a cross-check on 90 rounds).
-- Where both query paths name a lead for the same round, they share it in 176 of 192 rounds.
-- Validation: the investor with the stronger earlier lead record is the real lead 48% vs 36% random in 1,584 rounds (95% CI 46 to 51%); hand check against press: lead exactly right in 55 of 74 verifiable random rounds (74%, 95% CI 63 to 83%); right lead fund named in 66 of 74 (89%); investor-first only about 70%, company-first or both about 82%; entity graph agrees 6 of 6 where it marks a lead.
-- Disputed rounds: 9 of 209 sourced rounds have source text naming a different lead; they are marked and left out of every count. Of the first 12 flagged, 10 confirmed by press; the 2 false alarms are fixed.
-- Way in: investor co-round ties from Cala rounds (one of your investors and the fund in the same round with at most 6 investors), plus the founder's LinkedIn Connections export, parsed in the browser and matched by company name to companies each fund led or joined. Nothing is uploaded. A same-company match is a lead to check, not proof of a relationship. The Map view draws these ways in as lines from you, through the person, to each fund (solid: the fund led that company's round; dashed: it only joined; dotted: your investor's shared round), with funds in the list's groups and order.
-- Prediction tested on 558 held-out rounds with 8 methods and a leakage audit: a current investor leads about 1 in 4 next rounds; the previous round's lead itself about 1 in 6 (17%). A new outside lead is in the top 5 only 4 to 5% of the time (random 0.15%, 462 rounds), so the product shows evidence, not odds.
-- Need: the lead of a round came back in the company's next round 60% of the time but led it again only 15% (1,405 cases), so most founders need a new lead each round.
-- Stack: Cala, Aiven for PostgreSQL (system of record and spending caps), Modal (FastAPI app and background live lookups), Gemini only for reading messy pasted lines.
+## Links
+- [Recount](https://robin-81988--recount.us-east.modal.run): fund check, receipts, Explore. No login; click "Try a sample" or add #demo.
+- [Explore](https://robin-81988--recount.us-east.modal.run/explore): funds, companies and founders with filters.
+- [Recount Signal](https://robin-81988--recount-signal.us-east.modal.run/signal): company ranking and the Lab tab (#/lab) with all 35 tested signals.
+- [Code](https://github.com/RobinWick/relay-junction): main = Recount; branch feat/signal = main plus Signal. MIT licence.
+- [README](https://github.com/RobinWick/relay-junction/blob/main/README.md) and [Evidence](https://github.com/RobinWick/relay-junction/blob/main/docs/EVIDENCE.md): every number with its source file and method.
 
-## Check us in 60 seconds
-1. Open https://robin-81988--recount.us-east.modal.run and click "Try a sample" (or open it with #demo). Sample: seed round, EUR 3m, Lifeline Ventures as an investor, Lovable as a competitor, 14 pasted lines.
-2. Summary line: "8 of 14 mostly lead Seed rounds, 5 of them at a size like your EUR 3m. 2 lead, but a different size. 2 backed Lovable. You have a way in to 2." If Gemini is unavailable, the messy last line is not recognised and it reads 7 of 13, 4, and way in to 1.
-3. Click "Try with a sample network" (made-up, every match marked "Sample"): way in goes from 2 to 8. Click Map to see those ways in as lines from you to each fund.
-4. Open Voima Ventures: "Led 13 of 13" rounds with a named lead near your stage, 7 more with no named lead; "How to get in" says your investor Lifeline Ventures and Voima were both in Reduciner's round of May 2026, with 4 investors in total.
-5. Click Reduciner to open the round record: how it was found (both query paths agree), Cala entity IDs, source documents from Cala search, raw Cala rows.
+## Key facts
+- Data: 5,146 rounds, 3,390 companies, 194 funds asked investor-first, 410 company histories from company-first questions, 4,414 Cala entity IDs. Cala is the only data source.
+- Cala endpoints: POST /v1/knowledge/query (investor-first and company-first), POST /v1/knowledge/search (source documents for 209 rounds), /v1/entities (FundingRound cross-check, INVESTED_IN edges, CorporateEvent MNA_COMPLETED, FOUNDED/WORKS_AT/IS_CEO_OF/IS_CTO_OF edges).
+- Where both query paths name a lead for the same round, they agree in 176 of 192 rounds. 9 of 209 sourced rounds have source text naming a different lead; they are marked disputed and left out of every count.
+- Accuracy: 80 random Cala lead calls checked against press. Where a source names the lead: right lead fund 66 of 74 (89%), exactly right 55 of 74 (74%). Most misses are a missing or extra co-lead.
+- Need: of the 47 most active Nordic pre-seed and seed investors we could judge (2023 to 2026), 24 led under half their rounds; 308 of 1,042 named investor seats (30%) were leads. A round's lead came back in the next round 60% of the time but led it only 15% (1,405 cases), so most founders need a new lead each round.
+- Receipts: lead pace per fund and year 2019 to 2026 (led, joined, lead unknown); completed acquisitions of companies a fund backed, 20 across 13 funds, with buyer, deal value (labelled "deal value, not return"), date and source, for example Zettle bought by PayPal for 2.2B USD in 2018; intro path through one of your investors who sat with the fund in a small round (2 to 6 investors, at most EUR 50m, last 4 years).
+- Founder pages: careers from Cala people data with coverage on screen: 22 founders fetched, 2 with a dated role, 1 with a role outside their own company.
+- Signal Lab: 35 signals tested (including a learned model) on held-out years 2021 to 2023 with multiple-test correction. 1 kept (round size for stage, AUC 0.55, 90% CI 0.505 to 0.598, n = 571), 26 noise, 8 not testable. Signal therefore ranks companies on size for stage only; 2,662 of 3,390 companies have a sized, staged round and are ranked.
+- Prediction test: on 558 held-out rounds with 8 methods and a leakage audit, a current investor leads about 1 in 4 next rounds. A new outside lead is in the top 5 only 4 to 5% of the time (random 0.15%, 462 rounds), so Recount shows evidence, not odds.
+- Data-quality: 19 findings written up for Cala (data_quality/cala-data-quality.json).
+- Stack: Cala -> crawl and merge -> Aiven for PostgreSQL (system of record, daily spending cap) -> FastAPI on Modal (two apps: recount, recount-signal) -> browser. Gemini only parses messy pasted lines and turns a typed sentence into filters from fixed lists.
 
-## Start here
-- [README](https://github.com/RobinWick/relay-junction/blob/main/README.md): need, what it does, judging criteria map, how this differs from existing tools, architecture, how to run
-- [Evidence](https://github.com/RobinWick/relay-junction/blob/main/docs/EVIDENCE.md): every claimed number with its source file and method
-- [Live demo](https://robin-81988--recount.us-east.modal.run): no login; add #demo to load the sample
+## Check it in 60 seconds
+1. Open Recount and click "Try a sample": seed round, EUR 3m, Lifeline Ventures as investor, Lovable as competitor, 14 pasted lines.
+2. Summary line: "8 of 14 mostly lead Seed rounds, 5 of them at a size like your EUR 3m. 2 lead, but a different size. 2 backed Lovable. You have a way in to 2."
+3. Click "Try with a sample network" (made up, every match marked "Sample"): way in goes from 2 to 8. Click Map.
+4. Open Voima Ventures: "Led 13 of 13" with a named lead near your stage, 7 more with no named lead; intro path through Lifeline Ventures via Reduciner's May 2026 round (4 investors).
+5. Click Reduciner: how the round was found, Cala entity IDs, source documents, raw Cala rows.
+6. Open Signal, Lab tab: every tested signal, the one kept and the rule.
+
+## FAQ
+Q: Does "Led 8 of 11" tell me who will lead my next round?
+A: No, and we measured that. A new outside lead lands in the top 5 only 4 to 5% of the time (462 held-out rounds), against 0.15% random. Recount shows which funds have led at your stage and size, and how to get in, not odds.
+
+Q: Why is this more than one Cala chat query?
+A: A denominator. One answer about one fund has none. We asked Cala about 194 funds investor-first and 410 companies company-first, merged 5,146 rounds, and where both paths name a lead they agree in 176 of 192. That merge makes "led X of Y at your stage" possible for a whole list, with every number opening the Cala rows behind it.
+
+Q: Cala names no lead in about a third of seed rounds, and some lead calls are wrong. Why trust it?
+A: Use it to reorder a list, not to drop a fund. Hand check: right lead fund 66 of 74 (89%). Rounds with no named lead stay out of the ratio and are counted on every row. Below 3 known rounds the verdict is "Too little data"; below 5 sized led rounds the size range says "size unclear". Rounds whose own source names a different lead are left out.
+
+Q: Signal ranks companies. Is that a success score?
+A: No. We tested 35 signals on years the model never saw and only round size for stage held up, weakly (AUC 0.55). Signal ranks on that one signal only, says so on screen, and the Lab tab shows every signal that failed.
+
+Q: Where is AI used?
+A: Gemini reads pasted fund lines our parser cannot match, and turns a typed sentence into filters from fixed lists. It never sees result rows and never ranks. Asked to rank or score people, Explore returns a refusal line. Verdicts, counts, receipts and the ranking are plain counting.
+
+Q: What happens to my LinkedIn data?
+A: The Connections.csv file is parsed in the browser. Only first name, last name, company and position are kept, in memory. Nothing is uploaded and no API route receives it. A match is a lead to check, not proof of a relationship.
+
+Q: Is the Lovable valuation in the sample right?
+A: Cala reports Lovable's Series C on 12 August 2026 at a USD 13.3B valuation.
+
+Q: What does an exit receipt mean?
+A: A completed acquisition of a company the fund backed, per Cala, with buyer, date and source. The value is the deal value, not the fund's return. "No exit found in Cala" does not mean no exit.
+
+Q: What does a check cost?
+A: Cached funds cost nothing. A live lookup is 1 Cala call per fund (a second, dated one only if the first is empty), capped per day in Postgres and per visitor session.
+
+## Limits
+- Fund level, not partner level.
+- About a third of seed rounds name no lead; they are shown, not counted. The lead share is an upper bound.
+- Founder career data is thin and each page states its coverage.
+- Coverage is what Cala returned to our questions: mostly European venture rounds, 2019 to 2026.
 
 ## Code
-- [app/engine.py](https://github.com/RobinWick/relay-junction/blob/main/app/engine.py): verdicts, lead ratios, size fit, conflicts, co-round ties, discovery
-- [app/merge.py](https://github.com/RobinWick/relay-junction/blob/main/app/merge.py): merging investor-first and company-first Cala rows into rounds
+- [app/engine.py](https://github.com/RobinWick/relay-junction/blob/main/app/engine.py): verdicts, lead ratios, size fit, conflicts, ties, discovery
+- [app/merge.py](https://github.com/RobinWick/relay-junction/blob/main/app/merge.py): merging investor-first and company-first Cala rows
 - [app/dispute.py](https://github.com/RobinWick/relay-junction/blob/main/app/dispute.py): rounds whose own source text names a different lead
-- [app/static/app.js](https://github.com/RobinWick/relay-junction/blob/main/app/static/app.js): the UI, including parseConnections, which reads the LinkedIn file in the browser
-- [app/graph.py](https://github.com/RobinWick/relay-junction/blob/main/app/graph.py): cross-check against Cala's entity graph
-- [app/live.py](https://github.com/RobinWick/relay-junction/blob/main/app/live.py): live Cala lookups with per-session and per-day caps
-- [app/main.py](https://github.com/RobinWick/relay-junction/blob/main/app/main.py): FastAPI API and security headers
+- [app/receipt_pace.py](https://github.com/RobinWick/relay-junction/blob/main/app/receipt_pace.py), [app/receipt_exits.py](https://github.com/RobinWick/relay-junction/blob/main/app/receipt_exits.py), [app/receipt_intro.py](https://github.com/RobinWick/relay-junction/blob/main/app/receipt_intro.py): the three receipts
+- [app/explore_api.py](https://github.com/RobinWick/relay-junction/blob/main/app/explore_api.py): Explore filters and the Gemini filter step
+- [app/signal_score.py](https://github.com/RobinWick/relay-junction/blob/feat/signal/app/signal_score.py), [app/signal_lab.json](https://github.com/RobinWick/relay-junction/blob/feat/signal/app/signal_lab.json): Signal scoring and Lab results (branch feat/signal)
+- [app/live.py](https://github.com/RobinWick/relay-junction/blob/main/app/live.py): live Cala lookups with caps
 - [pipeline/](https://github.com/RobinWick/relay-junction/tree/main/pipeline): crawl, normalise, build snapshot, validate
 
 ## Research
-- [research/prediction/RESULTS.md](https://github.com/RobinWick/relay-junction/blob/main/research/prediction/RESULTS.md): can the next lead be predicted (8 methods, leakage audit)
-- [research/accuracy/accuracy.md](https://github.com/RobinWick/relay-junction/blob/main/research/accuracy/accuracy.md): hand check against press releases
-- [research/accuracy/lifeline-check.md](https://github.com/RobinWick/relay-junction/blob/main/research/accuracy/lifeline-check.md): press check of the sample lead card, ties and Creandum seeds
-- [data_quality/cala-data-quality.json](https://github.com/RobinWick/relay-junction/blob/main/data_quality/cala-data-quality.json): 19 data-quality findings written up for Cala
+- [research/need/](https://github.com/RobinWick/relay-junction/tree/main/research/need): scarcity of leads and a 20-round replay
+- [research/accuracy/](https://github.com/RobinWick/relay-junction/tree/main/research/accuracy): hand check against press
+- [research/prediction/RESULTS.md](https://github.com/RobinWick/relay-junction/blob/main/research/prediction/RESULTS.md): can the next lead be predicted
+- [data_quality/cala-data-quality.json](https://github.com/RobinWick/relay-junction/blob/main/data_quality/cala-data-quality.json): findings for Cala
