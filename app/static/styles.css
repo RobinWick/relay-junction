@@ -225,6 +225,7 @@ tr.main.enter{animation:rowin .18s ease-out both}
 .kv{display:grid;grid-template-columns:120px 1fr;gap:6px 12px;font-size:13px;margin:0 0 16px}
 .kv dt{color:var(--muted)}
 .kv dd{margin:0}
+.ent{display:inline-block;margin:0 10px 2px 0}.ent code{font-size:11px;color:var(--muted);background:var(--panel-2,rgba(0,0,0,.04));padding:1px 4px;border-radius:3px}
 .prov{border:1px solid var(--line);border-radius:var(--radius-ctl);padding:10px 12px;margin-bottom:10px;background:var(--bg)}
 .prov .q{font-family:var(--mono);font-size:12px;color:var(--ink-soft);margin:6px 0}
 details.raw summary{cursor:pointer;color:var(--accent);font-size:12.5px}

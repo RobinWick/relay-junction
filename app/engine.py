@@ -10,7 +10,6 @@ Verdict rules (shown verbatim on the Method page):
 """
 from __future__ import annotations
 
-import re
 from collections import defaultdict
 from dataclasses import dataclass, field
 from difflib import get_close_matches
@@ -46,6 +45,7 @@ class Snapshot:
     stats: dict
     retrieved: str
     version: str
+    entities: dict[str, str] = field(default_factory=dict)
     by_investor: dict[str, list[int]] = field(default_factory=dict)
     by_company: dict[str, list[int]] = field(default_factory=dict)
     _compact: dict | None = None
@@ -54,7 +54,8 @@ class Snapshot:
     @classmethod
     def from_dict(cls, d: dict) -> "Snapshot":
         s = cls(rounds=d["rounds"], names=d["investor_names"], fund_keys=set(d.get("fund_keys", [])),
-                stats=d["stats"], retrieved=d["retrieved"], version=d["version"])
+                stats=d["stats"], retrieved=d["retrieved"], version=d["version"],
+                entities=d.get("entities", {}))
         by_inv: dict[str, list[int]] = defaultdict(list)
         by_co: dict[str, list[int]] = defaultdict(list)
         for r in s.rounds:
@@ -346,4 +347,6 @@ def record(snap: Snapshot, rid: int) -> dict | None:
     return {**round_brief(snap, r), "type": r.get("type"), "country": r.get("country"),
             "participants": [snap.name(k) for k in r["participants"]],
             "sources": [{"path": s["path"], "query": s["query"], "row": s["row"]} for s in r["sources"]],
-            "source": r.get("source")}
+            "source": r.get("source"),
+            "entity_ids": {"company": snap.entities.get("c:" + r["ckey"]),
+                           "leads": [{"name": snap.name(k), "id": snap.entities.get("i:" + k)} for k in r["leads"]]}}

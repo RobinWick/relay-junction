@@ -201,6 +201,17 @@ class Builder:
         self.by_company: dict[str, list[int]] = defaultdict(list)
         self.by_prefix: dict[str, dict[str, list[int]]] = defaultdict(lambda: defaultdict(list))
         self.names: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
+        self.entities: dict[str, str] = {}  # "c:<company key>" / "i:<investor key>" -> Cala entity id
+
+    def add_entities(self, entities: list | None) -> None:
+        """Remember Cala's entity ids for the companies and funds a query answer mentions (first id wins)."""
+        for e in entities or []:
+            if not isinstance(e, dict) or e.get("entity_type") not in ("Company", "Organization") or not e.get("id"):
+                continue
+            for name in {e.get("name") or "", *(e.get("mentions") or [])}:
+                if name.strip():
+                    self.entities.setdefault("c:" + company_key(name), e["id"])
+                    self.entities.setdefault("i:" + canon(name), e["id"])
 
     def _name(self, raw: str) -> str:
         k = canon(raw)
@@ -290,6 +301,7 @@ class Builder:
     def company_first(self, data_dir) -> None:
         for line in (data_dir / "histories.jsonl").open():
             rec = json.loads(line)
+            self.add_entities(rec.get("entities"))
             q = ("List every funding round of {} with announcement date, round type, amount, lead investor and all "
                  "participating investors").format(rec["name"])
             for row in rec["rounds"]:
@@ -317,6 +329,7 @@ class Builder:
         fund_name = rec["name"]
         if fund_name:
             for q in rec["queries"]:
+                self.add_entities(q.get("entities"))
                 for row in q["rows"]:
                     company = _field(row, "company", "company_name", "startup", "name")
                     leads = split_investors(_field(row, "lead_investor", "lead_investors", "lead"))
@@ -357,6 +370,7 @@ class Builder:
             b.by_prefix[r["ckey"][:5]][r["ckey"]].append(r["id"])
         for key, name in snap["investor_names"].items():
             b.names[key][name] += 1
+        b.entities = dict(snap.get("entities", {}))
         return b
 
     def snapshot(self, fund_keys: set[str]) -> dict:
@@ -365,12 +379,14 @@ class Builder:
             paths = {s["path"] for s in r["sources"]}
             r["query_path"] = "both" if len(paths) > 1 else paths.pop()
         companies = len({r["ckey"] for r in self.rounds})
+        used = {"c:" + r["ckey"] for r in self.rounds} | {"i:" + k for k in names}
+        entities = {k: v for k, v in self.entities.items() if k in used}
         return {
             "version": datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S"),
             "retrieved": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
-            "rounds": self.rounds, "investor_names": names, "fund_keys": sorted(fund_keys),
+            "rounds": self.rounds, "investor_names": names, "fund_keys": sorted(fund_keys), "entities": entities,
             "stats": {"rounds": len(self.rounds), "companies": companies, "funds_queried": len(fund_keys),
-                      "investors": len(names)},
+                      "investors": len(names), "entity_ids": len(entities)},
         }
 
 

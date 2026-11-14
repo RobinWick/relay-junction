@@ -87,15 +87,17 @@ def _slot() -> None:
     time.sleep(max(0.0, start - time.time()))
 
 
-def _ask(question: str) -> list[dict]:
+def _ask(question: str) -> tuple[list[dict], list[dict]]:
     _slot()
     resp = requests.post(CALA, json={"input": question}, timeout=150,
                          headers={"X-API-KEY": os.environ["CALA_API_KEY"], "Content-Type": "application/json"})
     if resp.status_code == 429:
         raise RuntimeError("Cala is rate-limiting")
     resp.raise_for_status()
-    rows = resp.json().get("results", []) or []
-    return [] if (len(rows) == 1 and isinstance(rows[0], dict) and "error" in rows[0]) else rows
+    body = resp.json()
+    rows = body.get("results", []) or []
+    rows = [] if (len(rows) == 1 and isinstance(rows[0], dict) and "error" in rows[0]) else rows
+    return rows, body.get("entities", []) or []
 
 
 def budget(session: str) -> dict:
@@ -136,11 +138,12 @@ def _run(item: dict, session: str, on_result) -> None:
     item["status"], item["t0"] = "asking", time.time()
     queries = []
     try:
-        rows = _ask(OPEN_Q.format(f=item["name"]))
-        queries.append({"q": OPEN_Q.format(f=item["name"]), "rows": rows})
+        rows, ents = _ask(OPEN_Q.format(f=item["name"]))
+        queries.append({"q": OPEN_Q.format(f=item["name"]), "rows": rows, "entities": ents})
         if not rows and _spend_session(session, 1) and _charge(1):
             q = YEAR_Q.format(f=item["name"], y=2025)
-            queries.append({"q": q, "year": 2025, "rows": _ask(q)})
+            rows, ents = _ask(q)
+            queries.append({"q": q, "year": 2025, "rows": rows, "entities": ents})
         total = sum(len(q["rows"]) for q in queries)
         item["rows"] = total
         if total:

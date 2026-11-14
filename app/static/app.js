@@ -420,6 +420,7 @@ async function openRecord(e) {
         <dt>Amount</dt><dd class="num">${r.amount_raw ? esc(r.amount_raw) : "not stated"}${r.amount_eur_m ? ` <span class="faint">≈ EUR ${fmtM(r.amount_eur_m)}m</span>` : ""}</dd>
         <dt>Lead</dt><dd>${r.leads.length ? r.leads.map(esc).join(", ") : `<span class="none">not named</span>`}</dd>
         <dt>Participants</dt><dd>${r.participants.length ? r.participants.map(esc).join(", ") : `<span class="none">none named</span>`}</dd>
+        <dt>Cala entities</dt><dd>${entityHtml(r)}</dd>
         <dt>Found via</dt><dd>${r.path === "both" ? "Both query paths agree on this round" : r.path === "investor_first" ? "Investor-first query" : "Company-first query"}</dd>
       </dl>
       <h3>Source documents</h3>
@@ -438,11 +439,18 @@ async function openRecord(e) {
   }
 }
 
+function entityHtml(r) {
+  const e = r.entity_ids || {};
+  const one = (name, id) => `<span class="ent">${esc(name)} <code title="${esc(id || "")}">${id ? esc(id.slice(0, 8)) : "no id"}</code></span>`;
+  const parts = [one(r.company, e.company), ...(e.leads || []).map((l) => one(l.name, l.id))];
+  return parts.join(" ");
+}
+
 function sourceHtml(src, fresh) {
   if (!src) return `<p class="muted">No source document cached for this round yet.</p><button class="btn" type="button" id="ask-src">Ask Cala for a source</button> <span class="faint">one live Cala search, about 30 seconds</span>`;
   const docs = (src.docs || []).filter((d) => /^https:\/\//.test(d.url));
   return `<div class="src">
-    <div class="src-answer"><span class="pill pill-q">POST /v1/knowledge/search</span>${fresh ? ` <span class="pill">just now</span>` : ""}<p>${esc(src.answer)}</p></div>
+    <div class="src-answer"><span class="pill pill-q">POST /v1/knowledge/search</span>${fresh ? ` <span class="pill">just now</span>` : ""}<p>${esc(String(src.answer || "").replace(/^#+\s*/gm, "").replace(/\*\*/g, ""))}</p></div>
     ${docs.length ? `<ol class="src-docs">${docs.map((d) => `<li><a href="${esc(d.url)}" target="_blank" rel="noopener noreferrer">${esc(d.name)}</a><span class="faint"> · ${esc(d.site || new URL(d.url).hostname)}</span>${d.passage ? `<blockquote>${esc(d.passage.slice(0, 260))}${d.passage.length > 260 ? "…" : ""}</blockquote>` : ""}</li>`).join("")}</ol>` : `<p class="muted">Cala answered without a linked document.</p>`}
   </div>`;
 }
