@@ -79,6 +79,17 @@ def test_accelerator_and_pipe_rounds_are_not_led():
     assert by["Value.Space"]["leads"] == ["specialist"] and not by["Value.Space"].get("not_led")
 
 
+def test_phrases_are_not_names():
+    from merge import split_investors
+    assert split_investors("No new lead disclosed (existing investors)") == []
+    assert split_investors("No single named lead") == []
+    assert split_investors("Participant (no distinct lead)") == []
+    assert split_investors("A prominent Swiss family office") == []
+    assert split_investors("PhotonVentures, Kembara (co-leads)") == ["PhotonVentures", "Kembara"]
+    assert split_investors("NEA & others") == ["NEA"]
+    assert split_investors("A Energi, No Limit Capital, Lead Edge Capital") == ["A Energi", "No Limit Capital", "Lead Edge Capital"]
+
+
 if __name__ == "__main__":
     for name, fn in list(globals().items()):
         if name.startswith("test_"):

@@ -106,8 +106,15 @@ def investor_key(name: str) -> str:
 NOT_A_NAME = re.compile(r"\b(not|un)\s*(publicly\s+)?(disclosed|confirmed|known|available|specified|named|reported)\b|"
                         r"\bno lead\b|\bn/?a\b|^(unknown|none|tbd|null|others?|other investors)$|"
                         r"\bexisting (investors|shareholders)\b|^\d+\s+(others?|more|additional)\b|\bname undisclosed\b|"
-                        r"\bundisclosed\b|^not\b|\bno (formal |disclosed |named )?lead\b|\bnot (explicitly|separately)\b|"
-                        r"^(seed|led seed|first round|round ?\d+|pre-?seed|series [a-f]|lead|leads|co-?lead)$", re.I)
+                        r"\bundisclosed\b|^not\b|\bno\s+(?:[\w-]+\s+){0,3}leads?\b|\bnot (explicitly|separately)\b|"
+                        r"^(seed|led seed|first round|round ?\d+|pre-?seed|series [a-f]|lead|leads|co-?lead)$|"
+                        r"^(multiple|several|various|many)\b|^participants?$|\bbroad syndicate\b|\bprivate investors\b|"
+                        r"^an?\s+(prominent|undisclosed|unnamed|large|major|leading|well-known|group|number|consortium)\b|"
+                        r"^(group|number|consortium|syndicate) of\b|\b[\w-]+[- ]based family office\b", re.I)
+# trailing role words Cala writes into a name ('PhotonVentures, co-leads', 'NEA & others', 'X-led consortium')
+NAME_TRAIL = re.compile(r"\s*[-\u2010-\u2015]*\s*\bco-?leads?\s*$|\s*(?:&|\band\b|\+)\s*others?\s*$|[-\u2010-\u2015\s]+led consortium\s*$"
+                        r"|\s+(?:were|was|is|are)\s+(?:the\s+|key\s+)?(?:co-?)?(?:investors?|leads?)\s*$", re.I)
+NAME_LEADIN = re.compile(r"^(?:round\s+)?(?:backed|led)\s+by\s+", re.I)
 PROTECTED = ("plug and play", "johnson & johnson", "johnson and johnson", "procter & gamble", "black & white")
 
 
@@ -141,6 +148,7 @@ def split_investors(raw) -> list[str]:
             part = part.get("name") or ""
         name = re.sub(r"\(.*?\)", "", str(part)).strip(" .")
         name = re.sub(r"\s+(participated|also participated|joined|followed on)$", "", name, flags=re.I).strip()
+        name = NAME_LEADIN.sub("", NAME_TRAIL.sub("", name)).strip(" .,-")
         if len(name) > 1 and investor_key(name) not in NOT_AN_INVESTOR and not NOT_A_NAME.search(name):
             names.append(name)
     return names
