@@ -84,6 +84,7 @@ def merge_live(record_: dict) -> None:
         print(f"persist live result failed: {type(err).__name__}: {err}")
 
 
+GATE_ON = os.environ.get("RELAY_GATE", "off") == "on"  # passcode gate; off by default since 14.11 (Robin)
 OPEN_PATHS = {"/login", "/api/login", "/static/styles.css", "/static/login.js", "/static/brand.js",
               "/static/favicon.svg"}
 
@@ -108,12 +109,17 @@ async def gate(request: Request, call_next):
     length = request.headers.get("content-length")
     if request.method in ("POST", "PUT", "PATCH") and (not length or not length.isdigit() or int(length) > MAX_BODY):
         return JSONResponse({"error": "Request body missing or too large."}, status_code=413)
-    if path in OPEN_PATHS or path.startswith("/static/fonts/") or auth.cookie_ok(request.cookies.get(auth.COOKIE)):
+    has_session = auth.cookie_ok(request.cookies.get(auth.COOKIE))
+    if path in OPEN_PATHS or path.startswith("/static/fonts/") or has_session or not GATE_ON:
         resp = await call_next(request)
+        if not has_session and not GATE_ON:  # open demo: still one signed session per visitor for the live caps
+            resp.set_cookie(auth.COOKIE, auth.make_cookie(), httponly=True, secure=request.url.scheme == "https",
+                            samesite="strict", max_age=auth.SESSION_S)
     elif path.startswith("/api/"):
         resp = JSONResponse({"error": "Enter the demo passcode first."}, status_code=401)
     else:
         resp = RedirectResponse("/login", status_code=303)
+    resp.headers["X-Robots-Tag"] = "noindex, nofollow"
     resp.headers["X-Content-Type-Options"] = "nosniff"
     resp.headers["Referrer-Policy"] = "no-referrer"
     resp.headers["X-Frame-Options"] = "DENY"
@@ -142,6 +148,8 @@ def login(body: Login, request: Request):
 
 @app.get("/login", response_class=HTMLResponse)
 def login_page():
+    if not GATE_ON:
+        return RedirectResponse("/", status_code=303)
     return FileResponse(STATIC / "login.html")
 
 
