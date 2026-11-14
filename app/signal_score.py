@@ -417,7 +417,11 @@ def company_components(ctx: Context, ck: str) -> dict[str, dict]:
         else:
             v = midrank_pct(r["amount_eur_m"], pool)
             word = "Big" if v >= 0.5 else "Small"
-            out["size_for_stage"] = _comp(True, raw={"amount_eur_m": r["amount_eur_m"], "stage": r["stage"]}, value=v,
+            med = statistics.median(pool)
+            out["size_for_stage"] = _comp(True, raw={"amount_eur_m": r["amount_eur_m"], "stage": r["stage"],
+                                                     "peer_median_eur_m": round(med, 4),
+                                                     "vs_median": round(r["amount_eur_m"] / med, 4) if med else None},
+                                          value=v,
                                           records=[_rid(r)], peer=peer,
                                           text=f"{word} for its stage: {ordinal(min(99, max(1, round(100 * v))))} pct of {label} (n {len(pool)})")
 
@@ -669,6 +673,14 @@ def score_all(inp: ScoreInputs, as_of_t: float = NOW_T, weights: Optional[dict[s
     return rank(prepare(inp, as_of_t, ctx), weights, companies, require)
 
 
+def tie_key(row: dict, ck: str) -> tuple:
+    """Best first: unrounded score, then last sized round vs its peer median (larger first), then name, then ckey.
+    Many companies round to 100; this makes their order mean something and stay the same run to run."""
+    size = next((p for p in row["components"] if p["key"] == RANK_KEY), None)
+    vs = (size["raw"] or {}).get("vs_median") if size and size["present"] else None
+    return (-row["raw_score"], -(vs if vs is not None else 0.0), (row["name"] or "").lower(), ck)
+
+
 def rank(prep: Prepared, weights: Optional[dict[str, float]] = None,
          companies: Optional[Iterable[str]] = None, require: Optional[str] = None) -> ScoreRun:
     """Combine prepared components with one weight set, rank, band. Cheap enough to run per request.
@@ -710,15 +722,16 @@ def rank(prep: Prepared, weights: Optional[dict[str, float]] = None,
                     "why_short": short_why(why[0]) if why else None,
                     "last_round": _rid(rs[-1])}
 
-    ranked = sorted((ck for ck in rows if rows[ck]["ranked"]), key=lambda k: (-rows[k]["raw_score"], k))
+    ranked = sorted((ck for ck in rows if rows[ck]["ranked"]), key=lambda k: tie_key(rows[k], k))
     n = len(ranked)
+    for i, k in enumerate(ranked):  # strict order: equal scores are broken by tie_key, never share a rank
+        rows[k]["rank"] = i + 1
     i = 0
-    while i < n:  # ties share the best rank
+    while i < n:  # equal scores share percentile and band
         j = i
         while j < n and rows[ranked[j]]["raw_score"] == rows[ranked[i]]["raw_score"]:
             j += 1
         for k in ranked[i:j]:
-            rows[k]["rank"] = i + 1
             top = 1 - i / n  # share of ranked companies at or below this score
             rows[k]["percentile"] = round(top, 4)
             if i < math.ceil(0.1 * n):

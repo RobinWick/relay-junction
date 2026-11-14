@@ -425,7 +425,10 @@
     const v = S.route.view;
     const rows = S.rows[v] || [];
     const lm = (S.list[v] && S.list[v].meta) || {};
-    const scored = rows.filter((r) => isNum(r.score)).slice().sort((a, b) => b.score - a.score);
+    const byServer = S.sort[v] === "score:desc" && !S.fairRank; // server order = display order, ties already broken
+    const scored = rows.filter((r) => isNum(r.score)).slice();
+    if (!byServer) scored.sort((a, b) => (a.rank_global != null && b.rank_global != null ? a.rank_global - b.rank_global : b.score - a.score));
+    scored.forEach((r, i) => { r._pos = byServer && r.position != null ? r.position : i + 1; });
     const top = scored[0];
     const kind = v === "companies" ? "SIGNAL" : v === "funds" ? "ACTIVITY" : "FOUNDER EVIDENCE";
     let due;
@@ -439,7 +442,7 @@
         <div class="due-card__big">${fe ? `<span class="due-card__num">${fe.k}</span><span class="due-card__of">of ${fe.of || 4} facts</span>` : `<span class="due-card__num">${top.score}</span><span class="due-card__of">of 100</span>`}</div>
         <a class="due-card__name" href="${entHref(v, top.id)}">${cc(top.country)}<span>${esc(top.name)}</span></a>
         <p class="due-card__why">${esc(noDash(why))}</p>
-        <ul class="due-card__list">${scored.slice(1, 4).map((r, i) => `<li><a href="${entHref(v, r.id)}"><span class="due-card__rank">${String(r.rank || i + 2).padStart(2, "0")}</span><span class="due-card__lname">${esc(r.name)}</span><span class="due-card__score">${fe ? `${(r.founder_evidence || {}).k} of 4` : r.score}</span></a></li>`).join("")}</ul>
+        <ul class="due-card__list">${scored.slice(1, 4).map((r, i) => `<li><a href="${entHref(v, r.id)}"><span class="due-card__rank">${String(r._pos).padStart(2, "0")}</span><span class="due-card__lname">${esc(r.name)}</span><span class="due-card__score">${fe ? `${(r.founder_evidence || {}).k} of 4` : r.score}</span></a></li>`).join("")}</ul>
       </div>`;
     }
     host.innerHTML = due + sonarPanel(v, scored) + rankedOnPanel(v);
@@ -468,7 +471,7 @@
       const band = r.band || (r.score >= 70 ? "strong" : r.score >= 50 ? "watch" : "low");
       const x = (Math.cos(a) * rr).toFixed(1), y = (Math.sin(a) * rr).toFixed(1);
       blips += `<a href="${entHref(v, r.id)}" aria-label="${esc(r.name)}, score ${r.score}"><circle class="sonar__blip sonar__blip--${esc(band)}" cx="${x}" cy="${y}" r="${(2.4 + ev * 4.2).toFixed(1)}"><title>${esc(r.name)} · ${r.score}</title></circle></a>`;
-      if (i < 10) blips += `<text class="sonar__num" x="${(+x + 6).toFixed(1)}" y="${(+y + 2.5).toFixed(1)}">${String(r.rank || i + 1).padStart(2, "0")}</text>`;
+      if (i < 10) blips += `<text class="sonar__num" x="${(+x + 6).toFixed(1)}" y="${(+y + 2.5).toFixed(1)}">${String(r._pos).padStart(2, "0")}</text>`;
     });
     const rings = [0.25, 0.5, 0.75].map((f) => `<circle class="sonar__ring" r="${(f * R).toFixed(1)}"/>`).join("");
     const spokes = [0, 90, 180, 270].map((d) => { const a = (d - 90) * Math.PI / 180; return `<line class="sonar__spoke" x1="0" y1="0" x2="${(Math.cos(a) * R).toFixed(1)}" y2="${(Math.sin(a) * R).toFixed(1)}"/>`; }).join("");
@@ -488,12 +491,7 @@
 
   function rankedOnPanel(v) {
     const rows = [];
-    if (v === "companies") {
-      const c = comps().find((x) => x.key === "size_for_stage") || {};
-      const cv = c.coverage || {};
-      rows.push({ name: S.thesis ? "Thesis mix, 13 parts" : "Size for stage", n: cv.n, of: cv.of, pct: cv.of ? (100 * cv.n) / cv.of : null, low: false, lead: true });
-    }
-    S.fv[v].forEach((x) => {
+    S.fv[v].forEach((x) => { // active filters only; the ranking itself is not a coverage row
       const f = spec(v, x.key); if (!f) return;
       const c = covOf(f);
       rows.push({ name: f.label || x.key, n: c.n, of: c.of, pct: c.pct, low: c.low });
@@ -503,12 +501,14 @@
         <span class="cov-row__name" title="${esc(r.name)}">${esc(r.name)}</span>
         <span class="cov-row__n">${isNum(r.n) ? `${fmtInt(r.n)} / ${fmtInt(r.of)}` : ""}</span>
         <span class="cov-row__bar"><i data-w="${isNum(r.pct) ? r.pct.toFixed(1) : 0}" data-i="${i}"></i></span></li>`).join("");
-    const head = v === "companies"
-      ? `<p class="ranked-on">${S.thesis ? `Ranked on <b>Thesis mix</b> <span class="chip chip--amber">No measured lift</span>` : "Ranked on <b>Size for stage</b>"}</p>`
-      : "";
+    const head = v !== "companies" ? ""
+      : S.thesis ? `<p class="ranked-on">Ranked on: <b>Thesis mix</b> <span class="chip chip--amber">No measured lift</span></p>`
+      : `<p class="ranked-on">Ranked on: <b>Size for stage</b></p><p class="ranked-on__line">Held up in our test of 35 signals. <a class="link" href="#/lab">See Lab</a></p>`;
+    const list = body ? `<p class="overline cov-head">FILTER COVERAGE</p><ul class="cov-list">${body}</ul>`
+      : v === "companies" ? "" : `<ul class="cov-list"><li class="muted">No filter set.</li></ul>`;
     return `<div class="panel panel--cov">
       <div class="panel__head"><h2 class="panel__title">${v === "companies" ? "Ranking" : "Coverage"}</h2></div>
-      <div class="panel__body">${head}<ul class="cov-list">${body || `<li class="muted">No filter set.</li>`}</ul></div></div>`;
+      <div class="panel__body">${head}${list}</div></div>`;
   }
 
   /* ---------------- filter rail ---------------- */
@@ -747,7 +747,7 @@
   function cell(v, col, r, i) {
     const lr = r.last_round || {};
     switch (col.k) {
-      case "#": return `<div class="sheet__td sheet__rownum">${r.rank != null ? (S.fairRank && r.rank_in_cohort != null ? r.rank_in_cohort : r.rank) : ""}</div>`;
+      case "#": return `<div class="sheet__td sheet__rownum">${S.fairRank && r.rank_in_cohort != null ? r.rank_in_cohort : r.position != null ? r.position : ""}</div>`;
       case "name": {
         const tip = [r.name, r.country && r.country.name, r.last_stage && stageLabel(r.last_stage)].filter(Boolean).join(" · ");
         const fl = (r.flags || []).map((f) => flagLabel(f)).filter(Boolean);
@@ -874,7 +874,7 @@
     const why = v === "companies" ? r.why_short : v === "funds" ? (r.lead_share && isNum(r.lead_share.of) ? `Led ${r.lead_share.led} of ${r.lead_share.of} lead-known rounds` : "") : r.score_reason;
     const right = v === "companies" ? [stageLabel(r.last_stage || r.sized_stage), r.sector && (r.sector.tags || [])[0]].filter(Boolean).join(" · ") : v === "founders" ? (r.company && r.company.name) || "" : "";
     return `<a class="card" href="${entHref(v, r.id)}">
-      <div class="card__top"><span class="card__rank">${r.rank != null ? r.rank : ""}</span>${cc(r.country)}<span class="card__name">${esc(r.name)}</span></div>
+      <div class="card__top"><span class="card__rank">${r.position != null ? r.position : ""}</span>${cc(r.country)}<span class="card__name">${esc(r.name)}</span></div>
       <div class="card__line"><span>${isNum(r.score) ? `<span class="score-badge score-badge--${esc(r.band || "watch")}">${r.score}</span> ${esc(BAND_NAME[r.band] || "")}` : `<span class="nodata">${esc(v === "funds" ? "Seen only as a co-investor" : r.score_reason || "Not enough data")}</span>`}</span><span>${esc(right)}</span></div>
       ${why ? `<p class="card__why">${esc(noDash(why))}</p>` : ""}
     </a>`;
@@ -943,13 +943,20 @@
       </div>`;
     }).join("");
     return `<div class="bd">
-      <div class="bd__big"><span class="bd__num">${isNum(sc.value) ? sc.value : "n/a"}</span><span class="bd__of">of 100${isNum(sc.rank) ? ` · rank ${fmtInt(sc.rank)} of ${fmtInt(sc.of)}` : ""}</span>${sc.band ? `<span class="chip chip--outline"><span class="group-dot group-dot--${esc(sc.band)}"></span>${esc(BAND_NAME[sc.band] || sc.band)}</span>` : ""}</div>
+      <div class="bd__big"><span class="bd__num">${isNum(sc.value) ? sc.value : "n/a"}</span><span class="bd__of">of 100${isNum(sc.rank) ? ` · global rank ${fmtInt(sc.rank)} of ${fmtInt(sc.of)}` : ""}</span>${sc.band ? `<span class="chip chip--outline"><span class="group-dot group-dot--${esc(sc.band)}"></span>${esc(BAND_NAME[sc.band] || sc.band)}</span>` : ""}</div>
+      ${sizeLine(sc)}
       <div class="stack" aria-hidden="true">${stack}</div>
       <p class="overline">WHY THIS SCORE</p>
       <div>${rows}</div>
       <div class="bd__foot"><span>${sc.mode === "thesis" ? `Thesis mix: based on ${k} of ${n} parts, missing ones neutral` : "Ranked on size for stage only. Other parts: 0 weight"}</span>${sc.rules_hash ? `<span class="num">${esc(sc.rules_hash)}</span>` : ""}</div>
       ${sc.formula ? `<p class="frow__note">${esc(noDash(sc.formula))}</p>` : ""}
     </div>`;
+  }
+  function sizeLine(sc) {
+    const z = sc.size_detail;
+    if (!z || !isNum(z.pct)) return "";
+    const vs = isNum(z.vs_median) ? `EUR ${fmtM(z.amount_eur_m)}m vs peer median EUR ${fmtM(z.peer_median_eur_m)}m (${z.vs_median >= 10 ? Math.round(z.vs_median) : z.vs_median.toFixed(1)}x)` : "";
+    return `<p class="size-line num">Exact percentile ${z.pct.toFixed(1)}${vs ? ` · ${esc(vs)}` : ""}</p>`;
   }
   function compExtras(c) {
     const bits = [];
@@ -1150,7 +1157,7 @@
     const band = sc.band || d.band;
     dr.innerHTML = `
       <div class="drawer__head">
-        <div class="drawer__tile${rankTxt ? "" : " drawer__tile--none"}" title="${rankTxt ? `Rank ${sc.rank} of ${sc.of}` : "Not ranked"}">${rankTxt || "n/a"}</div>
+        <div class="drawer__tile${rankTxt ? "" : " drawer__tile--none"}" title="${rankTxt ? `Global rank ${sc.rank} of ${sc.of} ranked companies, before filters` : "Not ranked"}">${rankTxt || "n/a"}</div>
         <div>
           <h2 class="drawer__name">${esc(d.name)}${band ? `<span class="chip chip--accent"><span class="group-dot group-dot--${esc(band)}"></span>${esc(BAND_NAME[band] || band)}</span>` : ""}${depthChip(d.history_depth)}${(d.flags || []).map(flagChip).join("")}</h2>
           <div class="drawer__ids">${cc(d.country)}${d.entity_id ? `<span class="idpill" title="Cala entity id">${esc(String(d.entity_id).slice(0, 18))}<button type="button" data-act="copy" data-copy="${esc(d.entity_id)}" aria-label="Copy Cala id">${ic("copy")}</button></span>` : ""}</div>
@@ -1205,7 +1212,8 @@
     const partRow = (c) => `<li class="part"><span class="part__label">${esc(c.label)}${sc.mode === "thesis" && c.weight > 0 ? ` <span class="faint num">${fmtPts(c.points)}</span>` : ""}</span><span class="part__val${c.present ? "" : " faint"}" title="${esc(noDash(c.present ? c.text || "" : c.missing_reason || "No data"))}">${esc(noDash(c.present ? c.short || c.text || fmt2(c.value) : "No data"))}</span>${labChip(c.lab_verdict)}</li>`;
     return `<div class="cols2">
       <div class="stackp"><div class="panel"><div class="panel__head"><h3 class="panel__title">Signal</h3><span class="panel__meta">${esc(sc.mode === "thesis" ? "Thesis mix" : "Size for stage")}</span></div><div class="panel__body">
-        <div class="bd__big"><span class="bd__num">${isNum(sc.value) ? sc.value : "n/a"}</span><span class="bd__of">of 100${isNum(sc.rank) ? ` · rank ${fmtInt(sc.rank)} of ${fmtInt(sc.of)}` : ""}</span></div>
+        <div class="bd__big"><span class="bd__num">${isNum(sc.value) ? sc.value : "n/a"}</span><span class="bd__of">of 100${isNum(sc.rank) ? ` · global rank ${fmtInt(sc.rank)} of ${fmtInt(sc.of)}` : ""}</span></div>
+        ${sizeLine(sc)}
         <p class="why-full">${esc(noDash(whyFull))}</p>
         ${(size.records || []).length && sc.mode !== "thesis" ? `<div class="chips">${size.records.slice(0, 4).map(recChip).join("")}</div>` : ""}
         <p><a class="link" href="${entHref("companies", d.id, "score")}">Full breakdown</a></p>

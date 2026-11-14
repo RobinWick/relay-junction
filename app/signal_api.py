@@ -237,6 +237,17 @@ def _company_score_row(run: ss.ScoreRun, st: sd.Store, ck: str) -> dict:
             "evidence": {"value": 0.0, "band": "thin", "parts": {}}, "flags": [], "why": []}
 
 
+def _size_detail(r: dict) -> Optional[dict]:
+    """Exact size-for-stage percentile and the round vs its peer median, for the drawer (the list shows 0 to 100)."""
+    p = next((c for c in r["components"] if c["key"] == ss.RANK_KEY and c["present"]), None)
+    if p is None:
+        return None
+    raw = p["raw"] or {}
+    return {"pct": round(100 * p["value"], 1), "amount_eur_m": raw.get("amount_eur_m"),
+            "peer_median_eur_m": raw.get("peer_median_eur_m"), "vs_median": raw.get("vs_median"),
+            "peer_label": (p.get("peer_group") or {}).get("label"), "peer_n": (p.get("peer_group") or {}).get("n")}
+
+
 def _company_list_row(st: sd.Store, f: dict, r: dict, fair: bool) -> dict:
     chips = [f["history_depth"]]
     if f.get("lead_desert"):
@@ -330,6 +341,18 @@ def _coverage_warnings(st: sd.Store, view: str, filters: list[dict], rows: Optio
     return out
 
 
+def _number_positions(rows: list[dict]) -> None:
+    """position = 1, 2, 3 over the scored rows in display order, across groups and pages. The global rank skips
+    numbers once default exclusions or filters hide rows, so the list shows this instead."""
+    n = 0
+    for row in rows:
+        if row["score"] is None:
+            row["position"] = None
+        else:
+            n += 1
+            row["position"] = n
+
+
 def companies_payload(st: sd.Store, filters: list[dict], overrides: dict, sort: str = "score:desc",
                       limit: int = 50, offset: int = 0, fair_rank: bool = False, include_unranked: bool = True,
                       no_data_group: bool = False, by: str = "user", mode: str = "size") -> dict:
@@ -345,10 +368,10 @@ def companies_payload(st: sd.Store, filters: list[dict], overrides: dict, sort: 
     if key == "score" and fair_rank:
         ordered = _order(matched, lambda x: (x[1]["rank_in_cohort"] or 10 ** 6) * (-1 if d == "desc" else 1)
                          if x[1]["ranked"] else None, True)
-    elif key == "score":
-        ordered = sorted(matched, key=lambda x: (BAND_ORDER[x[1]["band"]] if d == "desc" else 0,
-                                                 -(x[1]["raw_score"] or -1) if d == "desc" else (x[1]["raw_score"] or 2),
-                                                 x[0]["ckey"]))
+    elif key == "score":  # global rank already carries the tie-break (signal_score.tie_key)
+        big = 10 ** 9
+        ordered = sorted(matched, key=lambda x: (BAND_ORDER[x[1]["band"]], x[1]["rank"] or big, x[0]["ckey"])
+                         if d == "desc" else (x[1]["rank"] is None, -(x[1]["rank"] or 0), x[0]["ckey"]))
     else:
         ordered = _order(matched, lambda x: getter(*x), d == "desc")
     groups = Counter(r["band"] for _, r in ordered)
@@ -357,6 +380,7 @@ def companies_payload(st: sd.Store, filters: list[dict], overrides: dict, sort: 
         nd = [{**_company_list_row(st, f, r, fair_rank), "group": "no_data"} for f, r in no_data]
         out_rows += nd
         groups["no_data"] = len(nd)
+    _number_positions(out_rows)
     page = out_rows[offset:offset + limit]
     nc_list = [{"filter": k, "count": v, "reason": f"no {(sf.SPECS['companies'][k].label if k in sf.SPECS['companies'] else k).lower()} data"}
                for k, v in nc.most_common()]
@@ -719,6 +743,7 @@ def company_detail(st: sd.Store, ck: str, overrides: dict, filters: list[dict],
         "score": {"value": r["score"], "reason": r.get("score_reason"), "rank": r.get("rank"),
                   "rank_in_cohort": r.get("rank_in_cohort"), "cohort_size": r.get("cohort_size"),
                   "of": len(run.ranked), "band": r["band"], "percentile": r.get("percentile"),
+                  "size_detail": _size_detail(r),
                   "rules_hash": run.rules_hash, "formula": FORMULA if mode == "size" else FORMULA_THESIS,
                   "mode": mode, "ranking": RANKING_LABEL[mode], "components": comps},
         "evidence": r["evidence"], "coverage": r["coverage"], "why": r["why"],

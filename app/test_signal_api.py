@@ -47,6 +47,8 @@ def _snapshot() -> dict:
         _r("payco", 2022.4, amount=1.0, path="company_first"),
         _r("payco", 2024.4, stage="series a", amount=8.0, leads=("gamma",), parts=("alpha", "beta", "delta"),
            path="company_first"),
+        _r("zedtie", 2024.5, amount=7.9, company="Zed Tie"),  # same stage, year and amount: an exact tie
+        _r("abtie", 2024.5, amount=7.9, company="Ab Tie"),
         _r("thinco", 2025.1, stage=None, amount=None, leads=(), parts=("beta",)),
         _r("grantco", 2025.0, stage=None, amount=0.2, leads=(), parts=("business finland",), not_led=True),
     ]
@@ -193,6 +195,42 @@ def test_fair_rank_and_sorts():
     assert d["meta"]["fair_rank"] is True and d["rows"][0]["rank"] == 1
     d = _get("/companies", sort="last_amount_eur_m:desc", limit="3").json()
     assert d["rows"][0]["last_round"]["amount_eur_m"] == 8.0
+
+
+def test_tie_break_order_is_score_then_vs_median_then_name():
+    def row(name, raw, vs):
+        return {"name": name, "raw_score": raw, "components": [
+            {"key": sd.ss.RANK_KEY, "present": vs is not None, "raw": {"vs_median": vs}}]}
+    rows = {"c": row("Cee", 0.995, 2.0), "a": row("Aye", 0.995, 2.0), "b": row("Bee", 0.995, 5.0),
+            "d": row("Dee", 0.999, 0.5), "e": row("Eee", 0.995, None)}
+    order = sorted(rows, key=lambda k: sd.ss.tie_key(rows[k], k))
+    assert order == ["d", "b", "a", "c", "e"]
+
+
+def test_exact_ties_get_distinct_ranks_in_name_order():
+    d = _get("/companies", limit="200").json()
+    ab = next(x for x in d["rows"] if x["id"] == "c:abtie")
+    zed = next(x for x in d["rows"] if x["id"] == "c:zedtie")
+    assert ab["score"] == zed["score"] and ab["components"] == zed["components"]
+    assert ab["rank_global"] + 1 == zed["rank_global"]
+    ranks = [x["rank_global"] for x in d["rows"] if x["rank_global"] is not None]
+    assert len(ranks) == len(set(ranks))
+    det = _get("/companies/c:abtie").json()["score"]["size_detail"]
+    assert det["pct"] == round(det["pct"], 1) and det["peer_median_eur_m"] > 0
+    assert det["vs_median"] == round(det["amount_eur_m"] / det["peer_median_eur_m"], 4)
+
+
+def test_positions_are_contiguous_after_filters_and_pages():
+    full = _get("/companies", limit="200").json()["rows"]
+    filt = [{"key": "country", "op": "in", "value": ["SE"]}]
+    rows = _get("/companies", limit="200", filters=filt).json()["rows"]
+    scored = [x for x in rows if x["score"] is not None]
+    assert 0 < len(scored) < len([x for x in full if x["score"] is not None])
+    assert [x["position"] for x in scored] == list(range(1, len(scored) + 1))
+    assert any(x["rank_global"] != x["position"] for x in scored)  # global rank skips, position does not
+    assert all(x["position"] is None for x in rows if x["score"] is None)
+    page2 = _get("/companies", limit="5", offset="5", filters=filt).json()["rows"]
+    assert [x["position"] for x in page2] == [x["position"] for x in scored[5:10]]
 
 
 def test_funds_and_founders_lists():
