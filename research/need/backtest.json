@@ -1,0 +1,3704 @@
+{
+ "summary": {
+  "snapshot_version": "20261114133847",
+  "seed": 1415,
+  "eligible_rounds": 33,
+  "eligible_companies": 31,
+  "n": 20,
+  "lead_in_pitch": 5,
+  "lead_ranked_first": 8,
+  "random_first_expected": 4.65,
+  "lead_called_follows": 0,
+  "lead_first_by_verdict": 5,
+  "lead_has_verdict": 11,
+  "funds_no_history": 74,
+  "size_group_funds": 2,
+  "size_group_that_led": 1,
+  "follows_that_led": 0,
+  "funds_listed": 157,
+  "funds_follows": 5,
+  "funds_few": 122,
+  "funds_pitch": 8,
+  "pitch_that_led": 6,
+  "rounds_with_any_pitch": 6,
+  "no_target": {
+   "lead_in_pitch": 6,
+   "lead_ranked_first": 8
+  },
+  "with_earlier_investors": 13,
+  "lead_already_investor": 1,
+  "small_round_tie": 0,
+  "any_shared_round": 4
+ },
+ "cases": [
+  {
+   "company": "eComID",
+   "ckey": "ecomid",
+   "rid": 852,
+   "country": "Sweden",
+   "date": "Aug 2026",
+   "t": 2026.583,
+   "stage": "seed",
+   "amount_eur_m": 15.64,
+   "amount_raw": "$17 million (€14.58M)",
+   "leads": [
+    "Systemiq Capital"
+   ],
+   "participants": [
+    "Alan Mamedi",
+    "Alexandra Sack",
+    "Anaheta Berenberg-Consbruch",
+    "August Erséus",
+    "Bo Eklöf",
+    "CapitalT",
+    "Course Corrected",
+    "Filip Ekvall",
+    "Gustav Gisseldahl",
+    "H&M Group Ventures",
+    "Henrik Nordvall",
+    "Lucas Otterling",
+    "Madeleine Persson",
+    "Maria Raga",
+    "Paul Polman",
+    "Regeneration.VC",
+    "Sebastian Knutsson",
+    "Stadium"
+   ],
+   "with_target": {
+    "n_listed": 19,
+    "n_leads": 1,
+    "lead_in_pitch": false,
+    "lead_ranked_first": false,
+    "lead_first_by_verdict": false,
+    "lead_has_verdict": false,
+    "lead_verdicts": [
+     "Too few rounds"
+    ],
+    "n_no_history": 12,
+    "best_lead_rank": 18,
+    "n_pitch": 0,
+    "n_pitch_that_led": 0,
+    "n_follows": 1,
+    "lead_called_follows": false,
+    "n_few": 18,
+    "random_first_chance": 0.05263157894736842,
+    "earlier_rounds": 3,
+    "earlier_investors": [
+     "Anaheta Berenberg-Consbruch",
+     "CapitalT",
+     "H&M Group Ventures",
+     "Madeleine Persson"
+    ],
+    "intro": {
+     "Systemiq Capital": {
+      "already_investor": false,
+      "small_round_tie": null,
+      "any_shared_round": null
+     }
+    },
+    "rows": [
+     {
+      "name": "CapitalT",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 2,
+      "known": 2,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 3,
+      "rank": 1
+     },
+     {
+      "name": "Anaheta Berenberg-Consbruch",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 1,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 1,
+      "rank": 2
+     },
+     {
+      "name": "H&M Group Ventures",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 2,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 7,
+      "rank": 3
+     },
+     {
+      "name": "Madeleine Persson",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 1,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 1,
+      "rank": 4
+     },
+     {
+      "name": "Sebastian Knutsson",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 2,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 9,
+      "rank": 5
+     },
+     {
+      "name": "Alan Mamedi",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 6
+     },
+     {
+      "name": "Alexandra Sack",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 7
+     },
+     {
+      "name": "August Erséus",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 8
+     },
+     {
+      "name": "Bo Eklöf",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 9
+     },
+     {
+      "name": "Filip Ekvall",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 10
+     },
+     {
+      "name": "Gustav Gisseldahl",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 11
+     },
+     {
+      "name": "Henrik Nordvall",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 12
+     },
+     {
+      "name": "Lucas Otterling",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 13
+     },
+     {
+      "name": "Maria Raga",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 1,
+      "rank": 14
+     },
+     {
+      "name": "Paul Polman",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 15
+     },
+     {
+      "name": "Regeneration.VC",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 16
+     },
+     {
+      "name": "Stadium",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 17
+     },
+     {
+      "name": "Systemiq Capital",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": true,
+      "tie": null,
+      "history": 0,
+      "rank": 18
+     },
+     {
+      "name": "Course Corrected",
+      "verdict": "follows",
+      "label": "Mostly follows",
+      "group": "avoid",
+      "led": 1,
+      "known": 8,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 13,
+      "rank": 19
+     }
+    ]
+   },
+   "no_target": {
+    "lead_in_pitch": false,
+    "lead_ranked_first": false,
+    "best_lead_rank": 18,
+    "n_pitch": 0,
+    "n_follows": 1,
+    "lead_called_follows": false
+   }
+  },
+  {
+   "company": "Engrate",
+   "ckey": "engrate",
+   "rid": 1175,
+   "country": "Sweden",
+   "date": "Jun 2025",
+   "t": 2025.417,
+   "stage": "seed",
+   "amount_eur_m": 2.5,
+   "amount_raw": "€2.5 million (~$2.83–2.9M USD)",
+   "leads": [
+    "Maniv",
+    "Maniv Mobility"
+   ],
+   "participants": [
+    "Course Corrected",
+    "Evany Ventures",
+    "Eviny Ventures"
+   ],
+   "with_target": {
+    "n_listed": 5,
+    "n_leads": 2,
+    "lead_in_pitch": false,
+    "lead_ranked_first": false,
+    "lead_first_by_verdict": false,
+    "lead_has_verdict": false,
+    "lead_verdicts": [
+     "Too few rounds",
+     "Too few rounds"
+    ],
+    "n_no_history": 3,
+    "best_lead_rank": 3,
+    "n_pitch": 0,
+    "n_pitch_that_led": 0,
+    "n_follows": 0,
+    "lead_called_follows": false,
+    "n_few": 4,
+    "random_first_chance": 0.4,
+    "earlier_rounds": 1,
+    "earlier_investors": [
+     "NP-Hard Ventures"
+    ],
+    "intro": {
+     "Maniv": {
+      "already_investor": false,
+      "small_round_tie": null,
+      "any_shared_round": null
+     },
+     "Maniv Mobility": {
+      "already_investor": false,
+      "small_round_tie": null,
+      "any_shared_round": null
+     }
+    },
+    "rows": [
+     {
+      "name": "Evany Ventures",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 1
+     },
+     {
+      "name": "Eviny Ventures",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 1,
+      "rank": 2
+     },
+     {
+      "name": "Maniv",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": true,
+      "tie": null,
+      "history": 0,
+      "rank": 3
+     },
+     {
+      "name": "Maniv Mobility",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": true,
+      "tie": null,
+      "history": 0,
+      "rank": 4
+     },
+     {
+      "name": "Course Corrected",
+      "verdict": "mixed",
+      "label": "Mixed",
+      "group": "avoid",
+      "led": 0,
+      "known": 4,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 8,
+      "rank": 5
+     }
+    ]
+   },
+   "no_target": {
+    "lead_in_pitch": false,
+    "lead_ranked_first": false,
+    "best_lead_rank": 3,
+    "n_pitch": 0,
+    "n_follows": 0,
+    "lead_called_follows": false
+   }
+  },
+  {
+   "company": "Fintower",
+   "ckey": "fintower",
+   "rid": 1056,
+   "country": "Sweden",
+   "date": "Feb 2026",
+   "t": 2026.083,
+   "stage": "seed",
+   "amount_eur_m": 1.5,
+   "amount_raw": "~€1.5 M (≈ $1.76–1.8 M) — oversubscribed",
+   "leads": [
+    "Almi Invest"
+   ],
+   "participants": [
+    "Akka",
+    "Alexander Hars",
+    "Chalmers Ventures",
+    "Daniel Jonsson",
+    "Stena family"
+   ],
+   "with_target": {
+    "n_listed": 6,
+    "n_leads": 1,
+    "lead_in_pitch": false,
+    "lead_ranked_first": false,
+    "lead_first_by_verdict": false,
+    "lead_has_verdict": true,
+    "lead_verdicts": [
+     "Public body or programme"
+    ],
+    "n_no_history": 3,
+    "best_lead_rank": 6,
+    "n_pitch": 0,
+    "n_pitch_that_led": 0,
+    "n_follows": 0,
+    "lead_called_follows": false,
+    "n_few": 5,
+    "random_first_chance": 0.16666666666666666,
+    "earlier_rounds": 0,
+    "earlier_investors": [],
+    "intro": {
+     "Almi Invest": {
+      "already_investor": false,
+      "small_round_tie": null,
+      "any_shared_round": null
+     }
+    },
+    "rows": [
+     {
+      "name": "Chalmers Ventures",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 1,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 6,
+      "rank": 1
+     },
+     {
+      "name": "Akka",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 2
+     },
+     {
+      "name": "Alexander Hars",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 2,
+      "rank": 3
+     },
+     {
+      "name": "Daniel Jonsson",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 4
+     },
+     {
+      "name": "Stena family",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 5
+     },
+     {
+      "name": "Almi Invest",
+      "verdict": "public",
+      "label": "Public body or programme",
+      "group": "avoid",
+      "led": 1,
+      "known": 4,
+      "led_at_stage": 1,
+      "way": 0,
+      "is_lead": true,
+      "tie": null,
+      "history": 19,
+      "rank": 6
+     }
+    ]
+   },
+   "no_target": {
+    "lead_in_pitch": false,
+    "lead_ranked_first": false,
+    "best_lead_rank": 6,
+    "n_pitch": 0,
+    "n_follows": 0,
+    "lead_called_follows": false
+   }
+  },
+  {
+   "company": "Green Voltis",
+   "ckey": "greenvoltis",
+   "rid": 1162,
+   "country": "Sweden",
+   "date": "Aug 2025",
+   "t": 2025.583,
+   "stage": "seed",
+   "amount_eur_m": null,
+   "amount_raw": "Undisclosed",
+   "leads": [
+    "DeepMind Capital"
+   ],
+   "participants": [
+    "CMB International Capital Corporation",
+    "Cyber Creation Ventures",
+    "Planetree Investment",
+    "Unity Ventures"
+   ],
+   "with_target": {
+    "n_listed": 5,
+    "n_leads": 1,
+    "lead_in_pitch": false,
+    "lead_ranked_first": false,
+    "lead_first_by_verdict": false,
+    "lead_has_verdict": false,
+    "lead_verdicts": [
+     "Too few rounds"
+    ],
+    "n_no_history": 5,
+    "best_lead_rank": 3,
+    "n_pitch": 0,
+    "n_pitch_that_led": 0,
+    "n_follows": 0,
+    "lead_called_follows": false,
+    "n_few": 5,
+    "random_first_chance": 0.2,
+    "earlier_rounds": 1,
+    "earlier_investors": [],
+    "intro": {
+     "DeepMind Capital": {
+      "already_investor": false,
+      "small_round_tie": null,
+      "any_shared_round": null
+     }
+    },
+    "rows": [
+     {
+      "name": "CMB International Capital Corporation",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 1
+     },
+     {
+      "name": "Cyber Creation Ventures",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 2
+     },
+     {
+      "name": "DeepMind Capital",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": true,
+      "tie": null,
+      "history": 0,
+      "rank": 3
+     },
+     {
+      "name": "Planetree Investment",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 4
+     },
+     {
+      "name": "Unity Ventures",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 5
+     }
+    ]
+   },
+   "no_target": {
+    "lead_in_pitch": false,
+    "lead_ranked_first": false,
+    "best_lead_rank": 3,
+    "n_pitch": 0,
+    "n_follows": 0,
+    "lead_called_follows": false
+   }
+  },
+  {
+   "company": "Hybridity",
+   "ckey": "hybridity",
+   "rid": 1176,
+   "country": "Sweden",
+   "date": "Mar 2025",
+   "t": 2025.167,
+   "stage": "seed",
+   "amount_eur_m": 2.001,
+   "amount_raw": "SEK 23 million (~€2.16 million / ~$2.25 million)",
+   "leads": [
+    "Stefan Lennhammer"
+   ],
+   "participants": [
+    "Noam Perski",
+    "Simon Josefsson"
+   ],
+   "with_target": {
+    "n_listed": 3,
+    "n_leads": 1,
+    "lead_in_pitch": false,
+    "lead_ranked_first": false,
+    "lead_first_by_verdict": false,
+    "lead_has_verdict": false,
+    "lead_verdicts": [
+     "Too few rounds"
+    ],
+    "n_no_history": 2,
+    "best_lead_rank": 3,
+    "n_pitch": 0,
+    "n_pitch_that_led": 0,
+    "n_follows": 0,
+    "lead_called_follows": false,
+    "n_few": 3,
+    "random_first_chance": 0.3333333333333333,
+    "earlier_rounds": 0,
+    "earlier_investors": [],
+    "intro": {
+     "Stefan Lennhammer": {
+      "already_investor": false,
+      "small_round_tie": null,
+      "any_shared_round": null
+     }
+    },
+    "rows": [
+     {
+      "name": "Noam Perski",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 1
+     },
+     {
+      "name": "Simon Josefsson",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 2,
+      "rank": 2
+     },
+     {
+      "name": "Stefan Lennhammer",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": true,
+      "tie": null,
+      "history": 0,
+      "rank": 3
+     }
+    ]
+   },
+   "no_target": {
+    "lead_in_pitch": false,
+    "lead_ranked_first": false,
+    "best_lead_rank": 3,
+    "n_pitch": 0,
+    "n_follows": 0,
+    "lead_called_follows": false
+   }
+  },
+  {
+   "company": "imagiLabs",
+   "ckey": "imagilabs",
+   "rid": 1293,
+   "country": "Sweden",
+   "date": "Jun 2026",
+   "t": 2026.417,
+   "stage": "seed",
+   "amount_eur_m": 4.14,
+   "amount_raw": "$4.5M",
+   "leads": [
+    "Brighteye Ventures",
+    "Day One Capital"
+   ],
+   "participants": [
+    "Feminvest Ventures",
+    "Fredrik Hjelm",
+    "Julia Elf",
+    "Mati Staniszewski",
+    "Morgan Stanley",
+    "Simon Squibb",
+    "Sophia Amoruso",
+    "Sparkmind Capital",
+    "Thomas Dohmke",
+    "We Are Human",
+    "William James Adams Jr"
+   ],
+   "with_target": {
+    "n_listed": 13,
+    "n_leads": 2,
+    "lead_in_pitch": false,
+    "lead_ranked_first": false,
+    "lead_first_by_verdict": false,
+    "lead_has_verdict": true,
+    "lead_verdicts": [
+     "No lead since Jul 2023",
+     "Mixed"
+    ],
+    "n_no_history": 6,
+    "best_lead_rank": 12,
+    "n_pitch": 0,
+    "n_pitch_that_led": 0,
+    "n_follows": 0,
+    "lead_called_follows": false,
+    "n_few": 11,
+    "random_first_chance": 0.15384615384615385,
+    "earlier_rounds": 5,
+    "earlier_investors": [
+     "additional angels",
+     "Butler Accelerator for Education & Workforce Innovation",
+     "David Baszucki",
+     "Donna Hanafi",
+     "Eros Resmini",
+     "Josefin Landgård",
+     "KTH Holding",
+     "Lisa Gradow",
+     "members of Atomico's Angel Program",
+     "Morgan Stanley Inclusive Ventures Lab",
+     "Nicolas Grasset",
+     "other local angel investors",
+     "Propel Capital",
+     "Unconventional Ventures"
+    ],
+    "intro": {
+     "Brighteye Ventures": {
+      "already_investor": false,
+      "small_round_tie": null,
+      "any_shared_round": null
+     },
+     "Day One Capital": {
+      "already_investor": false,
+      "small_round_tie": null,
+      "any_shared_round": null
+     }
+    },
+    "rows": [
+     {
+      "name": "Fredrik Hjelm",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 2,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 2,
+      "rank": 1
+     },
+     {
+      "name": "Mati Staniszewski",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 1,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 1,
+      "rank": 2
+     },
+     {
+      "name": "Sophia Amoruso",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 1,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 1,
+      "rank": 3
+     },
+     {
+      "name": "Feminvest Ventures",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 4
+     },
+     {
+      "name": "Julia Elf",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 5
+     },
+     {
+      "name": "Morgan Stanley",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 2,
+      "rank": 6
+     },
+     {
+      "name": "Simon Squibb",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 7
+     },
+     {
+      "name": "Sparkmind Capital",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 1,
+      "rank": 8
+     },
+     {
+      "name": "Thomas Dohmke",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 9
+     },
+     {
+      "name": "We Are Human",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 10
+     },
+     {
+      "name": "William James Adams Jr",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 11
+     },
+     {
+      "name": "Brighteye Ventures",
+      "verdict": "stale",
+      "label": "No lead since Jul 2023",
+      "group": "avoid",
+      "led": 1,
+      "known": 3,
+      "led_at_stage": 1,
+      "way": 0,
+      "is_lead": true,
+      "tie": null,
+      "history": 5,
+      "rank": 12
+     },
+     {
+      "name": "Day One Capital",
+      "verdict": "mixed",
+      "label": "Mixed",
+      "group": "avoid",
+      "led": 0,
+      "known": 3,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": true,
+      "tie": null,
+      "history": 4,
+      "rank": 13
+     }
+    ]
+   },
+   "no_target": {
+    "lead_in_pitch": false,
+    "lead_ranked_first": false,
+    "best_lead_rank": 12,
+    "n_pitch": 0,
+    "n_follows": 0,
+    "lead_called_follows": false
+   }
+  },
+  {
+   "company": "Intric",
+   "ckey": "intric",
+   "rid": 1183,
+   "country": "Sweden",
+   "date": "Feb 2026",
+   "t": 2026.083,
+   "stage": "pre-seed",
+   "amount_eur_m": 3.567,
+   "amount_raw": "SEK 41 million (~€3.8 million / ~$4.5 million)",
+   "leads": [
+    "byFounders"
+   ],
+   "participants": [
+    "Carl-Henric Svanberg",
+    "Look Up Ventures",
+    "Mattias Miksche"
+   ],
+   "with_target": {
+    "n_listed": 4,
+    "n_leads": 1,
+    "lead_in_pitch": true,
+    "lead_ranked_first": true,
+    "lead_first_by_verdict": true,
+    "lead_has_verdict": true,
+    "lead_verdicts": [
+     "Leads rounds like yours"
+    ],
+    "n_no_history": 1,
+    "best_lead_rank": 1,
+    "n_pitch": 1,
+    "n_pitch_that_led": 1,
+    "n_follows": 0,
+    "lead_called_follows": false,
+    "n_few": 3,
+    "random_first_chance": 0.25,
+    "earlier_rounds": 1,
+    "earlier_investors": [
+     "Anton Wass",
+     "Daniel Petersen"
+    ],
+    "intro": {
+     "byFounders": {
+      "already_investor": false,
+      "small_round_tie": null,
+      "any_shared_round": null
+     }
+    },
+    "rows": [
+     {
+      "name": "byFounders",
+      "verdict": "leads",
+      "label": "Leads rounds like yours",
+      "group": "pitch",
+      "led": 12,
+      "known": 15,
+      "led_at_stage": 8,
+      "way": 0,
+      "is_lead": true,
+      "tie": null,
+      "history": 28,
+      "rank": 1
+     },
+     {
+      "name": "Look Up Ventures",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 1,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 1,
+      "rank": 2
+     },
+     {
+      "name": "Mattias Miksche",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 2,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 17,
+      "rank": 3
+     },
+     {
+      "name": "Carl-Henric Svanberg",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 4
+     }
+    ]
+   },
+   "no_target": {
+    "lead_in_pitch": true,
+    "lead_ranked_first": true,
+    "best_lead_rank": 1,
+    "n_pitch": 1,
+    "n_follows": 0,
+    "lead_called_follows": false
+   }
+  },
+  {
+   "company": "Ipercept",
+   "ckey": "ipercept",
+   "rid": 792,
+   "country": "Sweden",
+   "date": "May 2025",
+   "t": 2025.333,
+   "stage": "seed",
+   "amount_eur_m": 5.0,
+   "amount_raw": "€5.0 M (~$5.7 M)",
+   "leads": [
+    "Luminar Ventures"
+   ],
+   "participants": [
+    "AI.Fund",
+    "Backstage Invest",
+    "J12 Ventures",
+    "RunwayFBU"
+   ],
+   "with_target": {
+    "n_listed": 5,
+    "n_leads": 1,
+    "lead_in_pitch": true,
+    "lead_ranked_first": true,
+    "lead_first_by_verdict": true,
+    "lead_has_verdict": true,
+    "lead_verdicts": [
+     "Leads rounds like yours"
+    ],
+    "n_no_history": 2,
+    "best_lead_rank": 1,
+    "n_pitch": 1,
+    "n_pitch_that_led": 1,
+    "n_follows": 0,
+    "lead_called_follows": false,
+    "n_few": 3,
+    "random_first_chance": 0.2,
+    "earlier_rounds": 4,
+    "earlier_investors": [
+     "Almi Invest",
+     "DHS Venture Partners",
+     "J12 Ventures",
+     "KTH Ventures"
+    ],
+    "intro": {
+     "Luminar Ventures": {
+      "already_investor": false,
+      "small_round_tie": null,
+      "any_shared_round": {
+       "investor": "Almi Invest",
+       "company": "Debricked",
+       "date": "Jun 2020",
+       "rid": 1975,
+       "n_investors": 3
+      }
+     }
+    },
+    "rows": [
+     {
+      "name": "Luminar Ventures",
+      "verdict": "leads",
+      "label": "Leads rounds like yours",
+      "group": "pitch",
+      "led": 9,
+      "known": 11,
+      "led_at_stage": 7,
+      "way": 0,
+      "is_lead": true,
+      "tie": null,
+      "history": 40,
+      "rank": 1
+     },
+     {
+      "name": "RunwayFBU",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 1,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 2,
+      "rank": 2
+     },
+     {
+      "name": "AI.Fund",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 3
+     },
+     {
+      "name": "Backstage Invest",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 4
+     },
+     {
+      "name": "J12 Ventures",
+      "verdict": "mixed",
+      "label": "Mixed",
+      "group": "avoid",
+      "led": 4,
+      "known": 11,
+      "led_at_stage": 3,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 19,
+      "rank": 5
+     }
+    ]
+   },
+   "no_target": {
+    "lead_in_pitch": true,
+    "lead_ranked_first": true,
+    "best_lead_rank": 1,
+    "n_pitch": 1,
+    "n_follows": 0,
+    "lead_called_follows": false
+   }
+  },
+  {
+   "company": "Lovable",
+   "ckey": "lovable",
+   "rid": 1147,
+   "country": "Sweden",
+   "date": "Jan 2025",
+   "t": 2025.0,
+   "stage": "seed",
+   "amount_eur_m": 13.8,
+   "amount_raw": "~$15–20 million",
+   "leads": [
+    "Creandum"
+   ],
+   "participants": [
+    "20VC",
+    "Adam D'Angelo",
+    "byFounders",
+    "Charlie Songhurst",
+    "Hummingbird Ventures",
+    "Thomas Wolf",
+    "Visionaries Club"
+   ],
+   "with_target": {
+    "n_listed": 8,
+    "n_leads": 1,
+    "lead_in_pitch": true,
+    "lead_ranked_first": false,
+    "lead_first_by_verdict": false,
+    "lead_has_verdict": true,
+    "lead_verdicts": [
+     "Leads rounds like yours"
+    ],
+    "n_no_history": 1,
+    "best_lead_rank": 2,
+    "n_pitch": 2,
+    "n_pitch_that_led": 1,
+    "n_follows": 0,
+    "lead_called_follows": false,
+    "n_few": 3,
+    "random_first_chance": 0.125,
+    "earlier_rounds": 3,
+    "earlier_investors": [
+     "AI founders",
+     "Bjarke Klinge Staun",
+     "byFounders",
+     "byFounders among early investors",
+     "Creandum",
+     "Creandum co-founder Stefan Lindeberg",
+     "DeepMind angel operators",
+     "Fredrik Hjelm",
+     "Hummingbird Ventures",
+     "J12 Ventures",
+     "J12 Ventures among investors",
+     "Mattias Miksche",
+     "Siavash Ghorbani",
+     "Stefan Lindeberg"
+    ],
+    "intro": {
+     "Creandum": {
+      "already_investor": true,
+      "small_round_tie": null,
+      "any_shared_round": {
+       "investor": "byFounders",
+       "company": "Monta",
+       "date": "Jan 2024",
+       "rid": 1532,
+       "n_investors": 9
+      }
+     }
+    },
+    "rows": [
+     {
+      "name": "byFounders",
+      "verdict": "leads",
+      "label": "Leads at your stage, size unclear",
+      "group": "pitch",
+      "led": 10,
+      "known": 13,
+      "led_at_stage": 3,
+      "way": 2,
+      "is_lead": false,
+      "tie": {
+       "investor": "J12 Ventures",
+       "weight": 0.25,
+       "round": {
+        "id": 1627,
+        "company": "DataCrunch",
+        "date": "Oct 2024",
+        "t": 2024.75,
+        "stage": "Seed",
+        "amount_eur_m": 11.96,
+        "amount_raw": "$13M",
+        "n_investors": 5,
+        "leads": [
+         "byFounders"
+        ],
+        "path": "investor_first",
+        "sourced": false,
+        "disputed": null,
+        "not_led": null
+       }
+      },
+      "history": 19,
+      "rank": 1
+     },
+     {
+      "name": "Creandum",
+      "verdict": "leads",
+      "label": "Leads rounds like yours",
+      "group": "pitch",
+      "led": 10,
+      "known": 16,
+      "led_at_stage": 5,
+      "way": 0,
+      "is_lead": true,
+      "tie": null,
+      "history": 59,
+      "rank": 2
+     },
+     {
+      "name": "Charlie Songhurst",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 2,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 6,
+      "rank": 3
+     },
+     {
+      "name": "Thomas Wolf",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 2,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 2,
+      "rank": 4
+     },
+     {
+      "name": "Adam D'Angelo",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 5
+     },
+     {
+      "name": "20VC",
+      "verdict": "mixed",
+      "label": "Mixed",
+      "group": "avoid",
+      "led": 2,
+      "known": 4,
+      "led_at_stage": 1,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 4,
+      "rank": 6
+     },
+     {
+      "name": "Hummingbird Ventures",
+      "verdict": "mixed",
+      "label": "Mixed",
+      "group": "avoid",
+      "led": 3,
+      "known": 10,
+      "led_at_stage": 2,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 18,
+      "rank": 7
+     },
+     {
+      "name": "Visionaries Club",
+      "verdict": "stale",
+      "label": "No lead since Oct 2021",
+      "group": "avoid",
+      "led": 1,
+      "known": 3,
+      "led_at_stage": 1,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 6,
+      "rank": 8
+     }
+    ]
+   },
+   "no_target": {
+    "lead_in_pitch": true,
+    "lead_ranked_first": false,
+    "best_lead_rank": 2,
+    "n_pitch": 2,
+    "n_follows": 0,
+    "lead_called_follows": false
+   }
+  },
+  {
+   "company": "Oplane",
+   "ckey": "oplane",
+   "rid": 812,
+   "country": "Sweden",
+   "date": "Jun 2026",
+   "t": 2026.417,
+   "stage": "seed",
+   "amount_eur_m": 4.5,
+   "amount_raw": "€4.5 million (~$5.2 M cumulative / ~$4.1 M in this round)",
+   "leads": [
+    "Seed Capital"
+   ],
+   "participants": [
+    "Emil Eifrem",
+    "Icebreaker.vc",
+    "Joakim Nydrén",
+    "Robert Lagerström"
+   ],
+   "with_target": {
+    "n_listed": 5,
+    "n_leads": 1,
+    "lead_in_pitch": true,
+    "lead_ranked_first": true,
+    "lead_first_by_verdict": true,
+    "lead_has_verdict": true,
+    "lead_verdicts": [
+     "Leads at your stage, size unclear"
+    ],
+    "n_no_history": 2,
+    "best_lead_rank": 1,
+    "n_pitch": 1,
+    "n_pitch_that_led": 1,
+    "n_follows": 0,
+    "lead_called_follows": false,
+    "n_few": 3,
+    "random_first_chance": 0.2,
+    "earlier_rounds": 1,
+    "earlier_investors": [
+     "Icebreaker.vc"
+    ],
+    "intro": {
+     "Seed Capital": {
+      "already_investor": false,
+      "small_round_tie": null,
+      "any_shared_round": null
+     }
+    },
+    "rows": [
+     {
+      "name": "Seed Capital",
+      "verdict": "leads",
+      "label": "Leads at your stage, size unclear",
+      "group": "pitch",
+      "led": 3,
+      "known": 3,
+      "led_at_stage": 2,
+      "way": 0,
+      "is_lead": true,
+      "tie": null,
+      "history": 9,
+      "rank": 1
+     },
+     {
+      "name": "Emil Eifrem",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 1,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 1,
+      "rank": 2
+     },
+     {
+      "name": "Joakim Nydrén",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 3
+     },
+     {
+      "name": "Robert Lagerström",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 4
+     },
+     {
+      "name": "Icebreaker.vc",
+      "verdict": "mixed",
+      "label": "Mixed",
+      "group": "avoid",
+      "led": 3,
+      "known": 7,
+      "led_at_stage": 2,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 18,
+      "rank": 5
+     }
+    ]
+   },
+   "no_target": {
+    "lead_in_pitch": true,
+    "lead_ranked_first": true,
+    "best_lead_rank": 1,
+    "n_pitch": 1,
+    "n_follows": 0,
+    "lead_called_follows": false
+   }
+  },
+  {
+   "company": "Polar",
+   "ckey": "polar",
+   "rid": 1044,
+   "country": "Sweden",
+   "date": "Jun 2025",
+   "t": 2025.417,
+   "stage": "seed",
+   "amount_eur_m": 9.2,
+   "amount_raw": "$10 million",
+   "leads": [
+    "Accel"
+   ],
+   "participants": [
+    "Alexandre Chopin",
+    "Anton Osika",
+    "Guillermo Rauch",
+    "Harley Finkelstein",
+    "Jared Palmer",
+    "Jorn van Dijk",
+    "Koen Bok",
+    "Michael Grinich",
+    "Paul Copplestone",
+    "Sébastien Chopin",
+    "Steven Tey",
+    "Thomas Paul Mann",
+    "Tobi Lütke",
+    "Zeno Rocha"
+   ],
+   "with_target": {
+    "n_listed": 15,
+    "n_leads": 1,
+    "lead_in_pitch": false,
+    "lead_ranked_first": true,
+    "lead_first_by_verdict": false,
+    "lead_has_verdict": false,
+    "lead_verdicts": [
+     "Too few rounds"
+    ],
+    "n_no_history": 13,
+    "best_lead_rank": 1,
+    "n_pitch": 0,
+    "n_pitch_that_led": 0,
+    "n_follows": 0,
+    "lead_called_follows": false,
+    "n_few": 15,
+    "random_first_chance": 0.06666666666666667,
+    "earlier_rounds": 1,
+    "earlier_investors": [
+     "Abstract Ventures",
+     "Carl W Rivera",
+     "David Cramer",
+     "Fredrik Björk",
+     "Gustaf Alströmer",
+     "Joel Hellermark",
+     "Kaj Drobin",
+     "Kieran Flanagan",
+     "Mattias Miksche",
+     "Mischief",
+     "Mitchell Hashimoto",
+     "Siavash Ghorbani",
+     "Sri Batchu",
+     "SV Angel",
+     "Tristan Handy",
+     "Zachary Perret"
+    ],
+    "intro": {
+     "Accel": {
+      "already_investor": false,
+      "small_round_tie": null,
+      "any_shared_round": {
+       "investor": "SV Angel",
+       "company": "GoCardless",
+       "date": "Feb 2012",
+       "rid": 4968,
+       "n_investors": 4
+      }
+     }
+    },
+    "rows": [
+     {
+      "name": "Accel",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 2,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": true,
+      "tie": null,
+      "history": 71,
+      "rank": 1
+     },
+     {
+      "name": "Guillermo Rauch",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 2,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 2,
+      "rank": 2
+     },
+     {
+      "name": "Alexandre Chopin",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 3
+     },
+     {
+      "name": "Anton Osika",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 4
+     },
+     {
+      "name": "Harley Finkelstein",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 5
+     },
+     {
+      "name": "Jared Palmer",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 6
+     },
+     {
+      "name": "Jorn van Dijk",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 7
+     },
+     {
+      "name": "Koen Bok",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 8
+     },
+     {
+      "name": "Michael Grinich",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 9
+     },
+     {
+      "name": "Paul Copplestone",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 10
+     },
+     {
+      "name": "Steven Tey",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 11
+     },
+     {
+      "name": "Sébastien Chopin",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 12
+     },
+     {
+      "name": "Thomas Paul Mann",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 13
+     },
+     {
+      "name": "Tobi Lütke",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 14
+     },
+     {
+      "name": "Zeno Rocha",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 15
+     }
+    ]
+   },
+   "no_target": {
+    "lead_in_pitch": false,
+    "lead_ranked_first": true,
+    "best_lead_rank": 1,
+    "n_pitch": 0,
+    "n_follows": 0,
+    "lead_called_follows": false
+   }
+  },
+  {
+   "company": "Redpine",
+   "ckey": "redpine",
+   "rid": 1179,
+   "country": "Sweden",
+   "date": "Apr 2026",
+   "t": 2026.25,
+   "stage": "seed",
+   "amount_eur_m": 6.8,
+   "amount_raw": "€6.8 million (~$7.3–8M)",
+   "leads": [
+    "NordicNinja VC"
+   ],
+   "participants": [
+    "Anna Nordell Westling",
+    "Colin M. Evans",
+    "Dan McCormick",
+    "Eric Carlson Rydman",
+    "Greens Ventures",
+    "Gustav Lindqvist",
+    "Luminar Ventures",
+    "node.vc",
+    "Patrik Liu Tran",
+    "Peter Sarlin",
+    "Siddharth Khullar"
+   ],
+   "with_target": {
+    "n_listed": 12,
+    "n_leads": 1,
+    "lead_in_pitch": false,
+    "lead_ranked_first": false,
+    "lead_first_by_verdict": false,
+    "lead_has_verdict": true,
+    "lead_verdicts": [
+     "Mixed"
+    ],
+    "n_no_history": 4,
+    "best_lead_rank": 11,
+    "n_pitch": 0,
+    "n_pitch_that_led": 0,
+    "n_follows": 1,
+    "lead_called_follows": false,
+    "n_few": 8,
+    "random_first_chance": 0.08333333333333333,
+    "earlier_rounds": 1,
+    "earlier_investors": [
+     "Anna Nordell Westling",
+     "Colin M. Evans",
+     "Daniel Langkilde",
+     "Feng Hong",
+     "Greens Ventures",
+     "Gustav Lindqvist",
+     "Sebastian Bond"
+    ],
+    "intro": {
+     "NordicNinja VC": {
+      "already_investor": false,
+      "small_round_tie": null,
+      "any_shared_round": null
+     }
+    },
+    "rows": [
+     {
+      "name": "Luminar Ventures",
+      "verdict": "leads_size",
+      "label": "Leads, but smaller rounds",
+      "group": "size",
+      "led": 12,
+      "known": 15,
+      "led_at_stage": 7,
+      "way": 2,
+      "is_lead": false,
+      "tie": {
+       "investor": "Greens Ventures",
+       "weight": 0.5,
+       "round": {
+        "id": 1956,
+        "company": "Opper AI",
+        "date": "Jul 2025",
+        "t": 2025.5,
+        "stage": "Pre-seed",
+        "amount_eur_m": 2.76,
+        "amount_raw": "~$3M–$3.5M",
+        "n_investors": 3,
+        "leads": [
+         "Luminar Ventures"
+        ],
+        "path": "investor_first",
+        "sourced": false,
+        "disputed": null,
+        "not_led": null
+       }
+      },
+      "history": 48,
+      "rank": 1
+     },
+     {
+      "name": "Peter Sarlin",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 1,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 2,
+      "rank": 2
+     },
+     {
+      "name": "Anna Nordell Westling",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 1,
+      "rank": 3
+     },
+     {
+      "name": "Colin M. Evans",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 1,
+      "rank": 4
+     },
+     {
+      "name": "Dan McCormick",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 5
+     },
+     {
+      "name": "Eric Carlson Rydman",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 6
+     },
+     {
+      "name": "Gustav Lindqvist",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 1,
+      "rank": 7
+     },
+     {
+      "name": "Patrik Liu Tran",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 8
+     },
+     {
+      "name": "Siddharth Khullar",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 9
+     },
+     {
+      "name": "node.vc",
+      "verdict": "mixed",
+      "label": "Mixed",
+      "group": "avoid",
+      "led": 2,
+      "known": 3,
+      "led_at_stage": 1,
+      "way": 2,
+      "is_lead": false,
+      "tie": {
+       "investor": "Greens Ventures",
+       "weight": 0.5,
+       "round": {
+        "id": 4998,
+        "company": "Serverpod",
+        "date": "Feb 2025",
+        "t": 2025.083,
+        "stage": "Seed",
+        "amount_eur_m": 2.7,
+        "amount_raw": "€2.7M",
+        "n_investors": 3,
+        "leads": [],
+        "path": "investor_first",
+        "sourced": false,
+        "disputed": null,
+        "not_led": null
+       }
+      },
+      "history": 4,
+      "rank": 10
+     },
+     {
+      "name": "NordicNinja VC",
+      "verdict": "mixed",
+      "label": "Mixed",
+      "group": "avoid",
+      "led": 5,
+      "known": 5,
+      "led_at_stage": 1,
+      "way": 0,
+      "is_lead": true,
+      "tie": null,
+      "history": 30,
+      "rank": 11
+     },
+     {
+      "name": "Greens Ventures",
+      "verdict": "follows",
+      "label": "Mostly follows",
+      "group": "avoid",
+      "led": 0,
+      "known": 6,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 13,
+      "rank": 12
+     }
+    ]
+   },
+   "no_target": {
+    "lead_in_pitch": false,
+    "lead_ranked_first": false,
+    "best_lead_rank": 11,
+    "n_pitch": 1,
+    "n_follows": 1,
+    "lead_called_follows": false
+   }
+  },
+  {
+   "company": "Reduciner",
+   "ckey": "reduciner",
+   "rid": 1315,
+   "country": "Finland",
+   "date": "May 2026",
+   "t": 2026.333,
+   "stage": "seed",
+   "amount_eur_m": 3.6,
+   "amount_raw": "€3.6 million (~$3.9–4.3M USD equivalent)",
+   "leads": [
+    "Lifeline Ventures",
+    "Voima Ventures"
+   ],
+   "participants": [
+    "Mikko Kodisoja Foundation",
+    "VTT Technical Research Centre of Finland"
+   ],
+   "with_target": {
+    "n_listed": 4,
+    "n_leads": 2,
+    "lead_in_pitch": true,
+    "lead_ranked_first": true,
+    "lead_first_by_verdict": true,
+    "lead_has_verdict": true,
+    "lead_verdicts": [
+     "Leads rounds like yours",
+     "Leads rounds like yours"
+    ],
+    "n_no_history": 1,
+    "best_lead_rank": 1,
+    "n_pitch": 2,
+    "n_pitch_that_led": 2,
+    "n_follows": 0,
+    "lead_called_follows": false,
+    "n_few": 2,
+    "random_first_chance": 0.5,
+    "earlier_rounds": 0,
+    "earlier_investors": [],
+    "intro": {
+     "Lifeline Ventures": {
+      "already_investor": false,
+      "small_round_tie": null,
+      "any_shared_round": null
+     },
+     "Voima Ventures": {
+      "already_investor": false,
+      "small_round_tie": null,
+      "any_shared_round": null
+     }
+    },
+    "rows": [
+     {
+      "name": "Voima Ventures",
+      "verdict": "leads",
+      "label": "Leads rounds like yours",
+      "group": "pitch",
+      "led": 11,
+      "known": 11,
+      "led_at_stage": 8,
+      "way": 0,
+      "is_lead": true,
+      "tie": null,
+      "history": 31,
+      "rank": 1
+     },
+     {
+      "name": "Lifeline Ventures",
+      "verdict": "leads",
+      "label": "Leads rounds like yours",
+      "group": "pitch",
+      "led": 24,
+      "known": 27,
+      "led_at_stage": 14,
+      "way": 0,
+      "is_lead": true,
+      "tie": null,
+      "history": 53,
+      "rank": 2
+     },
+     {
+      "name": "VTT Technical Research Centre of Finland",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 1,
+      "known": 1,
+      "led_at_stage": 1,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 3,
+      "rank": 3
+     },
+     {
+      "name": "Mikko Kodisoja Foundation",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 4
+     }
+    ]
+   },
+   "no_target": {
+    "lead_in_pitch": true,
+    "lead_ranked_first": true,
+    "best_lead_rank": 1,
+    "n_pitch": 2,
+    "n_follows": 0,
+    "lead_called_follows": false
+   }
+  },
+  {
+   "company": "Renasens",
+   "ckey": "renasens",
+   "rid": 1099,
+   "country": "Sweden",
+   "date": "Mar 2026",
+   "t": 2026.167,
+   "stage": "seed",
+   "amount_eur_m": 10.0,
+   "amount_raw": "€10 million (~$11.5–11.6 million)",
+   "leads": [
+    "Extantia Capital"
+   ],
+   "participants": [
+    "Course Corrected",
+    "Norrsken Launcher"
+   ],
+   "with_target": {
+    "n_listed": 3,
+    "n_leads": 1,
+    "lead_in_pitch": false,
+    "lead_ranked_first": false,
+    "lead_first_by_verdict": false,
+    "lead_has_verdict": false,
+    "lead_verdicts": [
+     "Too few rounds"
+    ],
+    "n_no_history": 0,
+    "best_lead_rank": 2,
+    "n_pitch": 0,
+    "n_pitch_that_led": 0,
+    "n_follows": 1,
+    "lead_called_follows": false,
+    "n_few": 2,
+    "random_first_chance": 0.3333333333333333,
+    "earlier_rounds": 0,
+    "earlier_investors": [],
+    "intro": {
+     "Extantia Capital": {
+      "already_investor": false,
+      "small_round_tie": null,
+      "any_shared_round": null
+     }
+    },
+    "rows": [
+     {
+      "name": "Norrsken Launcher",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 1,
+      "known": 1,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 2,
+      "rank": 1
+     },
+     {
+      "name": "Extantia Capital",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 1,
+      "known": 2,
+      "led_at_stage": 1,
+      "way": 0,
+      "is_lead": true,
+      "tie": null,
+      "history": 2,
+      "rank": 2
+     },
+     {
+      "name": "Course Corrected",
+      "verdict": "follows",
+      "label": "Mostly follows",
+      "group": "avoid",
+      "led": 0,
+      "known": 6,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 11,
+      "rank": 3
+     }
+    ]
+   },
+   "no_target": {
+    "lead_in_pitch": false,
+    "lead_ranked_first": false,
+    "best_lead_rank": 2,
+    "n_pitch": 0,
+    "n_follows": 1,
+    "lead_called_follows": false
+   }
+  },
+  {
+   "company": "Sapient Perception",
+   "ckey": "sapientperception",
+   "rid": 149,
+   "country": "Denmark",
+   "date": "Apr 2026",
+   "t": 2026.25,
+   "stage": "pre-seed",
+   "amount_eur_m": 2.0,
+   "amount_raw": "€2 million (~$2.3–2.4 million)",
+   "leads": [
+    "Balnord",
+    "FORWARD.one"
+   ],
+   "participants": [
+    "Odense Robotics"
+   ],
+   "with_target": {
+    "n_listed": 3,
+    "n_leads": 2,
+    "lead_in_pitch": false,
+    "lead_ranked_first": true,
+    "lead_first_by_verdict": false,
+    "lead_has_verdict": false,
+    "lead_verdicts": [
+     "Too few rounds",
+     "Too few rounds"
+    ],
+    "n_no_history": 2,
+    "best_lead_rank": 1,
+    "n_pitch": 0,
+    "n_pitch_that_led": 0,
+    "n_follows": 0,
+    "lead_called_follows": false,
+    "n_few": 3,
+    "random_first_chance": 0.6666666666666666,
+    "earlier_rounds": 0,
+    "earlier_investors": [],
+    "intro": {
+     "Balnord": {
+      "already_investor": false,
+      "small_round_tie": null,
+      "any_shared_round": null
+     },
+     "FORWARD.one": {
+      "already_investor": false,
+      "small_round_tie": null,
+      "any_shared_round": null
+     }
+    },
+    "rows": [
+     {
+      "name": "Balnord",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": true,
+      "tie": null,
+      "history": 0,
+      "rank": 1
+     },
+     {
+      "name": "FORWARD.one",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": true,
+      "tie": null,
+      "history": 2,
+      "rank": 2
+     },
+     {
+      "name": "Odense Robotics",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 3
+     }
+    ]
+   },
+   "no_target": {
+    "lead_in_pitch": false,
+    "lead_ranked_first": true,
+    "best_lead_rank": 1,
+    "n_pitch": 0,
+    "n_follows": 0,
+    "lead_called_follows": false
+   }
+  },
+  {
+   "company": "Stilta",
+   "ckey": "stilta",
+   "rid": 829,
+   "country": "Sweden",
+   "date": "May 2026",
+   "t": 2026.333,
+   "stage": "seed",
+   "amount_eur_m": 9.66,
+   "amount_raw": "$10.5 million",
+   "leads": [
+    "Andreessen Horowitz"
+   ],
+   "participants": [
+    "Crevi",
+    "Inception Fund",
+    "Legora",
+    "Listen Labs. Additional named angels include Max Junestrand",
+    "Lovable",
+    "OpenAI",
+    "operators from Sana",
+    "plus founders",
+    "Y Combinator"
+   ],
+   "with_target": {
+    "n_listed": 10,
+    "n_leads": 1,
+    "lead_in_pitch": false,
+    "lead_ranked_first": false,
+    "lead_first_by_verdict": false,
+    "lead_has_verdict": true,
+    "lead_verdicts": [
+     "Mixed"
+    ],
+    "n_no_history": 6,
+    "best_lead_rank": 9,
+    "n_pitch": 0,
+    "n_pitch_that_led": 0,
+    "n_follows": 0,
+    "lead_called_follows": false,
+    "n_few": 8,
+    "random_first_chance": 0.1,
+    "earlier_rounds": 1,
+    "earlier_investors": [
+     "angel investors including Christian Nordbeck Sørensen",
+     "Oliver Molander",
+     "Y Combinator"
+    ],
+    "intro": {
+     "Andreessen Horowitz": {
+      "already_investor": false,
+      "small_round_tie": null,
+      "any_shared_round": null
+     }
+    },
+    "rows": [
+     {
+      "name": "Lovable",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 1,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 1,
+      "rank": 1
+     },
+     {
+      "name": "OpenAI",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 2,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 2,
+      "rank": 2
+     },
+     {
+      "name": "Crevi",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 3
+     },
+     {
+      "name": "Inception Fund",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 4
+     },
+     {
+      "name": "Legora",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 5
+     },
+     {
+      "name": "Listen Labs. Additional named angels include Max Junestrand",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 6
+     },
+     {
+      "name": "operators from Sana",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 7
+     },
+     {
+      "name": "plus founders",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 8
+     },
+     {
+      "name": "Andreessen Horowitz",
+      "verdict": "mixed",
+      "label": "Mixed",
+      "group": "avoid",
+      "led": 4,
+      "known": 9,
+      "led_at_stage": 2,
+      "way": 0,
+      "is_lead": true,
+      "tie": null,
+      "history": 37,
+      "rank": 9
+     },
+     {
+      "name": "Y Combinator",
+      "verdict": "public",
+      "label": "Public body or programme",
+      "group": "avoid",
+      "led": 5,
+      "known": 22,
+      "led_at_stage": 3,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 49,
+      "rank": 10
+     }
+    ]
+   },
+   "no_target": {
+    "lead_in_pitch": false,
+    "lead_ranked_first": false,
+    "best_lead_rank": 9,
+    "n_pitch": 0,
+    "n_follows": 0,
+    "lead_called_follows": false
+   }
+  },
+  {
+   "company": "Studio 555",
+   "ckey": "studio555",
+   "rid": 1207,
+   "country": "Sweden",
+   "date": "Jun 2025",
+   "t": 2025.417,
+   "stage": "seed",
+   "amount_eur_m": 4.0,
+   "amount_raw": "€4 million (~$4.6 million)",
+   "leads": [
+    "Failup Ventures",
+    "HOF Capital"
+   ],
+   "participants": [
+    "Mikko Kodisoja",
+    "Riccardo Zacconi",
+    "Timo Soininen"
+   ],
+   "with_target": {
+    "n_listed": 5,
+    "n_leads": 2,
+    "lead_in_pitch": false,
+    "lead_ranked_first": true,
+    "lead_first_by_verdict": false,
+    "lead_has_verdict": false,
+    "lead_verdicts": [
+     "Too few rounds",
+     "Too few rounds"
+    ],
+    "n_no_history": 0,
+    "best_lead_rank": 1,
+    "n_pitch": 0,
+    "n_pitch_that_led": 0,
+    "n_follows": 1,
+    "lead_called_follows": false,
+    "n_few": 4,
+    "random_first_chance": 0.4,
+    "earlier_rounds": 0,
+    "earlier_investors": [],
+    "intro": {
+     "Failup Ventures": {
+      "already_investor": false,
+      "small_round_tie": null,
+      "any_shared_round": null
+     },
+     "HOF Capital": {
+      "already_investor": false,
+      "small_round_tie": null,
+      "any_shared_round": null
+     }
+    },
+    "rows": [
+     {
+      "name": "Failup Ventures",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 1,
+      "known": 2,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": true,
+      "tie": null,
+      "history": 2,
+      "rank": 1
+     },
+     {
+      "name": "Riccardo Zacconi",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 1,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 3,
+      "rank": 2
+     },
+     {
+      "name": "HOF Capital",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": true,
+      "tie": null,
+      "history": 1,
+      "rank": 3
+     },
+     {
+      "name": "Mikko Kodisoja",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 2,
+      "rank": 4
+     },
+     {
+      "name": "Timo Soininen",
+      "verdict": "follows",
+      "label": "Mostly follows",
+      "group": "avoid",
+      "led": 0,
+      "known": 5,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 10,
+      "rank": 5
+     }
+    ]
+   },
+   "no_target": {
+    "lead_in_pitch": false,
+    "lead_ranked_first": true,
+    "best_lead_rank": 1,
+    "n_pitch": 0,
+    "n_follows": 1,
+    "lead_called_follows": false
+   }
+  },
+  {
+   "company": "TeraSi",
+   "ckey": "terasi",
+   "rid": 832,
+   "country": "Sweden",
+   "date": "Sep 2026",
+   "t": 2026.667,
+   "stage": "seed",
+   "amount_eur_m": 11.0,
+   "amount_raw": "€11 M (≈ $12.6 M)",
+   "leads": [
+    "Join Capital",
+    "NATO Innovation Fund"
+   ],
+   "participants": [
+    "Almi Invest",
+    "Andy Stentiford",
+    "D3",
+    "D3 Venture Capital Firm",
+    "Dominic Davies",
+    "Fredrik P",
+    "Further Than Capital",
+    "In-Q-Tel",
+    "KTH Ventures",
+    "Navigare Ventures",
+    "Onsight Ventures",
+    "Sting"
+   ],
+   "with_target": {
+    "n_listed": 14,
+    "n_leads": 2,
+    "lead_in_pitch": false,
+    "lead_ranked_first": false,
+    "lead_first_by_verdict": false,
+    "lead_has_verdict": true,
+    "lead_verdicts": [
+     "Too few rounds",
+     "No lead since Jan 2024"
+    ],
+    "n_no_history": 3,
+    "best_lead_rank": 3,
+    "n_pitch": 1,
+    "n_pitch_that_led": 0,
+    "n_follows": 0,
+    "lead_called_follows": false,
+    "n_few": 9,
+    "random_first_chance": 0.14285714285714285,
+    "earlier_rounds": 2,
+    "earlier_investors": [
+     "Almi Invest",
+     "Andrew Stentiford",
+     "Deeptech Labs",
+     "Dominic Davies",
+     "Fredrik Posse",
+     "KTH Ventures",
+     "KTH Holding",
+     "Navigare Ventures",
+     "Onsight Ventures",
+     "Per Björklund",
+     "Stefan Lindeberg",
+     "Sting"
+    ],
+    "intro": {
+     "Join Capital": {
+      "already_investor": false,
+      "small_round_tie": null,
+      "any_shared_round": {
+       "investor": "Onsight Ventures",
+       "company": "Semron",
+       "date": "Jan 2024",
+       "rid": 4827,
+       "n_investors": 10
+      }
+     },
+     "NATO Innovation Fund": {
+      "already_investor": false,
+      "small_round_tie": null,
+      "any_shared_round": null
+     }
+    },
+    "rows": [
+     {
+      "name": "Navigare Ventures",
+      "verdict": "leads",
+      "label": "Leads at your stage, size unclear",
+      "group": "pitch",
+      "led": 9,
+      "known": 12,
+      "led_at_stage": 6,
+      "way": 2,
+      "is_lead": false,
+      "tie": {
+       "investor": "KTH Ventures",
+       "weight": 0.5,
+       "round": {
+        "id": 3006,
+        "company": "OrbDB",
+        "date": "Aug 2026",
+        "t": 2026.583,
+        "stage": "Pre-seed",
+        "amount_eur_m": 1.84,
+        "amount_raw": "~$2M",
+        "n_investors": 3,
+        "leads": [],
+        "path": "investor_first",
+        "sourced": false,
+        "disputed": null,
+        "not_led": null
+       }
+      },
+      "history": 24,
+      "rank": 1
+     },
+     {
+      "name": "KTH Ventures",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 1,
+      "led_at_stage": 0,
+      "way": 2,
+      "is_lead": false,
+      "tie": {
+       "investor": "Navigare Ventures",
+       "weight": 0.5,
+       "round": {
+        "id": 3006,
+        "company": "OrbDB",
+        "date": "Aug 2026",
+        "t": 2026.583,
+        "stage": "Pre-seed",
+        "amount_eur_m": 1.84,
+        "amount_raw": "~$2M",
+        "n_investors": 3,
+        "leads": [],
+        "path": "investor_first",
+        "sourced": false,
+        "disputed": null,
+        "not_led": null
+       }
+      },
+      "history": 4,
+      "rank": 2
+     },
+     {
+      "name": "NATO Innovation Fund",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 2,
+      "known": 2,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": true,
+      "tie": null,
+      "history": 5,
+      "rank": 3
+     },
+     {
+      "name": "Sting",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 1,
+      "known": 1,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 2,
+      "rank": 4
+     },
+     {
+      "name": "D3",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 1,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 2,
+      "rank": 5
+     },
+     {
+      "name": "Dominic Davies",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 1,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 1,
+      "rank": 6
+     },
+     {
+      "name": "Further Than Capital",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 1,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 1,
+      "rank": 7
+     },
+     {
+      "name": "Andy Stentiford",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 8
+     },
+     {
+      "name": "D3 Venture Capital Firm",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 9
+     },
+     {
+      "name": "Fredrik P",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 10
+     },
+     {
+      "name": "Join Capital",
+      "verdict": "stale",
+      "label": "No lead since Jan 2024",
+      "group": "avoid",
+      "led": 1,
+      "known": 3,
+      "led_at_stage": 1,
+      "way": 0,
+      "is_lead": true,
+      "tie": null,
+      "history": 3,
+      "rank": 11
+     },
+     {
+      "name": "Almi Invest",
+      "verdict": "public",
+      "label": "Public body or programme",
+      "group": "avoid",
+      "led": 1,
+      "known": 5,
+      "led_at_stage": 1,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 22,
+      "rank": 12
+     },
+     {
+      "name": "In-Q-Tel",
+      "verdict": "mixed",
+      "label": "Mixed",
+      "group": "avoid",
+      "led": 0,
+      "known": 3,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 5,
+      "rank": 13
+     },
+     {
+      "name": "Onsight Ventures",
+      "verdict": "mixed",
+      "label": "Mixed",
+      "group": "avoid",
+      "led": 0,
+      "known": 4,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 5,
+      "rank": 14
+     }
+    ]
+   },
+   "no_target": {
+    "lead_in_pitch": false,
+    "lead_ranked_first": false,
+    "best_lead_rank": 3,
+    "n_pitch": 1,
+    "n_follows": 0,
+    "lead_called_follows": false
+   }
+  },
+  {
+   "company": "Vexlum",
+   "ckey": "vexlum",
+   "rid": 1432,
+   "country": "Finland",
+   "date": "Feb 2026",
+   "t": 2026.083,
+   "stage": "seed",
+   "amount_eur_m": 6.0,
+   "amount_raw": "€6M",
+   "leads": [
+    "Kvanted"
+   ],
+   "participants": [
+    "EIC Fund",
+    "European Innovation Council   Fund",
+    "Fabel Advisory",
+    "Tesi"
+   ],
+   "with_target": {
+    "n_listed": 5,
+    "n_leads": 1,
+    "lead_in_pitch": false,
+    "lead_ranked_first": true,
+    "lead_first_by_verdict": true,
+    "lead_has_verdict": true,
+    "lead_verdicts": [
+     "Leads, but smaller rounds"
+    ],
+    "n_no_history": 1,
+    "best_lead_rank": 1,
+    "n_pitch": 0,
+    "n_pitch_that_led": 0,
+    "n_follows": 0,
+    "lead_called_follows": false,
+    "n_few": 1,
+    "random_first_chance": 0.2,
+    "earlier_rounds": 1,
+    "earlier_investors": [
+     "EIC Fund"
+    ],
+    "intro": {
+     "Kvanted": {
+      "already_investor": false,
+      "small_round_tie": null,
+      "any_shared_round": null
+     }
+    },
+    "rows": [
+     {
+      "name": "Kvanted",
+      "verdict": "leads_size",
+      "label": "Leads, but smaller rounds",
+      "group": "size",
+      "led": 8,
+      "known": 9,
+      "led_at_stage": 5,
+      "way": 0,
+      "is_lead": true,
+      "tie": null,
+      "history": 10,
+      "rank": 1
+     },
+     {
+      "name": "Fabel Advisory",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 2
+     },
+     {
+      "name": "Tesi",
+      "verdict": "mixed",
+      "label": "Mixed",
+      "group": "avoid",
+      "led": 1,
+      "known": 5,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 31,
+      "rank": 3
+     },
+     {
+      "name": "EIC Fund",
+      "verdict": "public",
+      "label": "Public body or programme",
+      "group": "avoid",
+      "led": 0,
+      "known": 8,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 30,
+      "rank": 4
+     },
+     {
+      "name": "European Innovation Council   Fund",
+      "verdict": "public",
+      "label": "Public body or programme",
+      "group": "avoid",
+      "led": 0,
+      "known": 3,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 9,
+      "rank": 5
+     }
+    ]
+   },
+   "no_target": {
+    "lead_in_pitch": true,
+    "lead_ranked_first": true,
+    "best_lead_rank": 1,
+    "n_pitch": 1,
+    "n_follows": 0,
+    "lead_called_follows": false
+   }
+  },
+  {
+   "company": "Zero",
+   "ckey": "zero",
+   "rid": 1402,
+   "country": "Finland",
+   "date": "Sep 2026",
+   "t": 2026.667,
+   "stage": "seed",
+   "amount_eur_m": 8.93,
+   "amount_raw": "€8.93 million (~$10.3 million)",
+   "leads": [
+    "Primary Venture Partners"
+   ],
+   "participants": [
+    "angel investors including: Fabian Hedin",
+    "Arches Capital",
+    "Defiant",
+    "Fabian Hedin",
+    "founders of Depict",
+    "founders of Langdock",
+    "Gabriel Petersson",
+    "Greens Ventures",
+    "Ilkka Paananen",
+    "Inception Fund",
+    "Peter Sarlin",
+    "Returning backers from the pre-seed"
+   ],
+   "with_target": {
+    "n_listed": 13,
+    "n_leads": 1,
+    "lead_in_pitch": false,
+    "lead_ranked_first": false,
+    "lead_first_by_verdict": false,
+    "lead_has_verdict": false,
+    "lead_verdicts": [
+     "Too few rounds"
+    ],
+    "n_no_history": 7,
+    "best_lead_rank": 5,
+    "n_pitch": 0,
+    "n_pitch_that_led": 0,
+    "n_follows": 1,
+    "lead_called_follows": false,
+    "n_few": 12,
+    "random_first_chance": 0.07692307692307693,
+    "earlier_rounds": 1,
+    "earlier_investors": [
+     "20VC",
+     "Dropbox",
+     "Meta",
+     "OpenAI",
+     "operator funds backed by executives from Spotify",
+     "PostHog co-founder James Hawkins",
+     "Shopify Ventures",
+     "Wolt"
+    ],
+    "intro": {
+     "Primary Venture Partners": {
+      "already_investor": false,
+      "small_round_tie": null,
+      "any_shared_round": null
+     }
+    },
+    "rows": [
+     {
+      "name": "Arches Capital",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 1,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 1,
+      "rank": 1
+     },
+     {
+      "name": "Ilkka Paananen",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 1,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 10,
+      "rank": 2
+     },
+     {
+      "name": "Inception Fund",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 1,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 1,
+      "rank": 3
+     },
+     {
+      "name": "Peter Sarlin",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 2,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 3,
+      "rank": 4
+     },
+     {
+      "name": "Primary Venture Partners",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 1,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": true,
+      "tie": null,
+      "history": 1,
+      "rank": 5
+     },
+     {
+      "name": "angel investors including: Fabian Hedin",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 6
+     },
+     {
+      "name": "Defiant",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 7
+     },
+     {
+      "name": "Fabian Hedin",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 8
+     },
+     {
+      "name": "founders of Depict",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 9
+     },
+     {
+      "name": "founders of Langdock",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 10
+     },
+     {
+      "name": "Gabriel Petersson",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 11
+     },
+     {
+      "name": "Returning backers from the pre-seed",
+      "verdict": "few",
+      "label": "Too few rounds",
+      "group": "few",
+      "led": 0,
+      "known": 0,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 0,
+      "rank": 12
+     },
+     {
+      "name": "Greens Ventures",
+      "verdict": "follows",
+      "label": "Mostly follows",
+      "group": "avoid",
+      "led": 0,
+      "known": 7,
+      "led_at_stage": 0,
+      "way": 0,
+      "is_lead": false,
+      "tie": null,
+      "history": 16,
+      "rank": 13
+     }
+    ]
+   },
+   "no_target": {
+    "lead_in_pitch": false,
+    "lead_ranked_first": false,
+    "best_lead_rank": 5,
+    "n_pitch": 0,
+    "n_follows": 1,
+    "lead_called_follows": false
+   }
+  }
+ ]
+}

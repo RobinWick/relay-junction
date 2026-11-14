@@ -28,6 +28,20 @@ All numbers come from snapshot `20261114102039` (built 14 November 2026) and `ap
 | Entity graph agreement | On 60 random rounds the graph had the round 7 times; where it marks `is_lead`, it agrees with our lead 6 of 6 | `pipeline/fetch_graph.py`, `pipeline/validate.py` (`graph_check`) |
 | Sample lead card checked against press | The sample's "Will your lead come back?" card (Lifeline Ventures, 10 rounds in 8 companies) holds on "led 3"; two of its 10 cases are not supported by press, so we do not quote the card as a fact, and the sample no longer marks Lifeline as its lead, so the card does not show there | `research/accuracy/lifeline-check.md` |
 
+## Need
+
+Scripts and write-ups: [`research/need/`](../research/need/) (`scarcity.py` -> `scarcity.json`, `SCARCITY.md`; `backtest.py` -> `backtest.json`, `BACKTEST.md`). Both import `app/engine.py` read-only and read the snapshot from `RELAY_SNAPSHOT_PATH` (default `../cala/data/snapshot.json`). No Cala calls.
+
+| Claim | Value | Method |
+|---|---|---|
+| About half of the most active Nordic seed investors do not lead | Top 50 by Nordic (FI, SE, DK, NO, IS, EE) pre-seed and seed rounds joined, 2023 to 2026, public bodies left out: 47 have 3+ rounds with a named lead; 23 led at least half, 24 did not; 4 meet the strict Mostly follows rule. Base: 350 rounds, 255 with a named lead. Europe top 50: 30 lead at least half, 20 do not | `scarcity.py` (`a_nordic`, `b_europe`, with sensitivity runs in `sensitivity`) |
+| Only 3 in 10 names on a seed round led it | Nordic pre-seed and seed 2023 to 2026: 308 of 1,042 named investor seats (30%) are lead seats, in 255 rounds with a named lead. Europe: 1,006 of 3,252 (31%) in 779 rounds. All rounds: 4,216 of 14,228 | `scarcity.py` (`c_seats`) |
+| The lead comes back but rarely leads | 1,405 cases, came back 840 (60%), led again 212 (15%); recomputed from the snapshot with `pipeline/validate.py` and identical to `app/validation.json` | `scarcity.py` (`d_lead_comes_back`) |
+| Replay of 20 real Nordic seed rounds | 20 of 31 eligible companies (Nordic, pre-seed or seed, 2025 or 2026, named lead, 3+ investors, found company-first, not disputed), drawn with `random.seed(1415)`, each judged only on rounds dated before it. 6 of the 8 funds put in Pitch first led (95% CI 41% to 93%); eventual lead called Mostly follows 0 of 20; eventual lead in Pitch first 5 of 20 (11% to 47%); 122 of 157 names Too few rounds; small-round tie to the eventual lead 0 of 13 | `backtest.py`, per-round rows in `backtest.json` |
+| Named examples, lead checked against press | Intric, pre-seed, Feb 2026: byFounders (nordic9.com). IPercept, seed, May 2025: Luminar Ventures (bebeez.eu, vestbee.com; Seedtable lists J12 Ventures instead). Oplane, seed, Jun 2026: Seed Capital (tech.eu) | `BACKTEST.md`, "Three examples" |
+
+Caveats: the snapshot leans to 194 queried seed funds, so "about half lead" is likely an upper bound; per-fund counts are snapshot counts, not press-checked; the replay's lists are the eventual cap tables, so it tests sorting, not finding new funds, and only 3 of its 20 leads were checked against press.
+
 ## Way in
 
 | Claim | Value | Where it comes from |

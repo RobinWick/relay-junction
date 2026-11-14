@@ -1,0 +1,1244 @@
+{
+ "snapshot_version": "20261114133847",
+ "definitions": "Lead scarcity: how rare are investors who actually lead? Counted only from the cached Cala snapshot.\n\nRun:  python3 research/need/scarcity.py      (from /Users/robinwickholm/junction-2026)\nWrites research/need/scarcity.json next to this file and prints the headline numbers.\n\nRead-only use of the app: imports engine.py and pipeline/validate.py, edits nothing. No API calls.\n\nDefinitions (also in SCARCITY.md):\n  round set     : rounds with stage pre-seed or seed, year 2023..2026, not disputed, not not_led (same exclusions\n                  as the engine). Country = first place named in the round's country field (text before \"/\" or \"(\").\n  Nordic        : Finland, Sweden, Denmark, Norway, Iceland, Estonia.\n  Europe        : the European country list below (EU, EEA, UK, Switzerland, Balkans, Ukraine, Baltics).\n  rounds joined : rounds in the set where the investor is a named lead or participant.\n  active list   : top 50 investors by rounds joined (ties broken by name), public bodies and programmes\n                  (engine.HUBS) left out, because they do not lead equity rounds by design.\n  lead share    : rounds led / rounds joined where a lead is named (the engine's ratio, without its follow-on rule;\n                  a variant with the follow-on rule is also reported).\n  leads mostly  : lead share >= 0.5 (engine LEAD_SHARE).\n  mostly follows: 5+ rounds with a named lead and lead share < 0.15 (engine rule).\n",
+ "a_nordic": {
+  "rounds": 350,
+  "rounds_with_lead": 255,
+  "investors_seen": 747,
+  "top_n": 50,
+  "min_joined_in_top": 4,
+  "judged": 47,
+  "leads_mostly": 23,
+  "below_half": 24,
+  "mostly_follows": 4,
+  "median_share": 0.455,
+  "rows": [
+   {
+    "key": "lifeline",
+    "name": "Lifeline Ventures",
+    "joined": 29,
+    "known": 28,
+    "led": 23,
+    "share": 0.821,
+    "leads_mostly": true,
+    "mostly_follows": false
+   },
+   {
+    "key": "byfounders",
+    "name": "byFounders",
+    "joined": 25,
+    "known": 18,
+    "led": 12,
+    "share": 0.667,
+    "leads_mostly": true,
+    "mostly_follows": false
+   },
+   {
+    "key": "superhero",
+    "name": "Superhero Capital",
+    "joined": 20,
+    "known": 18,
+    "led": 10,
+    "share": 0.556,
+    "leads_mostly": true,
+    "mostly_follows": false
+   },
+   {
+    "key": "antler",
+    "name": "Antler",
+    "joined": 17,
+    "known": 13,
+    "led": 3,
+    "share": 0.231,
+    "leads_mostly": false,
+    "mostly_follows": false
+   },
+   {
+    "key": "greens",
+    "name": "Greens Ventures",
+    "joined": 16,
+    "known": 10,
+    "led": 0,
+    "share": 0.0,
+    "leads_mostly": false,
+    "mostly_follows": true
+   },
+   {
+    "key": "voima",
+    "name": "Voima Ventures",
+    "joined": 14,
+    "known": 10,
+    "led": 9,
+    "share": 0.9,
+    "leads_mostly": true,
+    "mostly_follows": false
+   },
+   {
+    "key": "luminar",
+    "name": "Luminar Ventures",
+    "joined": 13,
+    "known": 13,
+    "led": 10,
+    "share": 0.769,
+    "leads_mostly": true,
+    "mostly_follows": false
+   },
+   {
+    "key": "j12",
+    "name": "J12 Ventures",
+    "joined": 12,
+    "known": 9,
+    "led": 5,
+    "share": 0.556,
+    "leads_mostly": true,
+    "mostly_follows": false
+   },
+   {
+    "key": "specialist",
+    "name": "Specialist VC",
+    "joined": 12,
+    "known": 11,
+    "led": 5,
+    "share": 0.455,
+    "leads_mostly": false,
+    "mostly_follows": false
+   },
+   {
+    "key": "mattias miksche",
+    "name": "Mattias Miksche",
+    "joined": 11,
+    "known": 7,
+    "led": 0,
+    "share": 0.0,
+    "leads_mostly": false,
+    "mostly_follows": true
+   },
+   {
+    "key": "navigare",
+    "name": "Navigare Ventures",
+    "joined": 11,
+    "known": 8,
+    "led": 4,
+    "share": 0.5,
+    "leads_mostly": true,
+    "mostly_follows": false
+   },
+   {
+    "key": "wave",
+    "name": "Wave Ventures",
+    "joined": 11,
+    "known": 9,
+    "led": 2,
+    "share": 0.222,
+    "leads_mostly": false,
+    "mostly_follows": false
+   },
+   {
+    "key": "icebreaker",
+    "name": "Icebreaker.vc",
+    "joined": 10,
+    "known": 8,
+    "led": 3,
+    "share": 0.375,
+    "leads_mostly": false,
+    "mostly_follows": false
+   },
+   {
+    "key": "maki",
+    "name": "Maki.vc",
+    "joined": 10,
+    "known": 9,
+    "led": 7,
+    "share": 0.778,
+    "leads_mostly": true,
+    "mostly_follows": false
+   },
+   {
+    "key": "startup wise guys",
+    "name": "Startup Wise Guys",
+    "joined": 10,
+    "known": 4,
+    "led": 2,
+    "share": 0.5,
+    "leads_mostly": true,
+    "mostly_follows": false
+   },
+   {
+    "key": "nordic makers",
+    "name": "Nordic Makers",
+    "joined": 9,
+    "known": 7,
+    "led": 3,
+    "share": 0.429,
+    "leads_mostly": false,
+    "mostly_follows": false
+   },
+   {
+    "key": "spintop",
+    "name": "Spintop Ventures",
+    "joined": 9,
+    "known": 8,
+    "led": 7,
+    "share": 0.875,
+    "leads_mostly": true,
+    "mostly_follows": false
+   },
+   {
+    "key": "butterfly",
+    "name": "Butterfly Ventures",
+    "joined": 8,
+    "known": 6,
+    "led": 4,
+    "share": 0.667,
+    "leads_mostly": true,
+    "mostly_follows": false
+   },
+   {
+    "key": "first fellow",
+    "name": "First Fellow Partners",
+    "joined": 8,
+    "known": 7,
+    "led": 2,
+    "share": 0.286,
+    "leads_mostly": false,
+    "mostly_follows": false
+   },
+   {
+    "key": "nordic foodtech",
+    "name": "Nordic FoodTech VC",
+    "joined": 8,
+    "known": 7,
+    "led": 7,
+    "share": 1.0,
+    "leads_mostly": true,
+    "mostly_follows": false
+   },
+   {
+    "key": "vendep",
+    "name": "Vendep Capital",
+    "joined": 8,
+    "known": 7,
+    "led": 7,
+    "share": 1.0,
+    "leads_mostly": true,
+    "mostly_follows": false
+   },
+   {
+    "key": "course corrected",
+    "name": "Course Corrected",
+    "joined": 7,
+    "known": 5,
+    "led": 0,
+    "share": 0.0,
+    "leads_mostly": false,
+    "mostly_follows": true
+   },
+   {
+    "key": "norrsken",
+    "name": "Norrsken VC",
+    "joined": 7,
+    "known": 7,
+    "led": 4,
+    "share": 0.571,
+    "leads_mostly": true,
+    "mostly_follows": false
+   },
+   {
+    "key": "skyfall",
+    "name": "Skyfall Ventures",
+    "joined": 7,
+    "known": 7,
+    "led": 3,
+    "share": 0.429,
+    "leads_mostly": false,
+    "mostly_follows": false
+   },
+   {
+    "key": "superangel",
+    "name": "Superangel",
+    "joined": 7,
+    "known": 4,
+    "led": 0,
+    "share": 0.0,
+    "leads_mostly": false,
+    "mostly_follows": false
+   },
+   {
+    "key": "alliance",
+    "name": "Alliance Venture",
+    "joined": 6,
+    "known": 5,
+    "led": 3,
+    "share": 0.6,
+    "leads_mostly": true,
+    "mostly_follows": false
+   },
+   {
+    "key": "kvanted",
+    "name": "Kvanted",
+    "joined": 6,
+    "known": 6,
+    "led": 5,
+    "share": 0.833,
+    "leads_mostly": true,
+    "mostly_follows": false
+   },
+   {
+    "key": "node",
+    "name": "node.vc",
+    "joined": 6,
+    "known": 4,
+    "led": 2,
+    "share": 0.5,
+    "leads_mostly": true,
+    "mostly_follows": false
+   },
+   {
+    "key": "norrsken evolve",
+    "name": "Norrsken Evolve",
+    "joined": 6,
+    "known": 3,
+    "led": 0,
+    "share": 0.0,
+    "leads_mostly": false,
+    "mostly_follows": false
+   },
+   {
+    "key": "preseed",
+    "name": "PreSeed Ventures",
+    "joined": 6,
+    "known": 2,
+    "led": 0,
+    "share": 0.0,
+    "leads_mostly": false,
+    "mostly_follows": false
+   },
+   {
+    "key": "sebastian knutsson",
+    "name": "Sebastian Knutsson",
+    "joined": 6,
+    "known": 3,
+    "led": 0,
+    "share": 0.0,
+    "leads_mostly": false,
+    "mostly_follows": false
+   },
+   {
+    "key": "seed",
+    "name": "Seed Capital",
+    "joined": 6,
+    "known": 4,
+    "led": 4,
+    "share": 1.0,
+    "leads_mostly": true,
+    "mostly_follows": false
+   },
+   {
+    "key": "timo soininen",
+    "name": "Timo Soininen",
+    "joined": 6,
+    "known": 4,
+    "led": 0,
+    "share": 0.0,
+    "leads_mostly": false,
+    "mostly_follows": false
+   },
+   {
+    "key": "wellstreet",
+    "name": "Wellstreet",
+    "joined": 6,
+    "known": 5,
+    "led": 4,
+    "share": 0.8,
+    "leads_mostly": true,
+    "mostly_follows": false
+   },
+   {
+    "key": "angel invest",
+    "name": "Angel Invest",
+    "joined": 5,
+    "known": 3,
+    "led": 1,
+    "share": 0.333,
+    "leads_mostly": false,
+    "mostly_follows": false
+   },
+   {
+    "key": "chalmers",
+    "name": "Chalmers Ventures",
+    "joined": 5,
+    "known": 5,
+    "led": 1,
+    "share": 0.2,
+    "leads_mostly": false,
+    "mostly_follows": false
+   },
+   {
+    "key": "dhs",
+    "name": "DHS Venture Partners",
+    "joined": 5,
+    "known": 3,
+    "led": 1,
+    "share": 0.333,
+    "leads_mostly": false,
+    "mostly_follows": false
+   },
+   {
+    "key": "further than",
+    "name": "Further Than Capital",
+    "joined": 5,
+    "known": 5,
+    "led": 0,
+    "share": 0.0,
+    "leads_mostly": false,
+    "mostly_follows": true
+   },
+   {
+    "key": "industrifonden",
+    "name": "Industrifonden",
+    "joined": 5,
+    "known": 5,
+    "led": 2,
+    "share": 0.4,
+    "leads_mostly": false,
+    "mostly_follows": false
+   },
+   {
+    "key": "kth holding",
+    "name": "KTH Holding",
+    "joined": 5,
+    "known": 1,
+    "led": 0,
+    "share": 0.0,
+    "leads_mostly": false,
+    "mostly_follows": false
+   },
+   {
+    "key": "lemonade stand",
+    "name": "Lemonade Stand",
+    "joined": 5,
+    "known": 4,
+    "led": 1,
+    "share": 0.25,
+    "leads_mostly": false,
+    "mostly_follows": false
+   },
+   {
+    "key": "sisu game",
+    "name": "Sisu Game Ventures",
+    "joined": 5,
+    "known": 4,
+    "led": 1,
+    "share": 0.25,
+    "leads_mostly": false,
+    "mostly_follows": false
+   },
+   {
+    "key": "the footprint firm",
+    "name": "The Footprint Firm",
+    "joined": 5,
+    "known": 4,
+    "led": 2,
+    "share": 0.5,
+    "leads_mostly": true,
+    "mostly_follows": false
+   },
+   {
+    "key": "ugly duckling",
+    "name": "Ugly Duckling Ventures",
+    "joined": 5,
+    "known": 4,
+    "led": 2,
+    "share": 0.5,
+    "leads_mostly": true,
+    "mostly_follows": false
+   },
+   {
+    "key": "2c",
+    "name": "2C Ventures",
+    "joined": 4,
+    "known": 4,
+    "led": 3,
+    "share": 0.75,
+    "leads_mostly": true,
+    "mostly_follows": false
+   },
+   {
+    "key": "creandum",
+    "name": "Creandum",
+    "joined": 4,
+    "known": 3,
+    "led": 1,
+    "share": 0.333,
+    "leads_mostly": false,
+    "mostly_follows": false
+   },
+   {
+    "key": "emblem",
+    "name": "Emblem",
+    "joined": 4,
+    "known": 4,
+    "led": 1,
+    "share": 0.25,
+    "leads_mostly": false,
+    "mostly_follows": false
+   },
+   {
+    "key": "failup",
+    "name": "Failup Ventures",
+    "joined": 4,
+    "known": 4,
+    "led": 2,
+    "share": 0.5,
+    "leads_mostly": true,
+    "mostly_follows": false
+   },
+   {
+    "key": "foundry",
+    "name": "Foundry Ventures",
+    "joined": 4,
+    "known": 2,
+    "led": 1,
+    "share": 0.5,
+    "leads_mostly": true,
+    "mostly_follows": false
+   },
+   {
+    "key": "fredrik hjelm",
+    "name": "Fredrik Hjelm",
+    "joined": 4,
+    "known": 4,
+    "led": 0,
+    "share": 0.0,
+    "leads_mostly": false,
+    "mostly_follows": false
+   }
+  ]
+ },
+ "b_europe": {
+  "rounds": 997,
+  "rounds_with_lead": 779,
+  "investors_seen": 1952,
+  "top_n": 50,
+  "min_joined_in_top": 10,
+  "judged": 50,
+  "leads_mostly": 30,
+  "below_half": 20,
+  "mostly_follows": 8,
+  "median_share": 0.607,
+  "rows": [
+   {
+    "key": "founderful",
+    "name": "Founderful",
+    "joined": 35,
+    "known": 34,
+    "led": 24,
+    "share": 0.706,
+    "leads_mostly": true,
+    "mostly_follows": false
+   },
+   {
+    "key": "pitchdrive",
+    "name": "Pitchdrive",
+    "joined": 34,
+    "known": 28,
+    "led": 17,
+    "share": 0.607,
+    "leads_mostly": true,
+    "mostly_follows": false
+   },
+   {
+    "key": "kfund",
+    "name": "K Fund",
+    "joined": 33,
+    "known": 28,
+    "led": 14,
+    "share": 0.5,
+    "leads_mostly": true,
+    "mostly_follows": false
+   },
+   {
+    "key": "lifeline",
+    "name": "Lifeline Ventures",
+    "joined": 31,
+    "known": 30,
+    "led": 25,
+    "share": 0.833,
+    "leads_mostly": true,
+    "mostly_follows": false
+   },
+   {
+    "key": "byfounders",
+    "name": "byFounders",
+    "joined": 30,
+    "known": 23,
+    "led": 15,
+    "share": 0.652,
+    "leads_mostly": true,
+    "mostly_follows": false
+   },
+   {
+    "key": "speedinvest",
+    "name": "Speedinvest",
+    "joined": 26,
+    "known": 23,
+    "led": 15,
+    "share": 0.652,
+    "leads_mostly": true,
+    "mostly_follows": false
+   },
+   {
+    "key": "localglobe",
+    "name": "LocalGlobe",
+    "joined": 25,
+    "known": 21,
+    "led": 15,
+    "share": 0.714,
+    "leads_mostly": true,
+    "mostly_follows": false
+   },
+   {
+    "key": "startup wise guys",
+    "name": "Startup Wise Guys",
+    "joined": 25,
+    "known": 15,
+    "led": 5,
+    "share": 0.333,
+    "leads_mostly": false,
+    "mostly_follows": false
+   },
+   {
+    "key": "superhero",
+    "name": "Superhero Capital",
+    "joined": 25,
+    "known": 23,
+    "led": 15,
+    "share": 0.652,
+    "leads_mostly": true,
+    "mostly_follows": false
+   },
+   {
+    "key": "zurcher kantonalbank",
+    "name": "Zürcher Kantonalbank",
+    "joined": 20,
+    "known": 16,
+    "led": 1,
+    "share": 0.062,
+    "leads_mostly": false,
+    "mostly_follows": true
+   },
+   {
+    "key": "norrsken",
+    "name": "Norrsken VC",
+    "joined": 19,
+    "known": 14,
+    "led": 7,
+    "share": 0.5,
+    "leads_mostly": true,
+    "mostly_follows": false
+   },
+   {
+    "key": "antler",
+    "name": "Antler",
+    "joined": 18,
+    "known": 14,
+    "led": 3,
+    "share": 0.214,
+    "leads_mostly": false,
+    "mostly_follows": false
+   },
+   {
+    "key": "business angels",
+    "name": "Business Angels",
+    "joined": 18,
+    "known": 9,
+    "led": 0,
+    "share": 0.0,
+    "leads_mostly": false,
+    "mostly_follows": true
+   },
+   {
+    "key": "inovo",
+    "name": "Inovo VC",
+    "joined": 18,
+    "known": 14,
+    "led": 10,
+    "share": 0.714,
+    "leads_mostly": true,
+    "mostly_follows": false
+   },
+   {
+    "key": "seedcamp",
+    "name": "Seedcamp",
+    "joined": 17,
+    "known": 16,
+    "led": 5,
+    "share": 0.312,
+    "leads_mostly": false,
+    "mostly_follows": false
+   },
+   {
+    "key": "cherry",
+    "name": "Cherry Ventures",
+    "joined": 16,
+    "known": 16,
+    "led": 10,
+    "share": 0.625,
+    "leads_mostly": true,
+    "mostly_follows": false
+   },
+   {
+    "key": "fj labs",
+    "name": "FJ Labs",
+    "joined": 16,
+    "known": 14,
+    "led": 3,
+    "share": 0.214,
+    "leads_mostly": false,
+    "mostly_follows": false
+   },
+   {
+    "key": "greens",
+    "name": "Greens Ventures",
+    "joined": 16,
+    "known": 10,
+    "led": 0,
+    "share": 0.0,
+    "leads_mostly": false,
+    "mostly_follows": true
+   },
+   {
+    "key": "j12",
+    "name": "J12 Ventures",
+    "joined": 16,
+    "known": 13,
+    "led": 5,
+    "share": 0.385,
+    "leads_mostly": false,
+    "mostly_follows": false
+   },
+   {
+    "key": "cdp",
+    "name": "CDP Venture Capital",
+    "joined": 15,
+    "known": 13,
+    "led": 9,
+    "share": 0.692,
+    "leads_mostly": true,
+    "mostly_follows": false
+   },
+   {
+    "key": "hoxton",
+    "name": "Hoxton Ventures",
+    "joined": 15,
+    "known": 14,
+    "led": 11,
+    "share": 0.786,
+    "leads_mostly": true,
+    "mostly_follows": false
+   },
+   {
+    "key": "verve",
+    "name": "Verve Ventures",
+    "joined": 15,
+    "known": 15,
+    "led": 2,
+    "share": 0.133,
+    "leads_mostly": false,
+    "mostly_follows": true
+   },
+   {
+    "key": "voima",
+    "name": "Voima Ventures",
+    "joined": 15,
+    "known": 11,
+    "led": 10,
+    "share": 0.909,
+    "leads_mostly": true,
+    "mostly_follows": false
+   },
+   {
+    "key": "vsquared",
+    "name": "Vsquared Ventures",
+    "joined": 15,
+    "known": 12,
+    "led": 9,
+    "share": 0.75,
+    "leads_mostly": true,
+    "mostly_follows": false
+   },
+   {
+    "key": "creandum",
+    "name": "Creandum",
+    "joined": 14,
+    "known": 12,
+    "led": 7,
+    "share": 0.583,
+    "leads_mostly": true,
+    "mostly_follows": false
+   },
+   {
+    "key": "heartcore",
+    "name": "Heartcore Capital",
+    "joined": 14,
+    "known": 13,
+    "led": 9,
+    "share": 0.692,
+    "leads_mostly": true,
+    "mostly_follows": false
+   },
+   {
+    "key": "practica",
+    "name": "Practica Capital",
+    "joined": 14,
+    "known": 13,
+    "led": 11,
+    "share": 0.846,
+    "leads_mostly": true,
+    "mostly_follows": false
+   },
+   {
+    "key": "specialist",
+    "name": "Specialist VC",
+    "joined": 14,
+    "known": 12,
+    "led": 5,
+    "share": 0.417,
+    "leads_mostly": false,
+    "mostly_follows": false
+   },
+   {
+    "key": "kima",
+    "name": "Kima Ventures",
+    "joined": 13,
+    "known": 13,
+    "led": 0,
+    "share": 0.0,
+    "leads_mostly": false,
+    "mostly_follows": true
+   },
+   {
+    "key": "lakestar",
+    "name": "Lakestar",
+    "joined": 13,
+    "known": 12,
+    "led": 5,
+    "share": 0.417,
+    "leads_mostly": false,
+    "mostly_follows": false
+   },
+   {
+    "key": "luminar",
+    "name": "Luminar Ventures",
+    "joined": 13,
+    "known": 13,
+    "led": 10,
+    "share": 0.769,
+    "leads_mostly": true,
+    "mostly_follows": false
+   },
+   {
+    "key": "tiny",
+    "name": "Tiny VC",
+    "joined": 13,
+    "known": 11,
+    "led": 0,
+    "share": 0.0,
+    "leads_mostly": false,
+    "mostly_follows": true
+   },
+   {
+    "key": "uvc",
+    "name": "UVC Partners",
+    "joined": 13,
+    "known": 12,
+    "led": 8,
+    "share": 0.667,
+    "leads_mostly": true,
+    "mostly_follows": false
+   },
+   {
+    "key": "amadeus",
+    "name": "Amadeus Capital Partners",
+    "joined": 12,
+    "known": 12,
+    "led": 8,
+    "share": 0.667,
+    "leads_mostly": true,
+    "mostly_follows": false
+   },
+   {
+    "key": "angel invest",
+    "name": "Angel Invest",
+    "joined": 12,
+    "known": 10,
+    "led": 1,
+    "share": 0.1,
+    "leads_mostly": false,
+    "mostly_follows": true
+   },
+   {
+    "key": "bayern kapital",
+    "name": "Bayern Kapital",
+    "joined": 12,
+    "known": 6,
+    "led": 2,
+    "share": 0.333,
+    "leads_mostly": false,
+    "mostly_follows": false
+   },
+   {
+    "key": "index",
+    "name": "Index Ventures",
+    "joined": 12,
+    "known": 12,
+    "led": 10,
+    "share": 0.833,
+    "leads_mostly": true,
+    "mostly_follows": false
+   },
+   {
+    "key": "kvanted",
+    "name": "Kvanted",
+    "joined": 12,
+    "known": 12,
+    "led": 9,
+    "share": 0.75,
+    "leads_mostly": true,
+    "mostly_follows": false
+   },
+   {
+    "key": "northzone",
+    "name": "Northzone",
+    "joined": 12,
+    "known": 10,
+    "led": 6,
+    "share": 0.6,
+    "leads_mostly": true,
+    "mostly_follows": false
+   },
+   {
+    "key": "mattias miksche",
+    "name": "Mattias Miksche",
+    "joined": 11,
+    "known": 7,
+    "led": 0,
+    "share": 0.0,
+    "leads_mostly": false,
+    "mostly_follows": true
+   },
+   {
+    "key": "navigare",
+    "name": "Navigare Ventures",
+    "joined": 11,
+    "known": 8,
+    "led": 4,
+    "share": 0.5,
+    "leads_mostly": true,
+    "mostly_follows": false
+   },
+   {
+    "key": "smok",
+    "name": "SMOK Ventures",
+    "joined": 11,
+    "known": 11,
+    "led": 8,
+    "share": 0.727,
+    "leads_mostly": true,
+    "mostly_follows": false
+   },
+   {
+    "key": "wave",
+    "name": "Wave Ventures",
+    "joined": 11,
+    "known": 9,
+    "led": 2,
+    "share": 0.222,
+    "leads_mostly": false,
+    "mostly_follows": false
+   },
+   {
+    "key": "contrarian",
+    "name": "Contrarian Ventures",
+    "joined": 10,
+    "known": 7,
+    "led": 6,
+    "share": 0.857,
+    "leads_mostly": true,
+    "mostly_follows": false
+   },
+   {
+    "key": "icebreaker",
+    "name": "Icebreaker.vc",
+    "joined": 10,
+    "known": 8,
+    "led": 3,
+    "share": 0.375,
+    "leads_mostly": false,
+    "mostly_follows": false
+   },
+   {
+    "key": "maki",
+    "name": "Maki.vc",
+    "joined": 10,
+    "known": 9,
+    "led": 7,
+    "share": 0.778,
+    "leads_mostly": true,
+    "mostly_follows": false
+   },
+   {
+    "key": "norrsken evolve",
+    "name": "Norrsken Evolve",
+    "joined": 10,
+    "known": 7,
+    "led": 2,
+    "share": 0.286,
+    "leads_mostly": false,
+    "mostly_follows": false
+   },
+   {
+    "key": "notion",
+    "name": "Notion Capital",
+    "joined": 10,
+    "known": 10,
+    "led": 2,
+    "share": 0.2,
+    "leads_mostly": false,
+    "mostly_follows": false
+   },
+   {
+    "key": "passion",
+    "name": "Passion Capital",
+    "joined": 10,
+    "known": 7,
+    "led": 5,
+    "share": 0.714,
+    "leads_mostly": true,
+    "mostly_follows": false
+   },
+   {
+    "key": "plural",
+    "name": "Plural",
+    "joined": 10,
+    "known": 8,
+    "led": 6,
+    "share": 0.75,
+    "leads_mostly": true,
+    "mostly_follows": false
+   }
+  ]
+ },
+ "sensitivity": {
+  "nordic_engine_follow_on_rule": {
+   "rounds": 350,
+   "rounds_with_lead": 255,
+   "investors_seen": 747,
+   "top_n": 50,
+   "min_joined_in_top": 4,
+   "judged": 46,
+   "leads_mostly": 24,
+   "below_half": 22,
+   "mostly_follows": 4,
+   "median_share": 0.5
+  },
+  "europe_engine_follow_on_rule": {
+   "rounds": 997,
+   "rounds_with_lead": 779,
+   "investors_seen": 1952,
+   "top_n": 50,
+   "min_joined_in_top": 9,
+   "judged": 50,
+   "leads_mostly": 29,
+   "below_half": 21,
+   "mostly_follows": 8,
+   "median_share": 0.6
+  },
+  "nordic_with_public_bodies": {
+   "rounds": 350,
+   "rounds_with_lead": 255,
+   "investors_seen": 747,
+   "top_n": 50,
+   "min_joined_in_top": 4,
+   "judged": 48,
+   "leads_mostly": 22,
+   "below_half": 26,
+   "mostly_follows": 5,
+   "median_share": 0.429
+  },
+  "europe_with_public_bodies": {
+   "rounds": 997,
+   "rounds_with_lead": 779,
+   "investors_seen": 1952,
+   "top_n": 50,
+   "min_joined_in_top": 10,
+   "judged": 50,
+   "leads_mostly": 27,
+   "below_half": 23,
+   "mostly_follows": 10,
+   "median_share": 0.5
+  }
+ },
+ "c_seats": {
+  "all_rounds_all_stages": {
+   "rounds_with_lead": 3214,
+   "lead_seats": 4216,
+   "all_seats": 14228,
+   "lead_share": 0.296,
+   "rounds_2plus_investors": 2619,
+   "lead_share_2plus": 0.266
+  },
+  "nordic_preseed_seed_2023_26": {
+   "rounds_with_lead": 255,
+   "lead_seats": 308,
+   "all_seats": 1042,
+   "lead_share": 0.296,
+   "rounds_2plus_investors": 218,
+   "lead_share_2plus": 0.27
+  },
+  "europe_preseed_seed_2023_26": {
+   "rounds_with_lead": 779,
+   "lead_seats": 1006,
+   "all_seats": 3252,
+   "lead_share": 0.309,
+   "rounds_2plus_investors": 673,
+   "lead_share_2plus": 0.286
+  }
+ },
+ "d_lead_comes_back": {
+  "validation_json": {
+   "cases": 1405,
+   "came_back": 840,
+   "led_again": 212
+  },
+  "recomputed_now": {
+   "cases": 1405,
+   "came_back": 840,
+   "led_again": 212
+  },
+  "led_again_share": 0.151,
+  "came_back_share": 0.598
+ },
+ "e_list_of_14": {
+  "basis": "Nordic active list (a), judged investors",
+  "expected_below_half": 7.1,
+  "expected_mostly_follows_engine": 1.2,
+  "expected_lead_mostly": 6.9,
+  "p_at_least_half_below_half": 0.636
+ },
+ "e_sample_list": {
+  "funds": [
+   {
+    "name": "Maki.vc",
+    "key": "maki",
+    "verdict": "leads",
+    "label": "Leads rounds like yours",
+    "led": 8,
+    "known": 11
+   },
+   {
+    "name": "Voima Ventures",
+    "key": "voima",
+    "verdict": "leads",
+    "label": "Leads rounds like yours",
+    "led": 13,
+    "known": 13
+   },
+   {
+    "name": "Creandum",
+    "key": "creandum",
+    "verdict": "leads_size",
+    "label": "Leads, but larger rounds",
+    "led": 17,
+    "known": 25
+   },
+   {
+    "name": "Inventure",
+    "key": "inventure",
+    "verdict": "leads",
+    "label": "Leads at your stage, size unclear",
+    "led": 5,
+    "known": 7
+   },
+   {
+    "name": "Speedinvest",
+    "key": "speedinvest",
+    "verdict": "leads",
+    "label": "Leads rounds like yours",
+    "led": 26,
+    "known": 47
+   },
+   {
+    "name": "Northzone",
+    "key": "northzone",
+    "verdict": "leads_size",
+    "label": "Leads, but larger rounds",
+    "led": 13,
+    "known": 22
+   },
+   {
+    "name": "Icebreaker.vc",
+    "key": "icebreaker",
+    "verdict": "mixed",
+    "label": "Mixed",
+    "led": 3,
+    "known": 9
+   },
+   {
+    "name": "byFounders",
+    "key": "byfounders",
+    "verdict": "leads",
+    "label": "Leads at your stage, size unclear",
+    "led": 18,
+    "known": 25
+   },
+   {
+    "name": "Seedcamp",
+    "key": "seedcamp",
+    "verdict": "mixed",
+    "label": "Mixed",
+    "led": 6,
+    "known": 23
+   },
+   {
+    "name": "Point Nine",
+    "key": "point nine",
+    "verdict": "leads",
+    "label": "Leads at your stage, size unclear",
+    "led": 6,
+    "known": 8
+   },
+   {
+    "name": "Business Finland",
+    "key": "business finland",
+    "verdict": "public",
+    "label": "Public body or programme",
+    "led": 0,
+    "known": 12
+   },
+   {
+    "name": "Superhero Capital",
+    "key": "superhero",
+    "verdict": "leads",
+    "label": "Leads rounds like yours",
+    "led": 16,
+    "known": 26
+   },
+   {
+    "name": "FJ Labs",
+    "key": "fj labs",
+    "verdict": "follows",
+    "label": "Mostly follows",
+    "led": 3,
+    "known": 35
+   }
+  ],
+  "verdicts": {
+   "leads": 7,
+   "leads_size": 2,
+   "mixed": 2,
+   "public": 1,
+   "follows": 1
+  }
+ }
+}

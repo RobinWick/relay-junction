@@ -29,7 +29,16 @@ Built at Junction 2026 (Espoo, 13 to 15 November 2026) for Cala's "Make Unicorns
 
 ## The need
 
-Every priced round needs a lead investor, and most funds do not lead: they join once someone else has set the terms. The previous lead is rarely the answer: in our data the lead of a round came back in the next round 60% of the time but led it only 15% of the time. A seed or Series A founder can book only a few dozen investor meetings per raise, so pitching funds that only follow costs months. The question is simple: which of these funds actually leads rounds like mine, which only follows, and how do I get in? Fund websites list portfolio companies, not who led which round. Recount answers it for any list a founder has, and it is just as useful to accelerators and venture builders who prepare a whole cohort for investor meetings.
+Every priced round needs a lead investor, and a fund's name does not tell a founder whether it leads. Counted from the same Cala snapshot ([`research/need/`](research/need/)):
+
+- **About half of the most active Nordic seed investors do not lead.** Of the 50 investors that joined the most Nordic pre-seed and seed rounds from 2023 to 2026 (public bodies left out), 47 have 3 or more rounds with a named lead: 23 led at least half of them and 24 did not. Base: 350 rounds, 255 with a named lead ([`SCARCITY.md`](research/need/SCARCITY.md), [`scarcity.py`](research/need/scarcity.py)).
+- **Only 3 in 10 names on a seed round led it.** In those 255 Nordic rounds, 308 of 1,042 named investor seats (30%) are lead seats; across Europe 1,006 of 3,252 (31%) in 779 rounds.
+- **The previous lead is rarely the answer.** In 1,405 cases the lead of a round came back in the company's next round 60% of the time but led it only 15% of the time (`app/validation.json`).
+- **Recount separates the two on real lists.** We replayed 20 randomly drawn real Nordic pre-seed and seed rounds from 2025 and 2026, with Recount seeing only rounds dated before each one: 6 of the 8 funds it put in Pitch first went on to lead (95% CI 41% to 93%), and it never called the eventual lead Mostly follows (0 of 20). It also had nothing to say about most names: 122 of 157 got Too few rounds. Press-checked examples: Intric (byFounders, Feb 2026), IPercept (Luminar Ventures, May 2025; one source names J12 as lead) and Oplane (Seed Capital, Jun 2026) ([`BACKTEST.md`](research/need/BACKTEST.md), [`backtest.py`](research/need/backtest.py)).
+
+Caveats: the snapshot was built partly from 194 funds we chose as known seed investors, so "about half lead" is more likely an upper bound than a floor; the replay is 20 rounds, and its lists are the eventual cap tables, so it tests sorting, not finding new funds.
+
+A seed or Series A founder can book only a few dozen investor meetings per raise, so pitching funds that only follow costs months. The question is simple: which of these funds actually leads rounds like mine, which only follows, and how do I get in? Fund websites list portfolio companies, not who led which round. Recount answers it for any list a founder has, and it is just as useful to accelerators and venture builders who prepare a whole cohort for investor meetings.
 
 ## What it does
 
