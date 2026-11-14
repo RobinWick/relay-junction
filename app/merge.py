@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 
 MONTHS = {m: i for i, m in enumerate(
     ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"], 1)}
-FX_TO_EUR = {"€": 1.0, "eur": 1.0, "$": 0.92, "usd": 0.92, "£": 1.17, "gbp": 1.17,
+FX_TO_EUR = {"\u20ac": 1.0, "eur": 1.0, "$": 0.92, "usd": 0.92, "\u00a3": 1.17, "gbp": 1.17,
              "sek": 0.087, "nok": 0.085, "dkk": 0.134, "chf": 1.04}
 NOT_AN_INVESTOR = {"", "not disclosed", "undisclosed", "unknown", "n a", "na", "none", "null",
                    "founders", "various", "others", "angel investors", "angels", "existing investors",
@@ -43,13 +43,13 @@ def parse_date(raw: str | None) -> tuple[int, int] | None:
     return y, 6
 
 
-CURRENCY = re.compile(r"(€|eur|\$|usd|£|gbp|sek|nok|dkk|chf)")
+CURRENCY = re.compile(r"(\u20ac|eur|\$|usd|\u00a3|gbp|sek|nok|dkk|chf)")
 UNDISCLOSED = re.compile(r"undisclosed|not (?:publicly )?disclosed", re.I)
 VALUATION = re.compile(r"valuation|valued|\bval\.|pre-money|post-money", re.I)
 
 
 def parse_amount_eur(raw: str | None) -> float | None:
-    """Parse '$28M', '~€1.2 billion', 'SEK 50m', '€500,000' into EUR millions.
+    """Parse '$28M', '~\u20ac1.2 billion', 'SEK 50m', '\u20ac500,000' into EUR millions.
 
     Uses the first amount in the text and the currency written next to that amount.
     A bare number of 1,000 or more is read as whole currency units, not millions.

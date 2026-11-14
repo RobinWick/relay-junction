@@ -224,7 +224,7 @@ def suggest(q: str = ""):
 
 
 class Check(BaseModel):
-    funds_text: str = Field(default="", max_length=8000)
+    funds_text: str = Field(default="", max_length=32000)  # parse_list reads 8,000 and reports the rest as skipped
     stage: str = "seed"
     target_eur_m: Optional[float] = Field(default=None, ge=0, le=5000)
     investors: list[str] = Field(default_factory=list, max_length=12)
@@ -233,13 +233,17 @@ class Check(BaseModel):
     competitors: list[str] = Field(default_factory=list, max_length=3)
 
 
+# lines with a saved Gemini answer (the sample's messy line) stay on the Gemini path, so the sample shows that step
+SAVED_LINES = frozenset(line for lines in gemini.SAVED for line in lines)
+
+
 @app.post("/api/check")
 def check(body: Check, request: Request):
     if _too_many_checks(_session(request)):
         raise HTTPException(429, "Too many checks in a minute. Wait a moment.")
     s = snap()
     stage = body.stage if body.stage in STAGES else "seed"
-    parsed = parse_list(s, body.funds_text)
+    parsed = parse_list(s, body.funds_text, defer=SAVED_LINES)
     read_by_gemini = None
     lookup_candidates: list[str] = []
     if parsed["unmatched"]:
@@ -281,6 +285,7 @@ def check(body: Check, request: Request):
     lead_key = s.match_fund(body.lead) if body.lead else None
     return {
         "stage": STAGE_LABEL.get(stage, stage), "rows": rows, "unmatched": parsed["unmatched"], "counts": counts,
+        "skipped_lines": parsed["skipped_lines"],
         "conflict_count": sum(1 for r in rows if any(c["level"] == "led" for c in r["conflicts"])),
         "competitors": competitor_coverage(s, comps) if comps else {},
         "my_investors": [s.name(k) for k in my_inv],

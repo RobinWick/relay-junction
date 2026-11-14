@@ -17,8 +17,8 @@ INLINE = re.compile(r"(?:co-?\s?)?lead (?:investors?|backers?)\**\s*(?:was|were|
                     r"|\b(?:co-?\s?)?led by:?\s+(.+)", re.I)
 HEADER = re.compile(r"^\s*(?:#+\s*)?\**\s*(?:co-?\s?)?leads?(?: investors?| backers?)?\s*:?\s*\**\s*:?\s*$"
                     r"|\b(?:co-?\s?)?led by:?\s*\**:?\s*$", re.I)
-BULLET = re.compile(r"^\s*(?:[-*•]|\d+\.)\s+(.+)")
-TAGGED = re.compile(r"^\s*(?:[-*•|]|\d+\.)\s*\**([^*|()]+?)\**\s*(?:\((?:co-?\s?)?lead\)|\|\s*(?:co-?\s?)?lead(?: investor)?\s*\|)", re.I)
+BULLET = re.compile(r"^\s*(?:[-*\u2022]|\d+\.)\s+(.+)")
+TAGGED = re.compile(r"^\s*(?:[-*\u2022|]|\d+\.)\s*\**([^*|()]+?)\**\s*(?:\((?:co-?\s?)?lead\)|\|\s*(?:co-?\s?)?lead(?: investor)?\s*\|)", re.I)
 STOP = re.compile(r"\b(?:with participation|participation from|alongside|joined by|with (?:support|backing|existing|follow)"
                   r"|while|who|which|according|as (?:the|a)|in (?:a|the|its)|on \d|announced)\b|,\s*(?:an?|the)\s|[.;(:]", re.I)
 CUT = 690  # summarize_search keeps 700 characters of the answer; a lead list running to the end may be cut
@@ -100,7 +100,7 @@ def _mentioned(key: str, name: str, text: str) -> bool:
 
 
 STAGE_WORD = re.compile(r"\bpre-?\s?seed\b|\bseed\b|\bseries\s+([a-k])\b", re.I)
-MONEY = re.compile(r"(?:[$€£]|\b(?:usd|eur|gbp|sek|nok|dkk|chf))\s?\d[\d.,]*\s*(?:billion|bn|million|mn|m|k)?\b"
+MONEY = re.compile(r"(?:[$\u20ac\u00a3]|\b(?:usd|eur|gbp|sek|nok|dkk|chf))\s?\d[\d.,]*\s*(?:billion|bn|million|mn|m|k)?\b"
                    r"|\b\d[\d.,]*\s*(?:billion|bn|million|mn|m)\b\s*(?:usd|eur|gbp|sek|nok|dkk|dollars|euros)?", re.I)
 
 
