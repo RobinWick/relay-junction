@@ -1,0 +1,377 @@
+{
+ "version": 1,
+ "built": "2026-11-14",
+ "caveat": "Acquisitions found in Cala for companies this fund invested in at least 6 years before the deal. Deal value is the total price, not the fund's return. No exit found in Cala does not mean no exit.",
+ "value_label": "deal value, not return",
+ "funds": {
+  "lifeline": {
+   "fund_key": "lifeline",
+   "name": "Lifeline Ventures",
+   "fund_entities": [
+    "476a73ac-afa2-4713-9f73-188bc7ec0b95"
+   ],
+   "portfolio_edges_in_cala": 47,
+   "companies_checked": [
+    "Supercell Oy",
+    "Beddit"
+   ],
+   "receipts": [
+    {
+     "company": "Supercell Oy",
+     "company_entity": "ac911f72-9207-51bc-bda4-2f19b8de34c5",
+     "event_entity": "2557b4ee-fcc9-41f3-801a-b3e556cf38d8",
+     "event_type": "MNA_COMPLETED",
+     "role": "TARGET",
+     "date": "2016-06-21",
+     "year": 2016,
+     "acquirers": [
+      {
+       "name": "Tencent Holdings Limited",
+       "entity": "1fc75307-e554-529d-8c36-413e88543618"
+      }
+     ],
+     "acquirer_known": true,
+     "value": {
+      "status": "disclosed",
+      "amount": 8600000000.0,
+      "currency": "USD",
+      "reported": {
+       "value": 8600000000.0,
+       "units": "USD"
+      },
+      "display": "8.6B USD",
+      "label": "deal value, not return"
+     },
+     "description": "Tencent-led consortium (Halti S.A.) acquired ~81.4% of Supercell Oy from SoftBank for ~$8.6B, valuing the company at ~$10.2B.",
+     "vintage": {
+      "rule": "exit_at_least_6y_ago",
+      "text": "Acquired 2016, so the fund's stake is at least 6 years old."
+     },
+     "sources": [
+      {
+       "name": "Tencent to Acquire Majority Stake in Supercell from SoftBank | SoftBank Group Corp.",
+       "url": "https://group.softbank/en/news/press/20160621",
+       "date": "2016-06-21",
+       "rank": null
+      },
+      {
+       "name": "Tencent acquires Supercell for USD 8.6 billion - Avance Attorneys",
+       "url": "https://www.avance.com/cases/tencent-acquires-supercell-for-usd-8-6-billion-2",
+       "date": "2026-06-09",
+       "rank": null
+      },
+      {
+       "name": "en.wikipedia.org",
+       "url": "https://en.wikipedia.org/wiki/Supercell_(company)",
+       "date": "2026-08-25",
+       "rank": null
+      }
+     ],
+     "fund_link_sources": [
+      {
+       "name": "www.crunchbase.com",
+       "url": "https://www.crunchbase.com/organization/supercell/funding_rounds/funding_rounds_list",
+       "date": "2026-08-24",
+       "rank": null
+      }
+     ]
+    }
+   ],
+   "undisclosed": [],
+   "excluded": [
+    {
+     "company": "Beddit",
+     "reason": "no completed acquisition as target in Cala"
+    }
+   ],
+   "note": null,
+   "caveat": "Acquisitions found in Cala for companies this fund invested in at least 6 years before the deal. Deal value is the total price, not the fund's return. No exit found in Cala does not mean no exit."
+  },
+  "northzone": {
+   "fund_key": "northzone",
+   "name": "Northzone",
+   "fund_entities": [
+    "10c75ca4-24d6-4a32-8f22-08d4b1dfffce"
+   ],
+   "portfolio_edges_in_cala": 138,
+   "companies_checked": [
+    "Zettle",
+    "Energy Micro",
+    "Nimsoft",
+    "Mamut",
+    "Kahoot!"
+   ],
+   "receipts": [
+    {
+     "company": "Zettle",
+     "company_entity": "d7086835-ae2e-4491-ab7c-4f1eb110bf85",
+     "event_entity": "3a889503-8418-42d1-98d4-82b9d1fb1b7c",
+     "event_type": "MNA_COMPLETED",
+     "role": "TARGET",
+     "date": "2018-09-20",
+     "year": 2018,
+     "acquirers": [
+      {
+       "name": "PayPal Holdings, Inc.",
+       "entity": "19a4106b-5304-4c95-94d9-99ef1c5d0e4b"
+      }
+     ],
+     "acquirer_known": true,
+     "value": {
+      "status": "disclosed",
+      "amount": 2200000000.0,
+      "currency": "USD",
+      "reported": {
+       "value": 2200000000.0,
+       "units": "USD"
+      },
+      "display": "2.2B USD",
+      "label": "deal value, not return"
+     },
+     "description": "PayPal completed acquisition of iZettle (now Zettle) for ~$2.2B USD on Sept 20, 2018, its largest acquisition at the time.",
+     "vintage": {
+      "rule": "exit_at_least_6y_ago",
+      "text": "Acquired 2018, so the fund's stake is at least 6 years old."
+     },
+     "sources": [
+      {
+       "name": "PayPal Completes Acquisition of iZettle",
+       "url": "https://newsroom.paypal-corp.com/2018-09-20-PayPal-Completes-Acquisition-of-iZettle",
+       "date": "2018-09-20",
+       "rank": null
+      },
+      {
+       "name": "en.wikipedia.org",
+       "url": "https://en.wikipedia.org/wiki/Zettle",
+       "date": "2026-08-25",
+       "rank": null
+      }
+     ],
+     "fund_link_sources": [
+      {
+       "name": "Portfolio - Northzone multi-stage venture capital fund",
+       "url": "https://northzone.com/portfolio",
+       "date": "2026-01-01",
+       "rank": null
+      }
+     ]
+    },
+    {
+     "company": "Energy Micro",
+     "company_entity": "776e27b9-379e-4f2c-9a5e-12ec3047f9b9",
+     "event_entity": "5c134d83-f454-4df1-b3b3-b29bf47d0e3f",
+     "event_type": "MNA_COMPLETED",
+     "role": "TARGET",
+     "date": "2013-07-01",
+     "year": 2013,
+     "acquirers": [
+      {
+       "name": "Silicon Labs",
+       "entity": "1b19ef27-1910-4d52-ab6a-0cd2b76d5cf7"
+      }
+     ],
+     "acquirer_known": true,
+     "value": {
+      "status": "disclosed",
+      "amount": 170000000.0,
+      "currency": "USD",
+      "reported": {
+       "value": 170.0,
+       "units": "USD_millions"
+      },
+      "display": "170M USD",
+      "label": "deal value, not return"
+     },
+     "description": "Silicon Labs completed acquisition of Energy Micro AS on July 1, 2013 for $115M upfront plus ~$55M deferred/earn-out consideration.",
+     "vintage": {
+      "rule": "exit_at_least_6y_ago",
+      "text": "Acquired 2013, so the fund's stake is at least 6 years old."
+     },
+     "sources": [
+      {
+       "name": "Silicon Labs Completes Acquisition of Energy Micro",
+       "url": "https://news.silabs.com/2013-07-01-Silicon-Labs-Completes-Acquisition-of-Energy-Micro",
+       "date": "2013-07-01",
+       "rank": null
+      },
+      {
+       "name": "Silicon Labs to Acquire Energy Micro, a Leader in Low Power ARM Cortex-Based Microcontrollers and Radios",
+       "url": "https://news.silabs.com/2013-06-07-Silicon-Labs-to-Acquire-Energy-Micro-a-Leader-in-Low-Power-ARM-Cortex-Based-Microcontrollers-and-Radios",
+       "date": "2013-06-07",
+       "rank": null
+      },
+      {
+       "name": "Silicon Labs completes acquisition of Energy Micro",
+       "url": "https://www.powersystemsdesign.com/articles/silicon-labs-completes-acquisition-of-energy-micro/109/622",
+       "date": "2013-02-07",
+       "rank": null
+      }
+     ],
+     "fund_link_sources": [
+      {
+       "name": "Portfolio - Northzone multi-stage venture capital fund",
+       "url": "https://northzone.com/portfolio",
+       "date": "2026-01-01",
+       "rank": null
+      }
+     ]
+    },
+    {
+     "company": "Nimsoft",
+     "company_entity": "20d8db66-3c14-4e1c-a029-c63ae3941e06",
+     "event_entity": "62a9f6b8-895d-44bb-b7c6-beaaa53f8961",
+     "event_type": "MNA_COMPLETED",
+     "role": "TARGET",
+     "date": "2010-03-10",
+     "year": 2010,
+     "acquirers": [
+      {
+       "name": "CA Technologies",
+       "entity": "1073efc3-6406-4963-84bd-7967976b878b"
+      }
+     ],
+     "acquirer_known": true,
+     "value": {
+      "status": "disclosed",
+      "amount": 350000000.0,
+      "currency": "USD",
+      "reported": {
+       "value": 350.0,
+       "units": "USD million"
+      },
+      "display": "350M USD",
+      "label": "deal value, not return"
+     },
+     "description": "CA Technologies (CA Inc.) acquired Nimsoft in an all-cash transaction valued at $350 million on March 10, 2010.",
+     "vintage": {
+      "rule": "exit_at_least_6y_ago",
+      "text": "Acquired 2010, so the fund's stake is at least 6 years old."
+     },
+     "sources": [
+      {
+       "name": "CA Acquires Cloud Monitoring Company Nimsoft For $350 Million | TechCrunch",
+       "url": "https://techcrunch.com/2010/03/10/ca-acquires-cloud-monitoring-company-nimsoft-for-350-million",
+       "date": "2010-03-10",
+       "rank": null
+      },
+      {
+       "name": "CA to Acquire Nimsoft",
+       "url": "https://www.prnewswire.com/news-releases/ca-to-acquire-nimsoft-87265702.html",
+       "date": "2010-03-10",
+       "rank": null
+      },
+      {
+       "name": "en.wikipedia.org",
+       "url": "https://en.wikipedia.org/wiki/Nimsoft",
+       "date": "2026-08-25",
+       "rank": null
+      }
+     ],
+     "fund_link_sources": [
+      {
+       "name": "Portfolio - Northzone multi-stage venture capital fund",
+       "url": "https://northzone.com/portfolio",
+       "date": "2026-01-01",
+       "rank": null
+      }
+     ]
+    }
+   ],
+   "undisclosed": [],
+   "excluded": [
+    {
+     "company": "Mamut",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Kahoot!",
+     "reason": "no completed acquisition as target in Cala"
+    }
+   ],
+   "note": null,
+   "caveat": "Acquisitions found in Cala for companies this fund invested in at least 6 years before the deal. Deal value is the total price, not the fund's return. No exit found in Cala does not mean no exit."
+  },
+  "creandum": {
+   "fund_key": "creandum",
+   "name": "Creandum",
+   "fund_entities": [
+    "6ba00a20-2cb4-4559-8fe2-f39484a9e5f6",
+    "7d4ebd18-3539-4f19-a2e0-93bebb838554"
+   ],
+   "portfolio_edges_in_cala": 52,
+   "companies_checked": [
+    "Small Giant Games Oy",
+    "Tictail, Inc.",
+    "Kahoot!"
+   ],
+   "receipts": [
+    {
+     "company": "Small Giant Games Oy",
+     "company_entity": "a5660fb2-82e1-467b-9751-cf09e1e69661",
+     "event_entity": "76e23333-5f3b-4355-a58d-ddf05ff8ed2e",
+     "event_type": "MNA_COMPLETED",
+     "role": "TARGET",
+     "date": "2019-01-02",
+     "year": 2019,
+     "acquirers": [
+      {
+       "name": "ZYNGA INC.",
+       "entity": "a4104374-9905-45c4-9307-d4350f87e29d"
+      }
+     ],
+     "acquirer_known": true,
+     "value": {
+      "status": "disclosed",
+      "amount": 363500000.0,
+      "currency": "USD",
+      "reported": {
+       "value": 363500000.0,
+       "units": "USD"
+      },
+      "display": "363.5M USD",
+      "label": "deal value, not return"
+     },
+     "description": "Zynga Inc completed acquisition of 80% of Small Giant Games Oy for $363.5 million cash and 63,794,746 shares of Class A common stock",
+     "vintage": {
+      "rule": "exit_at_least_6y_ago",
+      "text": "Acquired 2019, so the fund's stake is at least 6 years old."
+     },
+     "sources": [
+      {
+       "name": "SEC",
+       "url": "https://www.sec.gov/Archives/edgar/data/1439404/000156459019000043/znga-8k_20190102.htm",
+       "date": "2019-01-02",
+       "rank": null
+      }
+     ],
+     "fund_link_sources": [
+      {
+       "name": "tracxn.com",
+       "url": "https://tracxn.com/d/companies/smallgiantgames/__lf3lUpfznpwmNEwj2KI8SIJb-h998tc6WLVFP3sywVw/funding-and-investors",
+       "date": "2026-08-25",
+       "rank": null
+      }
+     ]
+    }
+   ],
+   "undisclosed": [],
+   "excluded": [
+    {
+     "company": "Tictail, Inc.",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Kahoot!",
+     "reason": "no completed acquisition as target in Cala"
+    }
+   ],
+   "note": null,
+   "caveat": "Acquisitions found in Cala for companies this fund invested in at least 6 years before the deal. Deal value is the total price, not the fund's return. No exit found in Cala does not mean no exit."
+  }
+ },
+ "not_fetched": {
+  "maki": "Not fetched: the 20 call budget went to older funds; Maki.vc's first fund is from 2018.",
+  "inventure": "Not fetched: the 20 call budget ran out.",
+  "voima": "Not fetched: the 20 call budget went to older funds."
+ }
+}
