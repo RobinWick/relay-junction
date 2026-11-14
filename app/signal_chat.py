@@ -179,7 +179,9 @@ def from_gemini(raw: dict) -> dict:
 
 
 # ---------------------------------------------------------------- validation (DESIGN.md 1.2)
-def validate(st: Store, view: str, proposal: dict, current_weights: Optional[dict] = None) -> dict:
+def validate(st: Store, view: str, proposal: dict, current_weights: Optional[dict] = None,
+             weights_allowed: bool = True) -> dict:
+    """weights_allowed=False (the default size-for-stage ranking): weight changes are dropped, filters and sort stay."""
     filters, unmatched = [], []
     for u in proposal.get("unmatched") or []:
         unmatched.append({"phrase": str(u.get("phrase", ""))[:120], "reason": str(u.get("reason", ""))[:200]})
@@ -199,7 +201,10 @@ def validate(st: Store, view: str, proposal: dict, current_weights: Optional[dic
     sector_active = any(f["key"] == "sector" and f["op"] == "in" for f in filters)
     base = st.default_weights
     over = dict(current_weights or {})
-    if sector_active and "sector_heat" not in (proposal.get("weight_overrides") or {}):
+    if not weights_allowed:
+        proposal = {**proposal, "weight_overrides": {}}
+        over = {}
+    elif sector_active and "sector_heat" not in (proposal.get("weight_overrides") or {}):
         over.setdefault("sector_heat", 0.10)  # intent table: a named sector switches sector momentum on
     dropped_w = []
     for k, v in (proposal.get("weight_overrides") or {}).items():
@@ -210,7 +215,8 @@ def validate(st: Store, view: str, proposal: dict, current_weights: Optional[dic
             dropped_w.append(k)
             continue
         over[k] = float(v)
-    weights = ss.clamp_weights(over, base=base, sector_active=sector_active) if view == "companies" else base
+    weights = ss.clamp_weights(over, base=base, sector_active=sector_active) \
+        if view == "companies" and weights_allowed else base
     diff = [{"key": k, "from": round(base[k], 4), "to": round(weights[k], 4), "by": "chat"} for k in ss.KEYS
             if abs(weights[k] - base[k]) > 0.0005]
     return {"filters": filters, "weight_overrides": {k: v for k, v in over.items() if k in ss.KEYS},

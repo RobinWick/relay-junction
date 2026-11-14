@@ -71,6 +71,10 @@ DEFAULT_WEIGHTS = {c[0]: c[3] for c in COMPONENTS}
 CAP = {c[0]: c[4] for c in COMPONENTS}
 THESIS_TOTAL_CAP = 0.30
 SECTOR_MIN = 0.05
+# The default ranking: the one part that held up on held-out years (signal/HUNT.md). The 13-part mix is opt-in.
+RANK_KEY = "size_for_stage"
+SIZE_WEIGHTS = {k: (1.0 if k == RANK_KEY else 0.0) for k in KEYS}
+WHY_MAX = 32
 
 FUND_COMPONENTS = [("lead_pace", "Leads lately", 0.50), ("lead_share", "Leads when it invests", 0.30),
                    ("stage_fit", "Leads at your stage", 0.20)]
@@ -179,6 +183,57 @@ def ordinal(n: int) -> str:
 def next_stage(s: str) -> str:
     i = STAGE_IX[s]
     return STAGE_ORDER[min(i + 1, len(STAGE_ORDER) - 1)]
+
+
+def stage_name(s: Optional[str]) -> str:
+    """'series a' -> 'Series A', 'pre-seed' -> 'Pre-seed'."""
+    if not s:
+        return ""
+    if s.startswith("series "):
+        return "Series " + s[7:].upper()
+    return s[:1].upper() + s[1:]
+
+
+def fit_words(text: str, limit: int = WHY_MAX) -> str:
+    """Cut at a word boundary so nothing ends mid-word; no ellipsis."""
+    if len(text) <= limit:
+        return text
+    cut = text[:limit + 1].rsplit(" ", 1)[0].rstrip(",:;")
+    return cut or text[:limit]
+
+
+def short_why(part: dict) -> Optional[str]:
+    """At most WHY_MAX characters for the table, written from the part's raw values. None when the part has no data."""
+    if not part.get("present"):
+        return None
+    k, raw, v = part["key"], part.get("raw") or {}, part.get("value")
+    if k == "size_for_stage":
+        return fit_words(f"{ordinal(min(99, max(1, round(100 * v))))} pct of {stage_name(raw.get('stage'))} rounds")
+    if k == "syndicate_breadth":
+        return f"{raw.get('named_investors')} named investors"
+    if k == "lead_named":
+        return "Named lead" if raw.get("lead_named") else "No named lead"
+    if k == "acceleration":
+        return f"Gap {raw.get('last_gap_months')} mo vs {raw.get('prev_gap_months')} before"
+    if k == "backer_graduation":
+        return f"Backer: {raw.get('k')} of {raw.get('n')} raised again"
+    if k == "insider_follow_on":
+        return f"{len(raw.get('came_back') or [])} of {raw.get('of')} insiders came back"
+    if k == "named_angels":
+        return f"{len(raw.get('angels') or [])} named angels"
+    if k == "lead_supply":
+        return fit_words(f"{raw.get('funds')} {stage_name(raw.get('next_stage'))} leads at home")
+    if k == "cross_border":
+        return f"{len(raw.get('foreign') or [])} of {raw.get('of')} backers foreign"
+    if k == "step_up":
+        return f"Last raise {raw.get('ratio'):.1f}x the previous"
+    if k == "backer_exits":
+        return f"Backers hold {raw.get('exits')} exits"
+    if k == "freshness":
+        return f"{raw.get('months_since')} mo since last raise"
+    if k == "sector_heat":
+        return fit_words(f"{raw.get('sector')} at {raw.get('heat')}x")
+    return fit_words(part.get("text") or part.get("label") or k)
 
 
 def possible_duplicates(ckeys: Iterable[str]) -> set[str]:
@@ -603,21 +658,28 @@ def prepare(inp: ScoreInputs, as_of_t: float = NOW_T, ctx: Optional[Context] = N
 
 
 def score_all(inp: ScoreInputs, as_of_t: float = NOW_T, weights: Optional[dict[str, float]] = None,
-              ctx: Optional[Context] = None, companies: Optional[Iterable[str]] = None) -> ScoreRun:
+              ctx: Optional[Context] = None, companies: Optional[Iterable[str]] = None,
+              require: Optional[str] = None) -> ScoreRun:
     """Score every company with an equity round before as_of. Deterministic: same inputs, same output.
 
     weights: an effective weight set (use clamp_weights); defaults to load_weights() renormalised.
-    companies: optional subset to return (percentiles are still formed over everyone)."""
-    return rank(prepare(inp, as_of_t, ctx), weights, companies)
+    companies: optional subset to return (percentiles are still formed over everyone).
+    require: a component key; when set, only companies with data for it are ranked (size-for-stage mode)."""
+    return rank(prepare(inp, as_of_t, ctx), weights, companies, require)
 
 
 def rank(prep: Prepared, weights: Optional[dict[str, float]] = None,
-         companies: Optional[Iterable[str]] = None) -> ScoreRun:
-    """Combine prepared components with one weight set, rank, band. Cheap enough to run per request."""
+         companies: Optional[Iterable[str]] = None, require: Optional[str] = None) -> ScoreRun:
+    """Combine prepared components with one weight set, rank, band. Cheap enough to run per request.
+
+    require=None ranks every company whose last round has a stage (thesis mix). require=RANK_KEY ranks only
+    companies with a size-for-stage value; the rest are 'Not enough data', never a neutral 50."""
     ctx, comps, cohort, dups = prep.ctx, prep.comps, prep.cohort, prep.dups
     w = weights if weights is not None else clamp_weights(base=load_weights())
     if abs(sum(w.values()) - 1) > 1e-6:
         raise ValueError("weights must sum to 1; pass them through clamp_weights")
+    if require is not None and require not in CAP:
+        raise ValueError(f"unknown component '{require}'")
 
     rows = {}
     for ck, cc in comps.items():
@@ -626,15 +688,25 @@ def rank(prep: Prepared, weights: Optional[dict[str, float]] = None,
         flags = [f for f, on in (("possible_duplicate", ck in dups), ("already_acquired", ck in ctx.acquired),
                                  ("disputed_round", ck in ctx.disputed)) if on]
         ev = evidence(ctx, ck, comb["coverage"]["weighted"], ck in dups)
-        why = sorted((p for p in comb["components"] if p["points"] > 0 and p["text"]), key=lambda p: (-p["points"], p["key"]))
+        if require is None:
+            ranked = ck in cohort
+            reason = None if ranked else "Not enough data: no stage on the last round"
+            why = sorted((p for p in comb["components"] if p["points"] > 0 and p["text"]),
+                         key=lambda p: (-p["points"], p["key"]))
+        else:
+            req = cc[require]
+            ranked = bool(req["present"] and req["value"] is not None)
+            reason = None if ranked else f"Not enough data: {req['missing_reason'] or 'no value'}"
+            why = [p for p in comb["components"] if p["key"] == require and p["present"]]
         rows[ck] = {"ckey": ck, "name": rs[-1]["company"], "country": ctx.country_of.get(ck),
                     "history_depth": "full_history" if ck in ctx.full_history else "investor_first",
-                    "last_stage": rs[-1].get("stage"), "ranked": ck in cohort,
-                    "score": comb["score"] if ck in cohort else None,
-                    "raw_score": comb["raw_score"] if ck in cohort else None,
-                    "score_reason": None if ck in cohort else "Not enough data: no stage on the last round",
+                    "last_stage": rs[-1].get("stage"), "ranked": ranked,
+                    "score": comb["score"] if ranked else None,
+                    "raw_score": comb["raw_score"] if ranked else None,
+                    "score_reason": reason,
                     "components": comb["components"], "coverage": comb["coverage"], "evidence": ev, "flags": flags,
                     "why": [{"key": p["key"], "text": p["text"], "points": p["points"]} for p in why[:2]],
+                    "why_short": short_why(why[0]) if why else None,
                     "last_round": _rid(rs[-1])}
 
     ranked = sorted((ck for ck in rows if rows[ck]["ranked"]), key=lambda k: (-rows[k]["raw_score"], k))
@@ -659,8 +731,12 @@ def rank(prep: Prepared, weights: Optional[dict[str, float]] = None,
         if not r["ranked"]:
             r.update(rank=None, percentile=None, band="not_enough_data", rank_in_cohort=None, cohort_size=None)
     by_cohort: dict[tuple, list[str]] = defaultdict(list)
-    for ck in ranked:  # already best first
-        by_cohort[cohort[ck]].append(ck)
+    for ck in ranked:  # already best first; size mode may rank a company whose last round has no stage
+        if ck in cohort:
+            by_cohort[cohort[ck]].append(ck)
+    for ck in ranked:
+        rows[ck].setdefault("rank_in_cohort", None)
+        rows[ck].setdefault("cohort_size", None)
     for members in by_cohort.values():
         for i, ck in enumerate(members):
             rows[ck]["rank_in_cohort"] = i + 1
@@ -669,7 +745,7 @@ def rank(prep: Prepared, weights: Optional[dict[str, float]] = None,
         keep = set(companies)
         rows = {k: v for k, v in rows.items() if k in keep}
         ranked = [k for k in ranked if k in keep]
-    return ScoreRun(ctx.as_of_t, w, rules_hash(w), rows, ranked)
+    return ScoreRun(ctx.as_of_t, w, rules_hash(w) if require is None else "size-" + rules_hash(w)[4:], rows, ranked)
 
 
 # ---------------------------------------------------------------- funds

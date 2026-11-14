@@ -34,15 +34,20 @@ pages = APIRouter()
 
 BAND_ORDER = {"strong": 0, "promising": 1, "watch": 2, "low": 3, "not_enough_data": 4, "no_data": 5}
 BAND_RULES = [
-    {"key": "strong", "label": "Strong signal", "rule": "Top tenth on your weights, and well documented."},
-    {"key": "promising", "label": "Promising, thin data",
-     "rule": "Top tenth on your weights, but Cala has little on them. Unknowns lower evidence, never the score."},
-    {"key": "watch", "label": "Watch", "rule": "Above most peers on your weights."},
-    {"key": "low", "label": "Low", "rule": "Below most peers on your weights."},
-    {"key": "not_enough_data", "label": "Not enough data",
-     "rule": "No stage on the last round, so size and breadth cannot be compared."},
+    {"key": "strong", "label": "Strong signal", "rule": "Top 10%, solid data"},
+    {"key": "promising", "label": "Promising, thin data", "rule": "Top 10%, thin data"},
+    {"key": "watch", "label": "Watch", "rule": "Top 40%"},
+    {"key": "low", "label": "Low", "rule": "Bottom 60%"},
+    {"key": "not_enough_data", "label": "Not enough data", "rule": "No sized round to compare"},
 ]
-FORMULA = "Signal = 100 x sum(weight x value). Missing parts count as neutral 0.5 and are shown hatched."
+MODES = ("size", "thesis")
+FORMULA = "Signal = percentile of the last sized round among rounds of the same stage, 0 to 100."
+FORMULA_THESIS = "Thesis mix = 100 x sum(weight x value). Missing parts count as neutral 0.5 and are shown hatched."
+RANKING_LINE = "Ranked on round size for stage, the only signal that held up in our test."
+THESIS_LINE = "Thesis mix: 13 parts. No measured lift over size for stage alone."
+RANKING_LABEL = {"size": "Size for stage", "thesis": "Thesis mix"}
+SHORT_REASON = [("stage and an amount", "No sized, staged round"), ("not enough peers", "Too few peers to compare"),
+                ("no equity round", "No equity round on file"), ("no stage on the last round", "No stage on last round")]
 HONESTY = ["Lead accuracy: 74% exact, 89% right fund.", "Cala names no lead in about a third of seed rounds.",
            "No exit found does not mean no exit.",
            "Weights were chosen after seeing 2018 to 2023; held-out years were seen by the design debate.",
@@ -126,7 +131,7 @@ def _cached(key: str, fn):
 def warm() -> None:
     """Precompute the store, the default ranking and /meta (startup)."""
     st = sd.store()
-    st.run(st.default_weights)
+    st.size_run()
     _meta(st)
     companies_payload(st, [], {})
 
@@ -173,6 +178,26 @@ def _parse_weights(raw: Optional[str]) -> dict:
     return data
 
 
+def _mode(mode: Optional[str]) -> str:
+    m = mode or "size"
+    if m not in MODES:
+        raise sf.FilterError(f"unknown mode '{mode}'")
+    return m
+
+
+def _short_reason(reason: Optional[str]) -> Optional[str]:
+    low = (reason or "").lower()
+    return next((short for needle, short in SHORT_REASON if needle in low), None) if reason else None
+
+
+def _run_for(st: sd.Store, mode: str, overrides: dict, filters: list[dict]) -> tuple[ss.ScoreRun, dict]:
+    """(run, effective weights). Size mode ranks on size for stage only; overrides are validated but not used."""
+    w = _effective_weights(st, overrides, filters)
+    if mode == "size":
+        return st.size_run(), dict(ss.SIZE_WEIGHTS)
+    return st.run(w), w
+
+
 def _effective_weights(st: sd.Store, overrides: dict, filters: list[dict]) -> dict:
     sector_active = any(f["key"] == "sector" and f["op"] == "in" for f in filters)
     try:
@@ -186,8 +211,13 @@ def _diff(st: sd.Store, w: dict, by: str = "user") -> list[dict]:
             if abs(w[k] - st.default_weights[k]) > 0.0005]
 
 
-def _backtest_line(st: sd.Store) -> str:
-    return (st.backtest.get("verdict") or {}).get("line") or FALLBACK_LINE
+def _backtest_line(st: sd.Store, mode: str = "size") -> str:
+    return RANKING_LINE if mode == "size" else THESIS_LINE
+
+
+def lab_verdicts() -> dict[str, str]:
+    """{component key: Kept | Noise | Not testable} from the Lab (held-out years)."""
+    return {r["key"]: r["verdict"] for r in load_lab().get("rows") or [] if r.get("key") in ss.CAP}
 
 
 # ---------------------------------------------------------------- company rows
@@ -228,6 +258,7 @@ def _company_list_row(st: sd.Store, f: dict, r: dict, fair: bool) -> dict:
         "score": r["score"], "score_reason": r.get("score_reason"), "band": r["band"],
         "evidence": {"value": r["evidence"]["value"], "band": r["evidence"]["band"]},
         "coverage": r["coverage"], "why": r["why"], "flags": flags, "chips": chips,
+        "why_short": r.get("why_short") or _short_reason(r.get("score_reason")),
         "components": {p["key"]: (round(p["value"], 3) if p["present"] else None) for p in r["components"]},
     }
 
@@ -295,16 +326,14 @@ def _coverage_warnings(st: sd.Store, view: str, filters: list[dict], rows: Optio
         if c["pct"] < sf.LOW_COVERAGE:
             label = sf.SPECS[view][flt["key"]].label
             out.append({"filter": flt["key"], "coverage_pct": c["pct"], "n": c["n"], "of": c["of"],
-                        "text": f"{label} only exists for {c['n']:,} of {c['of']:,}. "
-                                f"{c['of'] - c['n']:,} have no data for it and were not considered."})
+                        "text": f"{label}: data for {c['n']:,} of {c['of']:,} only."})
     return out
 
 
 def companies_payload(st: sd.Store, filters: list[dict], overrides: dict, sort: str = "score:desc",
                       limit: int = 50, offset: int = 0, fair_rank: bool = False, include_unranked: bool = True,
-                      no_data_group: bool = False, by: str = "user") -> dict:
-    w = _effective_weights(st, overrides, filters)
-    run = st.run(w)
+                      no_data_group: bool = False, by: str = "user", mode: str = "size") -> dict:
+    run, w = _run_for(st, mode, overrides, filters)
     full = sf.with_defaults("companies", filters)
     key, d = _parse_sort(sort, SORTS)
     rows = {ck: _company_score_row(run, st, ck) for ck in st.facts}
@@ -329,7 +358,7 @@ def companies_payload(st: sd.Store, filters: list[dict], overrides: dict, sort: 
         out_rows += nd
         groups["no_data"] = len(nd)
     page = out_rows[offset:offset + limit]
-    nc_list = [{"filter": k, "count": v, "reason": f"no {k.replace('_', ' ')} data"}
+    nc_list = [{"filter": k, "count": v, "reason": f"no {(sf.SPECS['companies'][k].label if k in sf.SPECS['companies'] else k).lower()} data"}
                for k, v in nc.most_common()]
     ranked_n = len(run.ranked)
     return {
@@ -338,10 +367,12 @@ def companies_payload(st: sd.Store, filters: list[dict], overrides: dict, sort: 
                  "matched": len(matched), "not_considered": nc_list,
                  "considered": len(matched), "no_data_shown": no_data_group,
                  "filters_applied": full,
-                 "weights_effective": {k: round(v, 4) for k, v in w.items()}, "weights_diff": _diff(st, w, by),
+                 "mode": mode, "ranking": RANKING_LABEL[mode],
+                 "weights_effective": {k: round(v, 4) for k, v in w.items()},
+                 "weights_diff": _diff(st, w, by) if mode == "thesis" else [],
                  "bands": {"strong_min_pct": 90, "watch_min_pct": 60},
                  "coverage_warnings": _coverage_warnings(st, "companies", filters, rows),
-                 "backtest_line": _backtest_line(st), "fair_rank": fair_rank, "sort": f"{key}:{d}"},
+                 "backtest_line": _backtest_line(st, mode), "fair_rank": fair_rank, "sort": f"{key}:{d}"},
         "rows": page,
         "groups": [{"band": b, "count": groups.get(b, 0)} for b in BAND_ORDER if groups.get(b, 0) or b != "no_data"],
         "limit": limit, "offset": offset,
@@ -406,7 +437,7 @@ FOUNDER_SORTS = {"evidence": lambda f: f["founder_evidence"]["k"], "name": lambd
 def founders_payload(st: sd.Store, filters: list[dict], sort: str, limit: int, offset: int) -> dict:
     full = sf.with_defaults("founders", filters)
     key, d = _parse_sort(sort if sort != "score:desc" else "evidence:desc", FOUNDER_SORTS)
-    run = st.run(st.default_weights)
+    run = st.size_run()
     matched, _, nc = _apply(st, "founders", full, [(f, None) for f in st.founders])
     ordered = [f for f, _ in matched]
     ordered.sort(key=lambda f: f["name"].lower())
@@ -428,17 +459,19 @@ def founders_payload(st: sd.Store, filters: list[dict], sort: str, limit: int, o
 
 # ---------------------------------------------------------------- endpoints: lists
 def _list(request: Request, view: str, filters: Optional[str], weights: Optional[str], sort: str, limit: int,
-          offset: int, fair_rank: bool, include_unranked: bool, no_data_group: bool, stage: str):
+          offset: int, fair_rank: bool, include_unranked: bool, no_data_group: bool, stage: str,
+          mode: Optional[str] = None):
     _limit(request, "signal-get", GET_PER_MIN)
     st = sd.store()
     ck = json.dumps([view, filters, weights, sort, limit, offset, fair_rank, include_unranked, no_data_group, stage,
-                     st.version])
+                     mode, st.version])
     try:
         fl = _parse_filters(st, view, filters)
         if view == "companies":
             ov = _parse_weights(weights)
+            md = _mode(mode)
             return _cached(ck, lambda: companies_payload(st, fl, ov, sort, limit, offset, fair_rank, include_unranked,
-                                                         no_data_group))
+                                                         no_data_group, mode=md))
         if view == "funds":
             if sf._stage_norm(st, stage) is None:
                 raise sf.FilterError(f"unknown stage '{stage}'")
@@ -452,9 +485,10 @@ def _list(request: Request, view: str, filters: Optional[str], weights: Optional
 def list_companies(request: Request, filters: Optional[str] = Query(None, max_length=8000),
                    weights: Optional[str] = Query(None, max_length=2000), sort: str = "score:desc",
                    limit: int = Query(50, ge=1, le=200), offset: int = Query(0, ge=0),
-                   fair_rank: bool = False, include_unranked: bool = True, no_data_group: bool = False):
+                   fair_rank: bool = False, include_unranked: bool = True, no_data_group: bool = False,
+                   mode: str = Query("size", max_length=10)):
     return _list(request, "companies", filters, weights, sort, limit, offset, fair_rank, include_unranked,
-                 no_data_group, "seed")
+                 no_data_group, "seed", mode)
 
 
 @router.get("/funds")
@@ -484,8 +518,9 @@ def _component_backtest(st: sd.Store, k: str) -> dict:
 
 def _meta(st: sd.Store) -> dict:
     def build():
-        run = st.run(st.default_weights)
+        run = st.size_run()
         rows = {ck: _company_score_row(run, st, ck) for ck in st.facts}
+        lab_v = lab_verdicts()
         comps = []
         for k in ss.KEYS:
             n = sum(1 for r in run.rows.values() for p in r["components"] if p["key"] == k and p["present"])
@@ -494,7 +529,8 @@ def _meta(st: sd.Store) -> dict:
                                          "conditional": "Only with a sector query"}[ss.TIER[k]],
                           "default_weight": round(st.default_weights[k], 4), "design_default": ss.DEFAULT_WEIGHTS[k],
                           "cap": ss.CAP[k], "coverage": {"n": n, "of": len(st.facts)}, "how": HOW[k],
-                          "backtest": _component_backtest(st, k)})
+                          "backtest": _component_backtest(st, k), "lab_verdict": lab_v.get(k),
+                          "in_default_ranking": k == ss.RANK_KEY})
         filters = []
         for view, specs in sf.SPECS.items():
             for sp in specs.values():
@@ -518,8 +554,10 @@ def _meta(st: sd.Store) -> dict:
                        "rounds": len(st.inp.rounds)},
             "components": comps,
             "weights_default": {k: round(v, 4) for k, v in st.default_weights.items()},
-            "weights_note": ("Default weights chosen by validation AUC (cutoffs 2018 to 2020) among 3 candidates; "
-                             "renormalised. Difference to the design defaults is within noise."),
+            "weights_note": ("Thesis mix weights, chosen by validation AUC (cutoffs 2018 to 2020) among 3 "
+                             "candidates. No measured lift over size for stage alone."),
+            "ranking": {"default": "size", "label": RANKING_LABEL["size"], "line": RANKING_LINE,
+                        "thesis_label": "Thesis mix", "thesis_note": "No measured lift"},
             "weights_selection": sel,
             "fund_components": [{"key": k, "label": lab, "default_weight": w} for k, lab, w in ss.FUND_COMPONENTS],
             "fund_score_label": ss.FUND_LABEL,
@@ -530,13 +568,13 @@ def _meta(st: sd.Store) -> dict:
                                for i, lab, words, fl, ov in sc.INTENTS],
             "regions": [{"key": k, "label": lab, "countries": sorted(cs)} for k, (lab, cs) in sd.REGIONS.items()],
             "sectors": sd.SECTOR_TAGS, "stages": ss.STAGE_ORDER,
-            "bands": BAND_RULES, "formula": FORMULA,
-            "backtest_line": _backtest_line(st),
-            "backtest_summary": {"verdict": bt.get("verdict"), "line": _backtest_line(st),
+            "bands": BAND_RULES, "formula": FORMULA, "formula_thesis": FORMULA_THESIS,
+            "backtest_line": RANKING_LINE,
+            "backtest_summary": {"verdict": bt.get("verdict"), "line": bt.get("line") or FALLBACK_LINE,
                                  "gap_vs_size_alone": bt.get("gap_vs_size_alone"),
-                                 "always": ("Size for stage carries most of the measured lift. The other parts express "
-                                            "your thesis. Weights were chosen after seeing the data. Never read the "
-                                            "score as a probability.")},
+                                 "always": ("The ranking uses size for stage only. The 13 part composite is the "
+                                            "opt-in thesis mix and shows no measured lift. Never read the score as a "
+                                            "probability.")},
             "honesty": HONESTY,
             "gemini": {"model": sc.MODEL, "server_key": bool(os.environ.get("GEMINI_API_KEY")
                                                               or os.environ.get("GEMINI_API_KEY_FALLBACK")),
@@ -620,18 +658,20 @@ def _strip(prefix: str, id_: str) -> str:
     return id_[len(prefix):] if id_.startswith(prefix) else id_
 
 
-def company_detail(st: sd.Store, ck: str, overrides: dict, filters: list[dict]) -> Optional[dict]:
+def company_detail(st: sd.Store, ck: str, overrides: dict, filters: list[dict],
+                   mode: str = "size") -> Optional[dict]:
     f = st.facts.get(ck)
     if f is None:
         return None
-    w = _effective_weights(st, overrides, filters)
-    run = st.run(w)
+    run, w = _run_for(st, mode, overrides, filters)
     r = _company_score_row(run, st, ck)
     comps = []
     bt = {k: _component_backtest(st, k) for k in ss.KEYS}
+    lab_v = lab_verdicts()
     for p in r["components"]:
         recs = [{**x, "source_url": f"/api/record/{x['round_id']}"} if "round_id" in x else x for x in p["records"]]
         comps.append({**p, "records": recs, "backtest": bt[p["key"]], "how": HOW[p["key"]],
+                      "lab_verdict": lab_v.get(p["key"]), "short": ss.short_why(p),
                       "tier_label": {"measured": "Measured", "thesis": "Your thesis", "conditional": "Off"
                                      if p["weight"] == 0 else "Sector query"}[p["tier"]]})
     allr = sorted((x for x in st.inp.rounds if x["ckey"] == ck), key=lambda x: (x["t"], x["id"]))
@@ -659,7 +699,7 @@ def company_detail(st: sd.Store, ck: str, overrides: dict, filters: list[dict]) 
                           "person_named": k in set(_angel_keys(st, f))})
     founders = [_founder_list_row(st, p, run) for p in st.founders if p["company_ckey"] == ck or ck in p["ckeys"]]
     move = []
-    for p in comps:
+    for p in comps if mode == "thesis" else []:
         if p["weight"] <= 0:
             continue
         if p["key"] == "lead_named" and p["present"] and p["value"] == 0:
@@ -679,8 +719,10 @@ def company_detail(st: sd.Store, ck: str, overrides: dict, filters: list[dict]) 
         "score": {"value": r["score"], "reason": r.get("score_reason"), "rank": r.get("rank"),
                   "rank_in_cohort": r.get("rank_in_cohort"), "cohort_size": r.get("cohort_size"),
                   "of": len(run.ranked), "band": r["band"], "percentile": r.get("percentile"),
-                  "rules_hash": run.rules_hash, "formula": FORMULA, "components": comps},
+                  "rules_hash": run.rules_hash, "formula": FORMULA if mode == "size" else FORMULA_THESIS,
+                  "mode": mode, "ranking": RANKING_LABEL[mode], "components": comps},
         "evidence": r["evidence"], "coverage": r["coverage"], "why": r["why"],
+        "why_short": r.get("why_short") or _short_reason(r.get("score_reason")),
         "what_would_move_it": move, "rounds": rounds, "investors": investors, "founders": founders,
         "founders_note": None if founders else "Cala names no founder for this company.",
         "sector": {"tags": f["sector_tags"], "text_tags": f["sector_text_tags"], "text": f["sector_text"],
@@ -693,7 +735,7 @@ def company_detail(st: sd.Store, ck: str, overrides: dict, filters: list[dict]) 
             "lead_upgrade", "lead_active_at_stage_months", "backer_faded", "crossover", "raised_in_downturn",
             "cycle_bridge", "stage_velocity", "syndicate_size", "acquirers", "sector_heat")},
         "chips": [c for c in chips if c], "weights_effective": {k: round(v, 4) for k, v in w.items()},
-        "backtest_line": _backtest_line(st),
+        "backtest_line": _backtest_line(st, mode),
     }
 
 
@@ -705,7 +747,7 @@ def fund_detail(st: sd.Store, key: str) -> Optional[dict]:
     f = st.funds.get(key)
     if f is None:
         return None
-    run = st.run(st.default_weights)
+    run = st.size_run()
     row = _fund_list_row(f)
     if not f["queried"]:
         return {**row, "entity": "fund", "evidence_cards": [],
@@ -752,7 +794,7 @@ def founder_detail(st: sd.Store, pid: str) -> Optional[dict]:
     f = next((x for x in st.founders if x["pid"] == pid or x["id"] == pid), None)
     if f is None:
         return None
-    run = st.run(st.default_weights)
+    run = st.size_run()
     return {**_founder_list_row(st, f, run), "entity": "founder", "roles": f["roles"], "founded": f["founded"],
             "prior_exits": f["prior_exits"], "facts": f["founder_evidence"]["facts"],
             "missing": f["founder_evidence"]["missing"], "description": f["description"], "files": f["files"],
@@ -762,12 +804,12 @@ def founder_detail(st: sd.Store, pid: str) -> Optional[dict]:
 
 @router.get("/companies/{cid:path}")
 def get_company(cid: str, request: Request, weights: Optional[str] = Query(None, max_length=2000),
-                filters: Optional[str] = Query(None, max_length=8000)):
+                filters: Optional[str] = Query(None, max_length=8000), mode: str = Query("size", max_length=10)):
     _limit(request, "signal-get", GET_PER_MIN)
     st = sd.store()
     try:
         fl = _parse_filters(st, "companies", filters)
-        d = company_detail(st, _strip("c:", cid), _parse_weights(weights), fl)
+        d = company_detail(st, _strip("c:", cid), _parse_weights(weights), fl, _mode(mode))
     except sf.FilterError as e:
         return _bad(str(e))
     return d if d else JSONResponse({"error": "not_found"}, status_code=404)
@@ -798,6 +840,7 @@ class Current(BaseModel):
 class Chat(BaseModel):
     message: str = Field(default="", max_length=4000)
     view: Literal["companies", "funds", "founders"] = "companies"
+    mode: Literal["size", "thesis"] = "size"
     current: Optional[Current] = None
     user_api_key: Optional[str] = Field(default=None, max_length=200)
 
@@ -840,8 +883,11 @@ def chat(body: Chat, request: Request):
         proposal, source, model = sc.keyword_proposal(st, body.view, msg), "fallback", None
         ms = int((time.time() - t0) * 1000)
     cur = body.current or Current()
-    cur_w = {k: v for k, v in (cur.weights or {}).items() if k in ss.KEYS}
-    v = sc.validate(st, body.view, proposal, cur_w)
+    thesis = body.view == "companies" and body.mode == "thesis"
+    cur_w = {k: v for k, v in (cur.weights or {}).items() if k in ss.KEYS} if thesis else {}
+    if not thesis:  # default ranking: the chat may set filters and sort, never weights
+        proposal = {**proposal, "weight_overrides": {}}
+    v = sc.validate(st, body.view, proposal, cur_w, weights_allowed=thesis)
     if body.view == "founders" and re.search(r"\b(best|top|good|great|strongest|rank)", msg.lower()):
         v["unmatched"].append({"phrase": "best", "reason": "there is no founder quality score; founders are sorted by "
                                                            "how many of 4 track-record facts Cala documents"})
@@ -850,7 +896,7 @@ def chat(body: Chat, request: Request):
     try:
         if body.view == "companies":
             prev = companies_payload(st, v["filters"], v["weight_overrides"], f"{v['sort']['key']}:{v['sort']['dir']}",
-                                     10, 0, by="chat")
+                                     10, 0, by="chat", mode=body.mode)
             w_eff, diff = prev["meta"]["weights_effective"], prev["meta"]["weights_diff"]
             warn = prev["meta"]["coverage_warnings"]
         elif body.view == "funds":
@@ -864,12 +910,12 @@ def chat(body: Chat, request: Request):
     resp = {"source": source, "model": model, "ms": ms,
             "notice": None if source == "gemini" else (g.get("error") or "Gemini was unavailable") +
             ", matched keywords only",
-            "filters": v["filters"], "weight_overrides": v["weight_overrides"] if body.view == "companies" else {},
+            "filters": v["filters"], "weight_overrides": v["weight_overrides"] if thesis else {}, "mode": body.mode,
             "weights_effective": w_eff, "weights_diff": diff, "explanation": v["explanation"],
             "unmatched": v["unmatched"], "coverage_warnings": warn, "sort": v["sort"],
             "results_preview": {"matched": prev["meta"]["matched"], "rows": prev["rows"],
                                 "not_considered": prev["meta"].get("not_considered", [])},
-            "backtest_line": _backtest_line(st)}
+            "backtest_line": _backtest_line(st, body.mode if thesis else "size")}
     if body.view == "founders":
         resp["note"] = prev["meta"]["note"]
     return resp

@@ -724,3 +724,22 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
   .lab-card__adds .labadd{grid-template-columns:auto auto auto;align-items:start;gap:6px 14px}
 }
 @media (width<=719px){.lab-head .lab-head__big{font-size:20px}}
+
+/* option 1: size-for-stage ranking, less text */
+.sheet__grid{min-width:var(--sheet-min,760px)}
+.sheet__why{white-space:nowrap;min-width:0;color:var(--ink-2)}
+.flag-dot{flex:none;width:7px;height:7px;border-radius:50%;background:var(--amber,#d89b2b)}
+.chip--link{text-decoration:none;cursor:pointer}
+.chip--link:hover{box-shadow:inset 0 0 0 1px var(--line-3)}
+.ranked-on{margin:0 0 10px;font-size:13.5px;color:var(--ink-2);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ranked-on b{color:var(--ink)}
+.thesis-toggle{gap:10px;margin:0 0 14px}
+.wsec--off{opacity:.55}
+.why-full{font-size:14px;color:var(--ink-2);margin:6px 0 8px}
+.parts{list-style:none;margin:0;padding:0}
+.part{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr) auto;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px}
+.part:last-child{border-bottom:0}
+.part__label{color:var(--ink);font-weight:520}
+.part__val{color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hero .legend{grid-template-columns:1fr}
+@media (width<=719px){.part{grid-template-columns:minmax(0,1fr) auto}.part__val{grid-column:1/-1;grid-row:2}}

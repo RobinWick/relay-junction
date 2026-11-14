@@ -114,6 +114,40 @@ def test_companies_list_shape_and_transparency():
     assert row["coverage"]["n"] > 0 and "evidence" in row and row["band"] in signal_api.BAND_ORDER
 
 
+def test_default_ranking_is_size_for_stage_only():
+    d = _get("/companies", limit="200").json()
+    m = d["meta"]
+    assert m["mode"] == "size" and m["ranking"] == "Size for stage"
+    assert m["weights_effective"]["size_for_stage"] == 1 and m["weights_diff"] == []
+    assert "composite" not in m["backtest_line"].lower() and "size for stage" in m["backtest_line"]
+    for row in d["rows"]:
+        if row["score"] is None:
+            assert row["band"] == "not_enough_data" and row["why_short"]
+            continue
+        assert row["components"]["size_for_stage"] is not None
+        assert row["score"] == round(100 * row["components"]["size_for_stage"])
+        assert row["why_short"] and len(row["why_short"]) <= 32 and "pct of" in row["why_short"]
+    # weights sent in default mode are validated but never change the ranking
+    same = _get("/companies", limit="200", weights={"named_angels": 0.15}).json()
+    assert [x["id"] for x in same["rows"]] == [x["id"] for x in d["rows"]]
+
+
+def test_thesis_mix_is_opt_in_and_labelled():
+    d = _get("/companies", limit="200", mode="thesis").json()
+    assert d["meta"]["mode"] == "thesis" and d["meta"]["ranking"] == "Thesis mix"
+    assert "no measured lift" in d["meta"]["backtest_line"].lower()
+    assert sum(1 for v in d["meta"]["weights_effective"].values() if v > 0) > 1
+    assert _get("/companies", mode="magic").status_code == 400
+
+
+def test_no_size_value_goes_to_not_enough_data_and_stays_visible():
+    d = _get("/companies", limit="200").json()
+    by = {x["id"]: x for x in d["rows"]}
+    assert by["c:thinco"]["score"] is None and by["c:thinco"]["why_short"] == "No sized, staged round"
+    groups = {g["band"]: g["count"] for g in d["groups"]}
+    assert groups["not_enough_data"] >= 2
+
+
 def test_unranked_stay_visible_and_never_get_a_number():
     d = _get("/companies", limit="200").json()
     by = {x["id"]: x for x in d["rows"]}
@@ -142,7 +176,8 @@ def test_unknown_filter_key_is_400():
 
 
 def test_weights_clamped_renormalised_and_diffed():
-    d = _get("/companies", weights={"backer_graduation": 5, "named_angels": 5, "sector_heat": 0.1}).json()
+    d = _get("/companies", weights={"backer_graduation": 5, "named_angels": 5, "sector_heat": 0.1},
+             mode="thesis").json()
     w = d["meta"]["weights_effective"]
     assert abs(sum(w.values()) - 1) < 0.01
     assert w["sector_heat"] == 0  # no sector filter, no sector weight
@@ -177,6 +212,13 @@ def test_company_detail_shows_every_component():
     d = client.get("/api/signal/companies/c:payco").json()
     comps = d["score"]["components"]
     assert [c["key"] for c in comps] == sd.ss.KEYS
+    assert d["score"]["mode"] == "size" and d["what_would_move_it"] == []
+    assert {c["key"] for c in comps if c["weight"] > 0} == {"size_for_stage"}
+    if signal_api.LAB_PATH.exists():
+        assert next(c for c in comps if c["key"] == "size_for_stage")["lab_verdict"] == "Kept"
+        assert next(c for c in comps if c["key"] == "lead_named")["lab_verdict"] == "Noise"
+    t = client.get("/api/signal/companies/c:payco?mode=thesis").json()
+    assert t["score"]["mode"] == "thesis" and sum(1 for c in t["score"]["components"] if c["weight"] > 0) > 1
     for c in comps:
         assert {"weight", "value", "points", "raw", "records", "present"} <= set(c)
         if not c["present"]:
@@ -223,7 +265,7 @@ def test_chat_validates_gemini_output_unknown_keys_go_to_unmatched():
                        {"key": "country", "op": "in", "values": ["FI", "Atlantis"], "reason": "x"}],
            "weight_overrides": {"lead_named": 0.18, "made_up": 1}, "explanation": "Fintech, ranked.",
            "unmatched": [{"phrase": "ARR", "reason": "no revenue data"}]}
-    r = _chat({"message": "fintech with revenue growth in Finland"}, _stub(raw))
+    r = _chat({"message": "fintech with revenue growth in Finland", "mode": "thesis"}, _stub(raw))
     assert r.status_code == 200
     d = r.json()
     assert d["source"] == "gemini"
@@ -232,6 +274,15 @@ def test_chat_validates_gemini_output_unknown_keys_go_to_unmatched():
     assert {"revenue_growth", "ARR", "Atlantis", "made_up"} <= phrases
     assert d["weights_effective"]["sector_heat"] > 0  # sector named: momentum on
     assert d["coverage_warnings"] and d["results_preview"]["rows"]
+
+
+def test_chat_default_mode_sets_filters_never_weights():
+    raw = {"filters": [{"key": "sector", "op": "in", "values": ["Fintech"], "reason": "fintech"}],
+           "weight_overrides": {"lead_named": 0.18, "named_angels": 0.15}, "explanation": "Fintech.", "unmatched": []}
+    d = _chat({"message": "fintech", "current": {"filters": [], "weights": {"step_up": 0.1}}}, _stub(raw)).json()
+    assert d["mode"] == "size" and {f["key"] for f in d["filters"]} == {"sector"}
+    assert d["weight_overrides"] == {} and d["weights_diff"] == []
+    assert d["weights_effective"]["size_for_stage"] == 1
 
 
 def test_chat_fallback_keywords_when_gemini_fails():

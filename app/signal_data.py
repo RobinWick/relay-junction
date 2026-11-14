@@ -135,19 +135,23 @@ class Store:
     _coinvest: dict = field(default_factory=dict)
 
     # ---------------- ranking per weight set
-    def run(self, weights: dict[str, float]) -> ss.ScoreRun:
-        h = ss.rules_hash(weights)
+    def run(self, weights: dict[str, float], require: Optional[str] = None) -> ss.ScoreRun:
+        h = ss.rules_hash(weights) + ":" + (require or "")
         with self._lock:
             hit = self._runs.get(h)
             if hit is not None:
                 self._runs.move_to_end(h)
                 return hit
-        r = ss.rank(self.prep, weights)
+        r = ss.rank(self.prep, weights, require=require)
         with self._lock:
             self._runs[h] = r
             while len(self._runs) > 24:
                 self._runs.popitem(last=False)
         return r
+
+    def size_run(self) -> ss.ScoreRun:
+        """The default ranking: size for stage only (the one part that held up on held-out years)."""
+        return self.run(ss.SIZE_WEIGHTS, ss.RANK_KEY)
 
     # ---------------- investor name resolution
     def resolve_investor(self, value: str) -> Optional[str]:

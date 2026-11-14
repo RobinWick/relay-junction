@@ -214,6 +214,35 @@ def test_sector_heat_only_for_tagged():
     assert not _comp(run.rows["peer1"], "sector_heat")["present"]
 
 
+def test_size_mode_ranks_only_companies_with_size_value():
+    rounds = _peers() + [_r("big", 2024.5, amount=20.0), _r("nosize", 2024.5, amount=None),
+                         _r("nostage", 2024.5, stage=None)]
+    run = score_all(_inp(rounds), as_of_t=2025.0, weights=ss.SIZE_WEIGHTS, require=ss.RANK_KEY)
+    assert run.ranked[0] == "big" and run.rows["big"]["score"] == round(100 * _comp(run.rows["big"], "size_for_stage")["value"])
+    for ck in ("nosize", "nostage"):
+        r = run.rows[ck]
+        assert not r["ranked"] and r["score"] is None and r["band"] == "not_enough_data"
+        assert r["score_reason"].startswith("Not enough data")
+    assert run.rows["big"]["why_short"] == "98th pct of Seed rounds"  # midrank of 21
+    assert run.rules_hash.startswith("size-")
+
+
+def test_short_why_fits_and_never_cuts_a_word():
+    assert ss.fit_words("one two three", 9) == "one two"
+    assert ss.fit_words("short") == "short"
+    run = score_all(_inp(_peers(40)), as_of_t=2025.0, weights=clamp_weights())
+    for r in run.rows.values():
+        for p in r["components"]:
+            s = ss.short_why(p)
+            if s is not None:
+                assert len(s) <= ss.WHY_MAX, s
+    part = {"key": "sector_heat", "present": True, "value": 0.9,
+            "raw": {"sector": "Artificial intelligence and machine learning", "heat": 1.4}}
+    s = ss.short_why(part)
+    assert len(s) <= ss.WHY_MAX and "Artificial intelligence and machine learning at 1.4x".startswith(s)
+    assert s.split()[-1] in "Artificial intelligence and machine learning".split()
+
+
 def test_possible_duplicates():
     assert ss.possible_duplicates(["baichuan", "baichuanai", "other"]) == {"baichuan", "baichuanai"}
 
