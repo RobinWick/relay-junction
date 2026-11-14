@@ -559,7 +559,7 @@ function dotMarks(r) {
   const add = (rid, k, text) => { if (rid == null) return; if (!marks.has(rid)) marks.set(rid, []); marks.get(rid).push({k, text}); };
   if (r.tie) add(r.tie.round.id, "tie", `Your investor ${r.tie.investor} was in this round too`);
   for (const c of r.conflicts || []) add(c.round.id, "cf", `${c.level === "led" ? "Led" : "Joined"} ${c.competitor}, your competitor`);
-  for (const m of r.way?.matches || []) if (m.strength > 1) add(m.round.rid, "net", `You know ${personName(m.person)} here${sampleNet() ? " (made-up sample)" : ""}`);
+  for (const m of r.way?.matches || []) if (m.strength > 1) add(m.round.rid, "net", `You know ${personName(m.person)} here`);
   return marks;
 }
 
@@ -732,11 +732,10 @@ function lastCell(r) {
 /* The Way in column only shows once the founder gave us something to look for paths with. */
 const askedForPaths = () => (state.req?.investors?.length || 0) > 0 || !!state.network;
 const sampleNet = () => !!state.network?.sample;
-const wayFromNet = (r) => r.way.matches.length > 0 && r.way.strength !== 2;
 function wayCell(r) {
   if (!r.way.strength) return `<span class="way">None found</span>`;
   const weak = r.way.strength === 1;
-  return `<span class="way${weak ? " weak" : " yes"}">${ICON.link}${esc(r.way.text)}</span>${sampleNet() && wayFromNet(r) ? `<span class="tag-sample">Sample</span>` : ""}`;
+  return `<span class="way${weak ? " weak" : " yes"}">${ICON.link}${esc(r.way.text)}</span>`;
 }
 /* "Led Lovable" when the fund led any of the competitor's rounds, else "Backed Lovable". List, Map and phone say the same. */
 function conflictText(r) {
@@ -810,13 +809,23 @@ function notesUnderSummary(req, d) {
 function netbarHtml() {
   const n = state.network;
   const privacy = `<p class="privacy"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3.5" y="7" width="9" height="6.5" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg>Read in your browser. Nothing is uploaded or stored.</p>`;
+  if (n?.sample) return sampleNoticeHtml(privacy);
   if (n) {
-    return `<div class="netbar on" id="netbar"><div class="t"><b>Matched against ${plural(n.people.length, "connection", "connections")}</b> ${n.sample ? "from a made-up sample network." : "from your LinkedIn file."}${privacy}</div><button type="button" class="btn line" data-net-clear>Remove network</button></div>`;
+    return `<div class="netbar on" id="netbar"><div class="t"><b>Matched against ${plural(n.people.length, "connection", "connections")}</b> from your LinkedIn file.${privacy}</div><button type="button" class="btn line" data-net-clear>Remove network</button></div>`;
   }
   return `<div class="netbar" id="netbar"><div class="t"><b>See who can introduce you.</b> Add your LinkedIn connections and we match them to the companies each fund backed.${privacy}</div>
     <input type="file" id="li-file-2" class="file-in" accept=".csv,.zip,text/csv,application/zip" aria-label="Add LinkedIn connections, Connections.csv or the LinkedIn .zip">
     <label for="li-file-2" class="btn line">Add LinkedIn connections</label>
     <button type="button" class="linkbtn" data-net-sample>Try with a sample network</button></div>`;
+}
+
+/* The one place the results say the network is made up: above the list and the Map alike, so rows, pills and the
+   fund pane do not repeat it. Adding a real file here replaces the sample. */
+function sampleNoticeHtml(privacy) {
+  return `<div class="netbar sample" id="netbar" role="note"><div class="t"><b>Showing a made-up sample network.</b> Add your own LinkedIn connections to see your real ways in.${privacy}</div>
+    <input type="file" id="li-file-2" class="file-in" accept=".csv,.zip,text/csv,application/zip" aria-label="Add LinkedIn connections, Connections.csv or the LinkedIn .zip">
+    <label for="li-file-2" class="btn line">Add LinkedIn connections</label>
+    <button type="button" class="linkbtn" data-net-clear>Remove sample</button></div>`;
 }
 
 function renderSide(req) {
@@ -978,12 +987,11 @@ async function startLookup(names) {
 function copyCsv(rows) {
   /* A cell starting with = + - @ (or a tab or return) is a formula to a spreadsheet: prefix it with ' */
   const q = (v) => { let t = String(v ?? ""); if (/^[=+\-@\t\r]/.test(t)) t = `'${t}`; return `"${t.replace(/"/g, '""')}"`; };
-  const head = ["Group", "Fund", "Verdict", "Led", "Known rounds", "Lead not named", "Size it leads (EUR m)", "Size vs your raise", "Last lead", "Way in", "Conflict"];
+  const head = ["Group", "Fund", "Verdict", "Led", "Known rounds", "Lead not named", "Size it leads (EUR m)", "Size vs your raise", "Last lead", sampleNet() ? "Way in (made-up sample network)" : "Way in", "Conflict"];
   const lines = [head.map(q).join(",")];
-  const fake = sampleNet();
   rows.forEach((r) => lines.push([GROUP_NAME[r.group], r.name, verdictText(r), r.led, r.known, r.unknown,
     r.size ? (r.size.hi !== r.size.lo ? `${fmtM(r.size.lo)} to ${fmtM(r.size.hi)}` : fmtM(r.size.lo)) : "", r.size?.fit || "", r.last_lead ? `${r.last_lead.company} ${r.last_lead.date}` : "",
-    fake && wayFromNet(r) ? `SAMPLE, made-up contact: ${r.way.text}` : r.way.text,
+    r.way.text,
     (r.conflicts || []).map((c) => `${c.level} ${c.competitor}`).join("; ")].map(q).join(",")));
   const btn = $("#csv");
   const done = (msg) => { btn.lastChild.textContent = msg; setTimeout(() => { btn.lastChild.textContent = "Copy as CSV"; }, 1600); };
@@ -1075,11 +1083,10 @@ const personName = (p) => [p.first, p.last.length === 1 ? p.last : p.last ? `${p
 function waysHtml(r) {
   const parts = [];
   const m = r.way.matches;
-  const fake = sampleNet();
   if (m.length) {
     const shown = m.slice(0, 8);
-    parts.push(`<div class="introcard"><div class="l1">${ICON.link}${fake ? "Made-up sample: " : ""}You know ${plural(m.length, "person", "people")} at companies it backed</div>
-      <ul class="people">${shown.map(({person, round, weak}) => `<li><span><span class="who">${esc(personName(person))}</span> <span class="role">${esc(person.position || "Role not given")}</span></span>${fake ? `<span class="tag-sample">Made-up sample contact</span>` : person.founder && !weak ? `<span class="tagx">Founder level</span>` : ""}<span class="via">Works at <a href="#" data-rid="${round.rid}">${esc(round.company)}</a>, whose ${esc(round.stage)} round in ${esc(round.date)} ${esc(r.name)} ${round.led ? "led" : "joined"}.${weak ? ` <span class="wrn">Same name only: check it is the same company.</span>` : ""}</span></li>`).join("")}</ul>
+    parts.push(`<div class="introcard"><div class="l1">${ICON.link}You know ${plural(m.length, "person", "people")} at companies it backed</div>
+      <ul class="people">${shown.map(({person, round, weak}) => `<li><span><span class="who">${esc(personName(person))}</span> <span class="role">${esc(person.position || "Role not given")}</span></span>${person.founder && !weak ? `<span class="tagx">Founder level</span>` : ""}<span class="via">Works at <a href="#" data-rid="${round.rid}">${esc(round.company)}</a>, whose ${esc(round.stage)} round in ${esc(round.date)} ${esc(r.name)} ${round.led ? "led" : "joined"}.${weak ? ` <span class="wrn">Same name only: check it is the same company.</span>` : ""}</span></li>`).join("")}</ul>
       ${m.length > shown.length ? `<p>And ${m.length - shown.length} more.</p>` : ""}</div>`);
   }
   if (r.tie) {
@@ -1483,7 +1490,7 @@ function drawFlowSvg(host, W, rows, people, reach, all) {
   for (const n of people) {
     const funds = andList(n.links.map((l) => l.r.name));
     const label = n.kind === "inv" ? `${n.title}, your investor. A way in to ${funds}.`
-      : n.kind === "co" ? `${n.sub} at ${n.title}${sampleNet() ? ", made-up sample" : ""}. A way in to ${funds}.`
+      : n.kind === "co" ? `${n.sub} at ${n.title}. A way in to ${funds}.`
       : `${n.title} people or companies. Ways in to ${funds}.`;
     const g = svgEl("g", {class: `fl-p ${n.kind}`, transform: `translate(${PILL_X} ${n.y - PILL_H / 2})`, tabindex: 0, role: "button", "aria-pressed": "false", "aria-label": label}, pillsG);
     n.g = g;
@@ -1626,7 +1633,7 @@ document.addEventListener("keydown", (e) => { if (e.key === "Escape" && FLOW?.se
    company your contact works at. */
 /* A shared round names no stage: Cala's stage label for small co-rounds is often wrong (Reduciner is not a seed). */
 const tieLine = (tie, fund) => `${esc(shortFund(tie.investor))} and ${esc(shortFund(fund))} were both in ${esc(possessive(tie.round.company))} round, ${esc(tie.round.date)}.`;
-const contactLine = (people, round, fund) => `${esc(whoList(people))} ${people.length === 1 ? "works" : "work"} at ${esc(round.company)}${sampleNet() ? " (made-up sample)" : ""}. ${esc(shortFund(fund))} ${round.led ? "led" : "joined, but did not lead,"} its ${esc(stageWord(round.stage) ? `${stageWord(round.stage)} round` : "round")}, ${esc(round.date)}.`;
+const contactLine = (people, round, fund) => `${esc(whoList(people))} ${people.length === 1 ? "works" : "work"} at ${esc(round.company)}. ${esc(shortFund(fund))} ${round.led ? "led" : "joined, but did not lead,"} its ${esc(stageWord(round.stage) ? `${stageWord(round.stage)} round` : "round")}, ${esc(round.date)}.`;
 const fundRoundLine = (l) => `${esc(shortFund(l.r.name))} ${l.round.led ? "led" : "joined, but did not lead,"} ${esc(roundOf(l.round.company, l.round.stage))}, ${esc(l.round.date)}.`;
 function conflictLine(r) {
   const c = r.conflicts.find((x) => x.level === "led") || r.conflicts[0], more = r.conflicts.length - 1;
@@ -1645,7 +1652,7 @@ function sayIdle() {
       <p class="say-sub">The funds stay in the list's groups and order. Hover one for its lead record, click it for the rounds.</p></div>`};
   }
   const inv = state.req?.investors || [], net = state.network;
-  const via = [inv.length ? esc(andList(inv)) : "", net ? (net.sample ? "a made-up sample network" : "your LinkedIn connections") : ""].filter(Boolean).join(" or ");
+  const via = [inv.length ? esc(andList(inv)) : "", net ? (net.sample ? "the sample network" : "your LinkedIn connections") : ""].filter(Boolean).join(" or ");
   return {cls: "", html: `<span class="say-ic">${SAY_IC.path}</span><div class="say-body"><p class="say-main">Follow a line from you to a fund: that is who to ask for an intro.</p>
     <p class="say-sub"><b>${n} of ${total}</b> funds have a way in, through ${via}. Hover a fund or a person for the round behind the line.</p></div>`};
 }
@@ -1685,7 +1692,7 @@ function sayPerson(n) {
   const moreFunds = n.links.length - shown.length;
   const funds = andList(n.links.map((l) => `<b>${esc(l.r.name)}</b>`));
   const sub = n.kind === "inv" ? `${esc(n.title)}, your investor, might introduce you to ${funds}.`
-    : n.kind === "co" ? `${esc(n.sub)} ${n.people.length === 1 ? "works" : "work"} at ${esc(n.title)}${sampleNet() ? " (made-up sample)" : ""}, a way in to ${funds}. A lead to check, not proof they know the partner.`
+    : n.kind === "co" ? `${esc(n.sub)} ${n.people.length === 1 ? "works" : "work"} at ${esc(n.title)}, a way in to ${funds}. A lead to check, not proof they know the partner.`
     : `${n.rest.length} more people and companies are ways in to ${funds}. Each fund's rounds list all of them.`;
   return {cls: "on", html: `<span class="say-ic">${ICON.link}</span><div class="say-body"><ul class="say-lines">${lines.join("")}${moreFunds > 0 ? `<li class="j"><span class="k"></span><span>And ${plural(moreFunds, "more fund", "more funds")}.</span></li>` : ""}</ul><p class="say-sub">${sub}</p></div>`};
 }

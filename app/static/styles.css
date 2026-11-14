@@ -162,6 +162,8 @@ fieldset.field legend{padding:0}
 
 .netbar{margin:14px 24px 6px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 14px;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--sunk);font-size:14px;color:var(--ink-2)}
 .netbar.on{background:var(--accent-tint-2);border-color:var(--accent-line)}
+.netbar.sample{background:var(--amber-tint);border-color:#E9D3A8}
+.netbar.sample b{color:var(--amber)}
 .netbar .t{flex:1;min-width:220px}
 .netbar b{color:var(--ink);font-weight:600}
 .netbar .privacy{margin:2px 0 0}
@@ -214,7 +216,6 @@ h1[tabindex="-1"]:focus{outline:none}
 .way{font-size:13px;color:var(--ink-3)}
 .way.weak{display:inline-flex;align-items:center;gap:6px;color:var(--amber);font-weight:520}
 .way.weak svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:none}
-.tag-sample{font-size:13px;font-weight:560;color:var(--amber);background:var(--amber-tint);border-radius:4px;padding:1px 6px;white-space:nowrap;align-self:start}
 .wrn{color:var(--warn)}
 .way.yes{display:inline-flex;align-items:center;gap:6px;min-height:26px;padding:2px 9px 2px 7px;border-radius:12px;background:var(--accent-tint);color:var(--accent-ink);font-weight:560}
 .way.yes svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:none}
@@ -445,7 +446,6 @@ table.simple th{font-size:13px;color:var(--ink-3);font-weight:540}
   .cols,.row{grid-template-columns:36% 18% minmax(0,1fr);padding:0 2px;column-gap:6px}
   .has-way .cols,.has-way .row{grid-template-columns:26% 13% 20% minmax(0,1fr)}
   .vline{font-size:9px}
-  .tag-sample{font-size:8.5px;padding:0 3px}
   .cols{position:static;height:auto;padding-top:3px;padding-bottom:3px;margin:0;font-size:9px}
   .c-last,.cols .c-last{display:none !important}
   .grp{position:static;min-height:0;padding:4px 2px 2px;font-size:10.5px;background:#f3f3f3}
