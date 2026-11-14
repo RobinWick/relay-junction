@@ -165,7 +165,6 @@
     fv: { companies: [], funds: [], founders: [] },
     weights: {}, weightBy: {}, thesis: false,
     sort: { companies: "score:desc", funds: "score:desc", founders: "score:desc" },
-    fairRank: false,
     list: { companies: null, funds: null, founders: null },
     rows: { companies: [], funds: [], founders: [] },
     listErr: {}, loading: {}, seq: 0,
@@ -248,6 +247,7 @@
   const entHref = (view, id, tab) => `#/${view}/${encodeURIComponent(id)}${tab && tab !== "overview" ? "/" + tab : ""}`;
 
   function onRoute() {
+    if (T.on) endTour();
     const prev = S.route;
     const r = parseHash();
     S.route = r;
@@ -261,6 +261,7 @@
     const viewChanged = prev.page || prev.view !== r.view || !$("#sheet-host");
     if (viewChanged) { S.sel = -1; renderView(); if (!S.list[r.view] && !S.loading[r.view]) loadList(r.view); }
     if (r.id) openDetail(r.view, r.id, r.tab); else if (S.layer && S.layer.kind === "detail") closeLayer(true);
+    tourMaybe();
   }
 
   /* ---------------- top nav, tabbar, theme ---------------- */
@@ -279,6 +280,7 @@
       `<a class="seg__btn" href="#/${k}"${cur === k ? ' aria-current="page"' : ""}>${l}${isNum(n) ? ` <span class="seg__count">${fmtInt(n)}</span>` : ""}</a>`).join("");
     $("#tabbar").innerHTML = items.map(([k, l, , i]) => `<a href="#/${k}"${cur === k ? ' aria-current="page"' : ""}>${ic(i)}<span>${l}</span></a>`).join("");
     requestAnimationFrame(() => moveInd($("#nav")));
+    tourSync();
   }
   function moveInd(seg) {
     if (!seg) return;
@@ -350,6 +352,7 @@
     const ex = $("#expl"); if (ex) ex.innerHTML = explainer(S.route.view, TITLES[S.route.view][1]);
     renderChat(); renderHero(); renderRail(); renderTable();
     if (S.layer && S.layer.kind === "weights") renderWeights();
+    tourSync();
   }
 
   /* ---------------- chat bar ---------------- */
@@ -425,7 +428,7 @@
     const v = S.route.view;
     const rows = S.rows[v] || [];
     const lm = (S.list[v] && S.list[v].meta) || {};
-    const byServer = S.sort[v] === "score:desc" && !S.fairRank; // server order = display order, ties already broken
+    const byServer = S.sort[v] === "score:desc"; // server order = display order, ties already broken
     const scored = rows.filter((r) => isNum(r.score)).slice();
     if (!byServer) scored.sort((a, b) => (a.rank_global != null && b.rank_global != null ? a.rank_global - b.rank_global : b.score - a.score));
     scored.forEach((r, i) => { r._pos = byServer && r.position != null ? r.position : i + 1; });
@@ -677,7 +680,6 @@
     p.set("sort", S.sort[v]);
     p.set("limit", String(limit));
     p.set("offset", String(offset));
-    if (v === "companies" && S.fairRank) p.set("fair_rank", "true");
     return `/api/signal/${v}?${p}`;
   }
   async function loadList(v, append) {
@@ -697,6 +699,7 @@
     }
     S.loading[v] = false;
     if (S.route.view === v && !S.route.page) refreshAll();
+    tourMaybe();
   }
   const loadListSoon = debounce((v) => loadList(v), 150);
 
@@ -747,7 +750,7 @@
   function cell(v, col, r, i) {
     const lr = r.last_round || {};
     switch (col.k) {
-      case "#": return `<div class="sheet__td sheet__rownum">${S.fairRank && r.rank_in_cohort != null ? r.rank_in_cohort : r.position != null ? r.position : ""}</div>`;
+      case "#": return `<div class="sheet__td sheet__rownum">${r.position != null ? r.position : ""}</div>`;
       case "name": {
         const tip = [r.name, r.country && r.country.name, r.last_stage && stageLabel(r.last_stage)].filter(Boolean).join(" · ");
         const fl = (r.flags || []).map((f) => flagLabel(f)).filter(Boolean);
@@ -819,7 +822,6 @@
       <div class="tbar__left">
         <button class="btn btn--sm filters-btn" type="button" data-act="rail-open">${ic("filter")}Filters${S.fv[v].length ? ` <span class="seg__count">${S.fv[v].length}</span>` : ""}</button>
         <span class="tbar__meta">${d ? `<b>${fmtInt(lm.matched)}</b>&nbsp;${v}${nc.length ? `<span class="sep-dot"></span><span title="${esc(nc.map((x) => `${x.count} ${x.reason}`).join("\n"))}">${fmtInt(nc.reduce((a, x) => a + x.count, 0))} without data</span>` : ""}` : S.loading[v] ? "Ranking" : ""}</span>
-        ${v === "companies" ? `<label class="toggle"><input type="checkbox" data-act="fair"${S.fairRank ? " checked" : ""}><span class="toggle__track"></span><span title="Rank within the same stage and history depth">Fair rank</span></label>` : ""}
       </div>`;
     // ribbons
     const rib = [];
@@ -1445,7 +1447,7 @@
     if (!a && row && !t.closest("a")) { location.hash = entHref(S.route.view, row.dataset.id); return; }
     if (!a) return;
     const act = a.dataset.act;
-    if (["fair", "thesis"].includes(act)) return; // handled on change
+    if (act === "thesis") return; // handled on change
     switch (act) {
       case "ask": S.chatMsg = a.dataset.q; ask(a.dataset.q); break;
       case "rmf": setF(S.route.view, a.dataset.key, null); loadList(S.route.view); break;
@@ -1476,7 +1478,6 @@
   }
   function onChange(e) {
     const t = e.target;
-    if (t.dataset.act === "fair") { S.fairRank = t.checked; loadList("companies"); return; }
     if (t.dataset.act === "thesis") {
       S.thesis = t.checked;
       if (!S.thesis) { S.weights = {}; S.weightBy = {}; }
@@ -1542,6 +1543,196 @@
     document.body.appendChild(el); setTimeout(() => el.remove(), 2600);
   }
 
+  /* ---------------- first-visit tour ---------------- */
+  // Five short steps over the real page. Auto-starts once per browser after the list has loaded; never for
+  // webdriver (crawlers, screenshot tools) or ?tour=0; ?tour=1 forces it. If storage throws it does not auto-start.
+  const TOUR_KEY = "recount.signal.tour.v1";
+  const TOUR = [
+    { sel: ["#chat-form"], title: "Ask in your own words",
+      body: "Type what you want, like a good fintech company. Recount picks the filters for you." },
+    { sel: ["#hero .due-card"], title: "See who ranks first",
+      body: "Companies are ranked on round size for their stage. Click a row to see why.",
+      bodyMobile: "Companies are ranked on round size for their stage. Tap a company to see why." },
+    { sel: ["#rail", ".filters-btn"], title: "Narrow it down",
+      body: "Filter by country, stage, sector, downturn or founders." },
+    { sel: ['#nav a[href="#/lab"]', '#tabbar a[href="#/lab"]'], title: "Only one signal held up",
+      body: "We tested 35 signals on years the model never saw. Only one held up, so that is what we rank on." },
+    { sel: ['#nav a[href="#/funds"], #nav a[href="#/founders"]', '#tabbar a[href="#/funds"], #tabbar a[href="#/founders"]'],
+      title: "Funds and founders too",
+      body: "Switch tabs to see funds and founders the same way. Every number links to its Cala record." },
+  ];
+  const T = { on: false, steps: [], i: 0, root: null, ret: null, pending: false, autoChecked: false, raf: 0 };
+  const isPhone = () => innerWidth <= 719;
+  function shown(el) {
+    const r = el.getBoundingClientRect();
+    return r.width > 0 && r.height > 0 && getComputedStyle(el).visibility !== "hidden";
+  }
+  function tourTargets(step) {
+    for (const sel of step.sel) { const els = $$(sel).filter(shown); if (els.length) return els; }
+    return null;
+  }
+  function tourReady() {
+    return !S.route.page && !S.route.id && S.route.view === "companies" && !!S.list.companies && !S.loading.companies && !S.layer;
+  }
+  function wantAutoTour() {
+    const q = new URLSearchParams(location.search).get("tour");
+    if (q === "0") return false;
+    if (q === "1") return true;
+    if (navigator.webdriver) return false;
+    try {
+      if (localStorage.getItem(TOUR_KEY)) return false;
+      localStorage.setItem(TOUR_KEY, "1");
+      return true;
+    } catch (e) { return false; } // storage blocked: no reliable "seen" flag, so never auto-show
+  }
+  function tourMaybe() {
+    if (T.on || !tourReady()) return;
+    if (T.pending) { T.pending = false; setTimeout(startTour, 80); return; }
+    if (T.autoChecked) return;
+    T.autoChecked = true;
+    if (wantAutoTour()) setTimeout(startTour, 500);
+  }
+  function openTour(btn) {
+    T.ret = btn || document.activeElement;
+    if (tourReady()) { startTour(); return; }
+    T.pending = true;
+    if (S.layer) closeLayer(true);
+    if (location.hash !== "#/companies") location.hash = "#/companies"; else tourMaybe();
+  }
+  function startTour() {
+    if (T.on || !tourReady()) return;
+    closePop();
+    T.steps = TOUR.filter((st) => tourTargets(st));
+    if (!T.steps.length) return;
+    if (!T.ret || !document.contains(T.ret)) T.ret = document.activeElement;
+    const root = document.createElement("div");
+    root.className = "tour";
+    root.innerHTML = `<div class="tour__block"></div><div class="tour__spot" aria-hidden="true"></div>
+      <div class="tour-card" role="dialog" aria-modal="true" aria-labelledby="tour-title" aria-describedby="tour-body" tabindex="-1">
+        <h2 class="tour-card__title" id="tour-title"></h2>
+        <p class="tour-card__body" id="tour-body"></p>
+        <div class="tour-card__foot">
+          <div class="tour-dots" aria-hidden="true">${T.steps.map(() => "<i></i>").join("")}</div>
+          <span class="sr-only" id="tour-count" aria-live="polite"></span>
+          <div class="tour-card__btns">
+            <button class="btn btn--ghost" type="button" data-tour="skip">Skip</button>
+            <button class="btn" type="button" data-tour="back">Back</button>
+            <button class="btn btn--primary" type="button" data-tour="next">Next</button>
+          </div>
+        </div>
+      </div>`;
+    document.body.appendChild(root);
+    T.root = root; T.on = true;
+    root.addEventListener("click", (e) => {
+      const b = e.target.closest("[data-tour]"); if (!b) return;
+      e.stopPropagation();
+      const a = b.dataset.tour;
+      if (a === "skip") endTour(); else if (a === "back") tourGo(T.i - 1); else if (T.i >= T.steps.length - 1) endTour(); else tourGo(T.i + 1);
+    });
+    window.addEventListener("keydown", tourKey, true);
+    document.addEventListener("focusin", tourFocus, true);
+    window.addEventListener("resize", tourSync);
+    window.addEventListener("scroll", tourSync, { passive: true });
+    tourGo(0);
+  }
+  function endTour() {
+    if (!T.on) return;
+    T.on = false;
+    window.removeEventListener("keydown", tourKey, true);
+    document.removeEventListener("focusin", tourFocus, true);
+    window.removeEventListener("resize", tourSync);
+    window.removeEventListener("scroll", tourSync);
+    cancelAnimationFrame(T.raf);
+    if (T.root) T.root.remove();
+    T.root = null;
+    const back = T.ret && document.contains(T.ret) ? T.ret : $("#open-tour");
+    T.ret = null;
+    if (back) back.focus({ preventScroll: true });
+  }
+  function tourGo(i) {
+    if (!T.on || i < 0 || i >= T.steps.length) return;
+    T.i = i;
+    const st = T.steps[i];
+    const els = tourTargets(st);
+    if (!els) { T.steps.splice(i, 1); if (!T.steps.length) { endTour(); return; } $(".tour-dots", T.root).lastElementChild.remove(); tourGo(Math.min(i, T.steps.length - 1)); return; }
+    $("#tour-title").textContent = st.title;
+    $("#tour-body").textContent = isPhone() && st.bodyMobile ? st.bodyMobile : st.body;
+    $("#tour-count").textContent = `Step ${i + 1} of ${T.steps.length}`;
+    $$(".tour-dots i", T.root).forEach((d, j) => d.classList.toggle("is-on", j === i));
+    const back = $('[data-tour="back"]', T.root), next = $('[data-tour="next"]', T.root);
+    back.hidden = i === 0;
+    next.textContent = i === T.steps.length - 1 ? "Done" : "Next";
+    // Scroll the target into view unless it lives in the fixed header or tab bar.
+    const el = els[0];
+    if (!el.closest("#topbar,#tabbar")) {
+      const r = el.getBoundingClientRect();
+      const top = (parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--header-h")) || 64) + 12;
+      const bottom = innerHeight - (isPhone() ? 260 : 24);
+      if (r.top < top || r.bottom > bottom) {
+        const room = bottom - top;
+        const y = r.height > room ? r.top - top : r.top - top - (room - r.height) / 2;
+        window.scrollBy(0, y);
+      }
+    }
+    tourPlace();
+    next.focus({ preventScroll: true });
+  }
+  function tourSync() {
+    if (!T.on) return;
+    cancelAnimationFrame(T.raf);
+    T.raf = requestAnimationFrame(tourPlace);
+  }
+  function tourPlace() {
+    if (!T.on) return;
+    const els = tourTargets(T.steps[T.i]);
+    const spot = $(".tour__spot", T.root), card = $(".tour-card", T.root);
+    const W = innerWidth, H = innerHeight, pad = 6, gap = 14, m = 16;
+    let r = null;
+    if (els) {
+      const rs = els.map((e) => e.getBoundingClientRect());
+      r = { left: Math.min(...rs.map((x) => x.left)) - pad, top: Math.min(...rs.map((x) => x.top)) - pad,
+            right: Math.max(...rs.map((x) => x.right)) + pad, bottom: Math.max(...rs.map((x) => x.bottom)) + pad };
+      r.left = clamp(r.left, 4, W - 4); r.right = clamp(r.right, 4, W - 4);
+      r.top = clamp(r.top, 4, H - 4); r.bottom = clamp(r.bottom, 4, H - 4);
+      spot.style.left = r.left + "px"; spot.style.top = r.top + "px";
+      spot.style.width = Math.max(0, r.right - r.left) + "px"; spot.style.height = Math.max(0, r.bottom - r.top) + "px";
+    }
+    const w = card.offsetWidth, h = card.offsetHeight;
+    let x, y;
+    if (isPhone() || !r) {
+      // Docked: bottom by default, top when the spotlight sits where the card would go.
+      x = m;
+      y = r && r.bottom > H - h - m - 8 ? m : H - h - m;
+    } else if (r.bottom + gap + h <= H - m) { x = clamp(r.left, m, W - w - m); y = r.bottom + gap; }
+    else if (r.top - gap - h >= m) { x = clamp(r.left, m, W - w - m); y = r.top - gap - h; }
+    else if (r.right + gap + w <= W - m) { x = r.right + gap; y = clamp(r.top, m, H - h - m); }
+    else if (r.left - gap - w >= m) { x = r.left - gap - w; y = clamp(r.top, m, H - h - m); }
+    else { x = (W - w) / 2; y = H - h - m; }
+    card.style.left = Math.round(x) + "px"; card.style.top = Math.round(y) + "px";
+  }
+  function tourFocus(e) {
+    if (!T.on) return;
+    const card = $(".tour-card", T.root);
+    if (card && !card.contains(e.target)) { const n = $('[data-tour="next"]', T.root); if (n) n.focus({ preventScroll: true }); }
+  }
+  function tourKey(e) {
+    if (!T.on) return;
+    e.stopPropagation(); // the page's own shortcuts (j, k, w, /, Cmd K) stay off while the tour is open
+    if (e.key === "Escape") { e.preventDefault(); endTour(); return; }
+    if (e.key === "ArrowRight") { e.preventDefault(); tourGo(T.i + 1); return; }
+    if (e.key === "ArrowLeft") { e.preventDefault(); tourGo(T.i - 1); return; }
+    if (e.key === "Tab") {
+      const btns = $$(".tour-card button", T.root).filter((b) => !b.hidden);
+      if (!btns.length) return;
+      e.preventDefault();
+      const at = btns.indexOf(document.activeElement);
+      const nx = at < 0 ? 0 : (at + (e.shiftKey ? -1 : 1) + btns.length) % btns.length;
+      btns[nx].focus({ preventScroll: true });
+      return;
+    }
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") e.preventDefault();
+  }
+
   /* ---------------- init ---------------- */
   async function init() {
     renderTheme();
@@ -1552,6 +1743,7 @@
     document.addEventListener("keydown", onKey);
     $("#open-pal").addEventListener("click", openPal);
     $("#open-key").addEventListener("click", (e) => showKey(e.currentTarget));
+    $("#open-tour").addEventListener("click", (e) => openTour(e.currentTarget));
     window.addEventListener("hashchange", onRoute);
     window.addEventListener("resize", debounce(() => { moveInd($("#nav")); }, 100));
     window.addEventListener("scroll", () => { $("#topbar").dataset.scrolled = String(window.scrollY > 4); }, { passive: true });
