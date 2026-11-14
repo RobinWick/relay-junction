@@ -1,4 +1,8 @@
-"""Recount web app: FastAPI serving the API and the static page from one origin, behind a passcode gate."""
+"""Recount web app: FastAPI serving the API and the static page from one origin.
+
+An optional passcode gate exists (RELAY_GATE=on with RELAY_DEMO_PASSCODE). It is off by default, so the demo is
+open; every visitor still gets one signed session cookie so the live Cala lookup caps work per visitor.
+"""
 from __future__ import annotations
 
 import json
@@ -184,6 +188,34 @@ def meta():
     return {**s.stats, "retrieved": s.retrieved, "version": s.version,
             "stages": [{"key": k, "label": STAGE_LABEL[k]} for k in STAGES if k != "growth"],
             "validation": VALIDATION}
+
+
+_PROOF: dict = {}
+
+
+@app.get("/api/proof")
+def proof():
+    """The first-run recount strip: two funds from the sample list, counted live from the snapshot, never hardcoded.
+
+    Voima Ventures leads nearly every round it is in; FJ Labs mostly follows. Each round is one dot, so only the
+    fields a dot and its hover card need are sent.
+    """
+    s = snap()
+    if _PROOF.get("version") == s.version:
+        return _PROOF["body"]
+    funds = []
+    for name in ("Voima Ventures", "FJ Labs"):
+        key = s.match_fund(name)
+        if not key:
+            continue
+        p = fund_profile(s, key, "seed", 3.0)
+        keep = ("id", "company", "date", "t", "stage", "amount_eur_m", "leads")
+        funds.append({k: p[k] for k in ("key", "name", "verdict", "verdict_label", "led", "known", "unknown", "disputed")}
+                     | {"rounds_led": [{k: x[k] for k in keep} for x in p["rounds_led"]],
+                        "rounds_joined": [{k: x[k] for k in keep} for x in p["rounds_joined"]]})
+    body = {"stage": STAGE_LABEL["seed"], "target_eur_m": 3, "funds": funds}
+    _PROOF.update(version=s.version, body=body)
+    return body
 
 
 @app.get("/api/suggest")

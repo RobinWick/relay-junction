@@ -1,4 +1,4 @@
-"""Passcode gate for the private judge demo: signed cookie, failed-login limits per IP and globally."""
+"""Signed session cookie for every visitor, plus the optional passcode gate (off by default): failed-login limits per IP and globally."""
 from __future__ import annotations
 
 import hashlib

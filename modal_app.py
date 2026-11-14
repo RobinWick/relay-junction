@@ -1,7 +1,8 @@
 """Modal deployment for Recount: the web app, plus the Cala lookups that run in the background.
 
 Deploy:  python3 -m modal deploy modal_app.py
-Secrets: Modal secret `relay-secrets` (CALA_API_KEY, GEMINI_API_KEY, RELAY_DATABASE_URL, RELAY_DEMO_PASSCODE, COOKIE_KEY).
+Secrets: Modal secret `relay-secrets` (CALA_API_KEY, GEMINI_API_KEY, RELAY_DATABASE_URL, COOKIE_KEY).
+The passcode gate is optional and off by default; set RELAY_GATE=on and RELAY_DEMO_PASSCODE to turn it on.
 """
 from pathlib import Path
 

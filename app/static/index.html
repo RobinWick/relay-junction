@@ -13,9 +13,9 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Recount","applicationCategory":"BusinessApplication","operatingSystem":"Web","description":"Checks whether venture capital funds actually lead funding rounds at a founder's stage and size or mostly follow, when they last led, whether they backed a competitor, and which of the founder's investors can introduce them. Deterministic counting over 5,200 funding rounds from Cala, with source records behind every number.","isAccessibleForFree":true,"creator":{"@type":"Organization","name":"Team Wicflow, Junction 2026"},"about":["venture capital","lead investor","fundraising","Cala"]}</script>
 <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
 <link rel="preload" href="/static/fonts/geist-variable.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/static/styles.css?v=7">
-<script src="/static/brand.js?v=7" defer></script>
-<script src="/static/app.js?v=7" defer></script>
+<link rel="stylesheet" href="/static/styles.css?v=8">
+<script src="/static/brand.js?v=8" defer></script>
+<script src="/static/app.js?v=8" defer></script>
 </head>
 <body data-screen="paste">
 <div class="app">
@@ -24,7 +24,8 @@
     <nav class="nav" aria-label="Main">
       <a href="/" id="nav-check"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 4.5h10M3 8h10M3 11.5h6"/></svg>Check a list</a>
       <button type="button" id="nav-find"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><path d="m10.5 10.5 3 3"/></svg>Find funds for me</button>
-      <a href="/method" id="nav-method"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 2.5h7.5L13 5v8.5H3z"/><path d="M5.5 7h5M5.5 9.5h5"/></svg>Method and limits</a>
+      <a href="/method" id="nav-method"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 2.5h7.5L13 5v8.5H3z"/><path d="M5.5 7h5M5.5 9.5h5"/></svg><span>Method<span class="m-hide"> and limits</span></span></a>
+      <button type="button" id="nav-tour"><svg viewBox="0 0 16 16" aria-hidden="true"><circle class="gd" cx="8" cy="8" r="3.2"/><circle cx="8" cy="8" r="6"/></svg>Show me how</button>
     </nav>
     <section class="side-round only-results" aria-labelledby="side-round-h">
       <div class="side-h"><h2 id="side-round-h">Your round</h2><button type="button" id="side-edit">Edit</button></div>
@@ -41,6 +42,12 @@
       <section class="compose only-paste" aria-labelledby="h-main">
         <h1 id="h-main">Funds say they lead. <span>We recount.</span></h1>
         <p class="sub">Counted from Cala round data. Not AI.</p>
+
+        <div class="proof hidden" id="proof" aria-labelledby="proof-h">
+          <div class="proof-h"><b id="proof-h"></b><span class="sp"></span><span class="legend" aria-hidden="true"><span><i class="l"></i>Led</span><span><i></i>Joined</span></span></div>
+          <div id="proof-rows"></div>
+          <p class="proof-foot" id="proof-foot"></p>
+        </div>
 
         <form class="card card-pad" id="check-form" autocomplete="off" novalidate>
           <div id="mode-list">
@@ -101,17 +108,25 @@
                 <input class="input" id="company" maxlength="120" placeholder="Acme Oy" aria-describedby="company-hint">
                 <p class="hint" id="company-hint">Your own rounds are left out of intro paths.</p>
               </div>
-              <div class="field">
+              <div class="field li-box" id="li-box">
                 <span class="label" id="l-net">Your LinkedIn connections</span>
+                <p class="hint li-why">We match them to the companies each fund backed, to show who can introduce you.</p>
+                <ol class="li-steps" id="li-how">
+                  <li><span class="n" aria-hidden="true">1</span><span>On LinkedIn, open <a href="https://www.linkedin.com/mypreferences/d/download-my-data" target="_blank" rel="noopener noreferrer">Settings, Data privacy, Get a copy of your data</a>.</span></li>
+                  <li><span class="n" aria-hidden="true">2</span><span>Choose <b>Connections</b> only and request the archive.</span></li>
+                  <li><span class="n" aria-hidden="true">3</span><span>LinkedIn emails you a link, usually within 10 to 30 minutes.</span></li>
+                  <li><span class="n" aria-hidden="true">4</span><span>Drop <b>Connections.csv</b> here. The whole .zip works too.</span></li>
+                </ol>
                 <div class="drop" id="drop">
-                  <input type="file" id="li-file" class="file-in" accept=".csv,text/csv" aria-labelledby="l-net li-btn" aria-describedby="li-how li-privacy">
+                  <input type="file" id="li-file" class="file-in" accept=".csv,.zip,text/csv,application/zip" aria-labelledby="l-net li-btn" aria-describedby="li-how li-privacy">
                   <label for="li-file" class="file-btn" id="li-btn">Choose Connections.csv</label>
-                  <span>or drop the file here</span>
+                  <span>or drop it here</span>
+                  <span class="sp"></span>
                   <button type="button" class="linkbtn" id="net-sample">Try with a sample network</button>
                 </div>
-                <p class="hint" id="li-how">On LinkedIn: Settings, Data privacy, Get a copy of your data, Connections.</p>
                 <p class="privacy" id="li-privacy"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3.5" y="7" width="9" height="6.5" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg>Read in your browser. Nothing is uploaded or stored.</p>
                 <p class="net-status" id="net-status" role="status" aria-live="polite"></p>
+                <p class="soon">Coming next: connect directly through LinkedIn's official EU data-portability API.</p>
               </div>
             </div>
           </details>
@@ -132,6 +147,8 @@
   </main>
 </div>
 <div id="pane-root"></div>
+<div class="tip" id="tip" role="tooltip"></div>
+<div id="tour-root"></div>
 <div id="status" class="sr" role="status" aria-live="polite"></div>
 </body>
 </html>

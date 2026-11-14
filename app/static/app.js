@@ -61,7 +61,15 @@ async function api(path, opts = {}) {
 }
 
 function announce(msg) { const st = $("#status"); st.textContent = ""; setTimeout(() => { st.textContent = msg; }, 50); }
-const setScreen = (s) => { document.body.dataset.screen = s; };
+/* Only the visible screen animates: the first-run strip on paste, the map's sweep on results. */
+function setScreen(s) {
+  const was = document.body.dataset.screen;
+  document.body.dataset.screen = s;
+  hideTip();
+  if (s !== "results") stopMap();
+  else if (was !== "results" && state.resultView === "map" && MAP?.wrap.isConnected) ambient(0);
+  if (s === "paste" && was !== "paste") runProof();
+}
 
 /* ---------------- routing ---------------- */
 function route() {
@@ -72,7 +80,7 @@ function route() {
   $("#nav-find").toggleAttribute("aria-current", !isMethod && state.mode === "find");
   $("#nav-method").toggleAttribute("aria-current", isMethod);
   ["#nav-check", "#nav-find", "#nav-method"].forEach((id) => { if ($(id).hasAttribute("aria-current")) $(id).setAttribute("aria-current", "page"); });
-  if (isMethod) renderMethod();
+  if (isMethod) { renderMethod(); stopMap(); hideTip(); if ($("#tour-root").firstChild) tourClose("done"); }
 }
 function go(path) { if (location.pathname !== path) history.pushState({}, "", path); route(); window.scrollTo(0, 0); }
 document.addEventListener("click", (e) => {
@@ -282,12 +290,48 @@ function paintNetStatus(msg, isErr) {
   st.innerHTML = n ? `${n.sample ? "Made-up sample network loaded" : `Read ${esc(n.label)}`}: ${plural(n.people.length, "connection", "connections")}. <button type="button" class="linkbtn" data-net-clear>Remove</button>` : "";
 }
 
+/* Reads Connections.csv out of a LinkedIn archive .zip, in the browser. Only the central directory and that one
+   entry are read; deflate goes through the browser's own DecompressionStream, so no library and nothing inline. */
+async function csvFromZip(file) {
+  const buf = new Uint8Array(await file.arrayBuffer());
+  const dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
+  let end = -1;
+  for (let i = buf.length - 22; i >= Math.max(0, buf.length - 22 - 65535); i--) {
+    if (dv.getUint32(i, true) === 0x06054b50) { end = i; break; }
+  }
+  if (end < 0) throw new Error("not a zip");
+  const count = dv.getUint16(end + 10, true);
+  let p = dv.getUint32(end + 16, true);
+  const dec = new TextDecoder();
+  for (let n = 0; n < count && p + 46 <= buf.length; n++) {
+    if (dv.getUint32(p, true) !== 0x02014b50) break;
+    const method = dv.getUint16(p + 10, true), size = dv.getUint32(p + 20, true);
+    const nameLen = dv.getUint16(p + 28, true), extraLen = dv.getUint16(p + 30, true), noteLen = dv.getUint16(p + 32, true);
+    const at = dv.getUint32(p + 42, true);
+    const name = dec.decode(buf.subarray(p + 46, p + 46 + nameLen));
+    if (/(^|\/)connections\.csv$/i.test(name)) {
+      const start = at + 30 + dv.getUint16(at + 26, true) + dv.getUint16(at + 28, true);
+      const data = buf.subarray(start, start + size);
+      if (method === 0) return dec.decode(data);
+      if (method === 8 && typeof DecompressionStream === "function") {
+        return new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream("deflate-raw"))).text();
+      }
+      throw new Error("unsupported zip");
+    }
+    p += 46 + nameLen + extraLen + noteLen;
+  }
+  return null;
+}
+
 async function readNetworkFile(file) {
   if (!file) return;
-  if (!/\.csv$/i.test(file.name) && file.type !== "text/csv") return paintNetStatus("Choose the Connections.csv file from your LinkedIn export.", true);
-  if (file.size > 8 * 1024 * 1024) return paintNetStatus("That file is too large for a connections export.", true);
+  const isZip = /\.zip$/i.test(file.name) || /zip/.test(file.type);
+  if (!isZip && !/\.csv$/i.test(file.name) && file.type !== "text/csv") return paintNetStatus("Choose Connections.csv or the .zip from your LinkedIn export.", true);
+  if (file.size > (isZip ? 80 : 8) * 1024 * 1024) return paintNetStatus("That file is too large for a connections export.", true);
   try {
-    const people = parseConnections(await file.text());
+    const text = isZip ? await csvFromZip(file) : await file.text();
+    if (isZip && text == null) return paintNetStatus("No Connections.csv in that .zip. Ask LinkedIn for the Connections archive.", true);
+    const people = parseConnections(text);
     if (!people || !people.length) return paintNetStatus("No connections found. Use Connections.csv from the LinkedIn export.", true);
     setNetwork(people, file.name, false);
     announce(`${plural(people.length, "connection", "connections")} read in your browser.`);
@@ -370,10 +414,12 @@ async function run() {
     lead: state.lead, company: $("#company").value.trim() || null, competitors: [...state.competitors]});
 }
 
-/* The sample has its own request, so its investor, competitor and raise never land in the founder's form. */
+/* The sample has its own request, so its investor, competitor and raise never land in the founder's form.
+   Lifeline Ventures is the sample's investor (for the way-in ties) but not its lead: two of the ten rounds behind
+   its "Will your lead come back?" card are not supported by press, so the sample does not show that card. */
 function runSample() {
   setStage("seed");
-  check({funds_text: SAMPLE, stage: "seed", target_eur_m: 3, investors: ["Lifeline Ventures"], lead: "Lifeline Ventures",
+  check({funds_text: SAMPLE, stage: "seed", target_eur_m: 3, investors: ["Lifeline Ventures"], lead: null,
     company: null, competitors: ["Lovable"], sample: true});
 }
 
@@ -408,8 +454,12 @@ async function load(fetcher, toView, req) {
   window.scrollTo(0, 0);
   $("#go").disabled = true;
   try {
-    state.view = toView(await fetcher());
+    const view = toView(await fetcher());
+    counted.clear();
+    state.view = view;
     state.req = req;
+    state.resultView = "list";
+    state.mapRevealed = false;
     renderResults();
     $("#results h1")?.focus();
   } catch (err) {
@@ -459,14 +509,190 @@ function sizeCell(r, target) {
   const fitWord = {fits: "fits your raise", larger: "smaller than your raise", smaller: "larger than your raise"}[s.fit] || "";
   return `<span class="size${s.unclear ? " unclear" : ""}"><svg class="strip${fits ? " fit" : ""}" viewBox="0 0 56 14" aria-hidden="true"><rect class="trk" x="0" y="6" width="56" height="2" rx="1"/><rect class="rng" x="${a.toFixed(1)}" y="4" width="${Math.max(4, b - a).toFixed(1)}" height="6" rx="3"/>${you}</svg><span>EUR ${fmtM(s.lo)}${s.hi !== s.lo ? ` to ${fmtM(s.hi)}` : ""}m</span>${unclear}${fitWord ? `<span class="sr">, ${fitWord}</span>` : ""}</span>`;
 }
-/* Two-tone bar over every round in the window: led, joined with a named lead, and (track) lead not named.
-   The ratio only uses named leads, so the unnamed share is printed beside it. */
+/* ---------------- recount tally: one dot per round with a named lead ----------------
+   Filled = it led, hollow = it joined, oldest first. Rounds with no named lead and rounds the source disputes are
+   never dots; the row prints how many there are. Long records keep the newest TALLY_CAP dots and say "+N earlier". */
+const TALLY_COLS = 24, TALLY_CAP = 48;
+
+function tallyRounds(r) {
+  if (!r._tally) {
+    r._tally = [...(r.rounds_led || []).map((x) => ({...x, L: 1})), ...(r.rounds_joined || []).map((x) => ({...x, L: 0}))]
+      .sort((a, b) => a.t - b.t || a.id - b.id);
+  }
+  return r._tally;
+}
+
+/* Rings on a dot: your investor was in that round, someone you know works there, or it backed your competitor. */
+function dotMarks(r) {
+  const marks = new Map();
+  const add = (rid, k, text) => { if (rid == null) return; if (!marks.has(rid)) marks.set(rid, []); marks.get(rid).push({k, text}); };
+  if (r.tie) add(r.tie.round.id, "tie", `Your investor ${r.tie.investor} was in this round too`);
+  for (const c of r.conflicts || []) add(c.round.id, "cf", `${c.level === "led" ? "Led" : "Joined"} ${c.competitor}, your competitor`);
+  for (const m of r.way?.matches || []) if (m.strength > 1) add(m.round.rid, "net", `You know ${personName(m.person)} here${sampleNet() ? " (made-up sample)" : ""}`);
+  return marks;
+}
+
+function tallyHtml(r, {plain = false, cols = TALLY_COLS, cap = TALLY_CAP} = {}) {
+  const all = tallyRounds(r);
+  if (all.length > cap) { cols -= 4; cap = cols * 2; }  // room for "+N earlier" in front of the dots
+  const shown = all.slice(-cap), hidden = all.length - shown.length;
+  const rows = Math.min(2, Math.max(1, Math.ceil(shown.length / cols)));
+  const marks = plain ? new Map() : dotMarks(r);
+  const dots = shown.map((x, j) => {
+    const ks = (marks.get(x.id) || []).map((m) => m.k);
+    const ring = ks.includes("cf") ? " cf" : ks.includes("tie") ? " tie" : ks.includes("net") ? " net" : "";
+    return `<span class="td${x.L ? " led" : ""}${ring}" data-r="${hidden + j}"></span>`;
+  }).join("");
+  const label = `${r.name}: led ${r.led} of ${r.known} rounds with a named lead${r.unknown ? `, ${r.unknown} more name no lead` : ""}${r.disputed ? `, ${r.disputed} disputed by the source and not counted` : ""}. Arrow keys read each round.`;
+  return `<span class="tw">${hidden ? `<span class="earlier">+${hidden} earlier</span>` : ""}<span class="tally" data-rows="${rows}" tabindex="0" role="img" aria-label="${esc(label)}">${dots}<span class="tsw" aria-hidden="true"></span></span></span>`;
+}
+
+const counterHtml = (r) => `<span class="counter" aria-hidden="true">Led <b class="cl">${r.led}</b> of <span class="ck">${r.known}</span>${r.unknown ? " named" : ""}</span>`;
+
 function ledCell(r) {
-  if (!r.known) return `<span class="muted">No named leads</span>`;
-  const all = r.known + r.unknown, w = Math.max(r.led ? 3 : 0, (r.led / all) * 34), j = ((r.known - r.led) / all) * 34;
-  const bar = `<svg class="bar${r.verdict === "leads" ? " lead" : ""}" viewBox="0 0 34 6" aria-hidden="true"><rect class="jn" x="${w.toFixed(1)}" width="${j.toFixed(1)}" height="6"/><rect width="${w.toFixed(1)}" height="6" rx="3"/></svg>`;
-  if (!r.unknown) return `<span class="ratio">${bar}<span>Led <b>${r.led}</b> of ${r.known}</span></span>`;
-  return `<span class="ratio two"><span>Led <b>${r.led}</b> of ${r.known} named</span><span class="sub">${bar}<small>${r.unknown} unnamed</small></span></span>`;
+  const extra = [r.unknown ? `${r.unknown} unnamed` : "", r.disputed ? `${r.disputed} disputed, not counted` : ""].filter(Boolean).join(", ");
+  if (!r.known) return `<span class="rec"><span class="muted">No named leads</span>${extra ? `<small>${extra}</small>` : ""}</span>`;
+  return `<span class="rec${r.verdict === "leads" ? " lead" : ""}">${tallyHtml(r)}<span class="rec-l">${counterHtml(r)}${extra ? `<small aria-hidden="true">${extra}</small>` : ""}</span></span>`;
+}
+
+/* One clock drives every row that is counting: dot i lands at t0 + i * iv; the counter and the sweep follow it. */
+const counted = new Set();
+const countJobs = new Set();
+let countRaf = 0, countIO = null;
+
+function startCount(host, r, delay, iv) {
+  const all = tallyRounds(r), dots = $$(".td", host), n = dots.length, hidden = all.length - n;
+  if (!n) return;
+  const cum = [0];
+  all.forEach((x) => cum.push(cum[cum.length - 1] + x.L));
+  const job = {host, n, hidden, cum, shown: 0, t0: performance.now() + delay,
+    iv: iv || Math.max(14, Math.min(34, Math.round(900 / n))),
+    cl: $(".cl", host), ck: $(".ck", host), sw: $(".tsw", host), dots};
+  host.classList.add("tpre");
+  host.classList.remove("landed");
+  dots.forEach((d) => d.classList.remove("in"));
+  job.cl.textContent = cum[hidden];
+  job.ck.textContent = hidden;
+  countJobs.add(job);
+  if (!countRaf) countRaf = requestAnimationFrame(countTick);
+}
+function countTick(now) {
+  for (const j of countJobs) {
+    const e = now - j.t0;
+    if (e < 0) continue;
+    const k = Math.min(j.n, Math.floor(e / j.iv) + 1);
+    if (k > j.shown) {
+      const before = j.cum[j.hidden + j.shown];
+      for (let i = j.shown; i < k; i++) j.dots[i].classList.add("in");
+      j.shown = k;
+      j.host.classList.add("counting");
+      j.ck.textContent = j.hidden + k;
+      j.cl.textContent = j.cum[j.hidden + k];
+      if (j.cum[j.hidden + k] > before && j.cl.animate) j.cl.animate([{transform: "translateY(-3px) scale(1.18)"}, {transform: "none"}], {duration: 240, easing: "cubic-bezier(.3,1.6,.5,1)"});
+      const d = j.dots[k - 1];
+      j.sw.style.transform = `translateX(${d.offsetLeft + d.offsetWidth + 3}px)`;
+    }
+    if (k >= j.n && e > j.n * j.iv + 140) landCount(j);
+  }
+  countRaf = countJobs.size ? requestAnimationFrame(countTick) : 0;
+}
+function landCount(j) {
+  j.host.classList.remove("counting", "tpre");
+  j.host.classList.add("landed");
+  j.dots.forEach((d) => d.classList.remove("in"));
+  j.cl.textContent = j.cum[j.cum.length - 1];
+  j.ck.textContent = j.cum.length - 1;
+  countJobs.delete(j);
+}
+/* Print, reduced motion and re-renders all show the final count. */
+function landAll() { [...countJobs].forEach(landCount); }
+
+/* Rows count in when they scroll into view; rows that arrive together go top to bottom, 70 ms apart.
+   A fund counts once per result set: adding a network or switching views never replays it. */
+function setupCounting(out) {
+  countIO?.disconnect();
+  for (const j of countJobs) if (!j.host.isConnected) countJobs.delete(j);
+  const rows = $$(".row", out).filter((el) => $(".tally", el));
+  if (reduceMotion() || typeof IntersectionObserver !== "function") return;
+  const fresh = rows.filter((el) => !counted.has(el.dataset.k));
+  fresh.forEach((el) => el.classList.add("tpre"));
+  countIO = new IntersectionObserver((entries) => {
+    const now = entries.filter((e) => e.isIntersecting).map((e) => e.target).sort((a, b) => rows.indexOf(a) - rows.indexOf(b));
+    now.forEach((el, i) => {
+      countIO.unobserve(el);
+      counted.add(el.dataset.k);
+      startCount(el, state.ranked[+el.dataset.i], 120 + i * 70);
+    });
+  }, {threshold: 0.4});
+  fresh.forEach((el) => countIO.observe(el));
+}
+
+/* ---------------- hover and focus card for one dot ---------------- */
+function tallyFund(host) {
+  if (host.dataset.p != null) return state.proof?.funds[+host.dataset.p];
+  return state.ranked[+host.dataset.i];
+}
+function dotInfo(r, x, withMarks) {
+  const others = (x.leads || []).filter((n) => companyKey(n) !== companyKey(r.name));
+  const who = x.L ? (others.length ? `Led by ${r.name}, with ${others.join(", ")}` : `Led by ${r.name}`)
+    : `Joined. Led by ${(x.leads || []).join(", ")}`;
+  const marks = withMarks ? (dotMarks(r).get(x.id) || []) : [];
+  return {company: x.company, date: x.date, detail: `${x.stage}${x.amount_eur_m ? `, EUR ${fmtM(x.amount_eur_m)}m` : ", amount not stated"}`, who, marks};
+}
+function showTip(dot) {
+  const host = dot.closest("[data-i], [data-p]"), r = host && tallyFund(host);
+  if (!r) return;
+  const x = tallyRounds(r)[+dot.dataset.r];
+  if (!x) return;
+  const info = dotInfo(r, x, host.dataset.p == null);
+  const tip = $("#tip");
+  tip.innerHTML = `<b>${esc(info.company)}</b> <span class="m">${esc(info.date)}</span><br><span class="m">${esc(info.detail)}</span><br>${esc(info.who)}`
+    + info.marks.map((m) => `<span class="k"><i class="${m.k === "cf" ? "x" : ""}"></i>${esc(m.text)}</span>`).join("");
+  tip.classList.add("on");
+  const b = dot.getBoundingClientRect(), w = tip.offsetWidth, h = tip.offsetHeight;
+  const left = Math.max(8, Math.min(innerWidth - w - 8, b.left + b.width / 2 - w / 2));
+  const top = b.top - h - 10 < 8 ? b.bottom + 10 : b.top - h - 10;
+  tip.style.transform = `translate(${Math.round(left)}px, ${Math.round(top)}px)`;
+  $$(".td.hot").forEach((d) => d.classList.remove("hot"));
+  dot.classList.add("hot");
+  return info;
+}
+function hideTip() { $("#tip").classList.remove("on"); $$(".td.hot").forEach((d) => d.classList.remove("hot")); }
+
+function setupTips() {
+  document.addEventListener("mouseover", (e) => {
+    const d = e.target.closest(".td");
+    if (d) { showTip(d); return; }
+    if (!e.target.closest(".tally")) hideTip();
+    /* Last lead and way in point at their dot. */
+    const row = e.target.closest(".row");
+    const r = row && state.ranked[+row.dataset.i];
+    if (!r) return;
+    let rid = null;
+    if (e.target.closest(".c-last") && r.last_lead) rid = r.last_lead.id;
+    if (e.target.closest(".c-way")) rid = r.way.matches.find((m) => m.strength > 1)?.round.rid ?? r.tie?.round.id;
+    const i = tallyRounds(r).findIndex((x) => x.id === rid);
+    const dot = i >= 0 && row.querySelector(`.td[data-r="${i}"]`);
+    if (dot) dot.classList.add("hot");
+  });
+  document.addEventListener("scroll", hideTip, true);
+  document.addEventListener("focusout", (e) => { if (e.target.closest?.(".tally")) hideTip(); });
+  document.addEventListener("keydown", (e) => {
+    const t = e.target.closest?.(".tally");
+    if (!t) return;
+    const dots = $$(".td", t);
+    if (!dots.length) return;
+    let cur = dots.findIndex((d) => d.classList.contains("hot"));
+    if (e.key === "ArrowRight" || e.key === "ArrowDown") cur = Math.min(dots.length - 1, cur + 1);
+    else if (e.key === "ArrowLeft" || e.key === "ArrowUp") cur = cur < 0 ? dots.length - 1 : Math.max(0, cur - 1);
+    else if (e.key === "Home") cur = 0;
+    else if (e.key === "End") cur = dots.length - 1;
+    else if (e.key === "Escape") { hideTip(); return; }
+    else return;
+    e.preventDefault();
+    const info = showTip(dots[cur]);
+    if (info) announce(`${info.company}, ${info.date}. ${info.detail}. ${info.who}.${info.marks.map((m) => ` ${m.text}.`).join("")}`);
+  });
 }
 function lastCell(r) {
   if (r.verdict === "public") return `<span class="last muted">Not counted</span>`;
@@ -488,7 +714,7 @@ function conflictFlag(r) {
 }
 
 function rowHtml(r, i, showWay) {
-  return `<li class="row" data-i="${i}">
+  return `<li class="row" data-i="${i}" data-k="${esc(r.key || r.name)}">
     <div class="cell c-fund"><span class="fund-l1"><button type="button" class="nm" data-open="${i}" aria-haspopup="dialog">${esc(r.name)}</button>${conflictFlag(r)}</span>${verdictLine(r)}</div>
     <div class="cell c-led"><span class="lbl">Lead record</span>${ledCell(r)}</div>
     <div class="cell c-size"><span class="lbl">Round size it leads</span>${sizeCell(r, state.req?.target_eur_m)}</div>
@@ -536,7 +762,7 @@ function roundLine(req) {
 /* Without a target raise the size column is not judged, so "Pitch first" only means "leads at your stage". Say so. */
 function notesUnderSummary(req) {
   const out = [];
-  if (req.sample) out.push(`<p class="sample-line">Sample round: Seed, EUR 3m, Lifeline Ventures as your lead investor, Lovable as a competitor. <button type="button" class="linkbtn" data-edit>Check your own list</button></p>`);
+  if (req.sample) out.push(`<p class="sample-line">Sample round: Seed, EUR 3m, Lifeline Ventures as your investor, Lovable as a competitor. <button type="button" class="linkbtn" data-edit>Check your own list</button></p>`);
   else if (!req.target_eur_m) out.push(`<p class="size-off">Size not checked. <button type="button" class="linkbtn" data-edit-target>Add your target raise</button></p>`);
   return out.join("");
 }
@@ -548,7 +774,7 @@ function netbarHtml() {
     return `<div class="netbar on" id="netbar"><div class="t"><b>Matched against ${plural(n.people.length, "connection", "connections")}</b> ${n.sample ? "from a made-up sample network." : "from your LinkedIn file."}${privacy}</div><button type="button" class="btn line" data-net-clear>Remove network</button></div>`;
   }
   return `<div class="netbar" id="netbar"><div class="t"><b>See who can introduce you.</b> Add your LinkedIn connections and we match them to the companies each fund backed.${privacy}</div>
-    <input type="file" id="li-file-2" class="file-in" accept=".csv,text/csv" aria-label="Add LinkedIn connections, Connections.csv">
+    <input type="file" id="li-file-2" class="file-in" accept=".csv,.zip,text/csv,application/zip" aria-label="Add LinkedIn connections, Connections.csv or the LinkedIn .zip">
     <label for="li-file-2" class="btn line">Add LinkedIn connections</label>
     <button type="button" class="linkbtn" data-net-sample>Try with a sample network</button></div>`;
 }
@@ -574,6 +800,7 @@ function renderResults() {
   const groups = GROUPS.map((g) => [g, ranked.map((r, i) => [r, i]).filter(([r]) => r.group === g)]).filter(([, rs]) => rs.length);
   const list = groups.map(([g, rs]) => `<section aria-labelledby="g-${g}">${groupHead(g, rs.length, d, req)}<ul class="grp-list">${rs.map(([r, i]) => rowHtml(r, i, showWay)).join("")}</ul></section>`).join("");
   const isFind = d.mode === "discover";
+  const isMap = state.resultView === "map" && ranked.length > 0;
   out.classList.toggle("has-way", showWay);
   out.innerHTML = `
     <div class="topbar">
@@ -584,22 +811,54 @@ function renderResults() {
     </div>
     <p class="print-head"><b>${esc(APP())}</b> · ${roundLine(req)} · Cala round data, retrieved ${esc(state.meta?.retrieved || "")}${req.sample ? " · Sample round" : ""}${sampleNet() ? " · Way in uses a made-up sample network" : ""}</p>
     <div class="head">
-      <h1 tabindex="-1">${isFind ? "Funds that led rounds like yours" : "Your shortlist"} <span class="meta">${plural(ranked.length, "fund", "funds")}${isFind ? " found" : " checked"}</span></h1>
+      <div class="head-row">
+        <h1 tabindex="-1">${isFind ? "Funds that led rounds like yours" : "Your shortlist"} <span class="meta">${plural(ranked.length, "fund", "funds")}${isFind ? " found" : " recounted"}</span></h1>
+        ${ranked.length ? viewToggleHtml(isMap) : ""}
+      </div>
       <p class="round-line">${roundLine(req)}</p>
       <p class="summary">${summaryLine(d, ranked, req)}</p>
       ${notesUnderSummary(req)}
     </div>
     ${ranked.length ? netbarHtml() : ""}
-    ${ranked.length ? `<div class="cols" aria-hidden="true"><span>Fund</span><span>Lead record</span><span>Round size${req.target_eur_m ? ` vs your ${fmtM(req.target_eur_m)}m` : " it leads"}</span><span class="c-last">Last lead</span>${showWay ? "<span>Way in</span>" : ""}</div>${list}` : `<p class="empty">None of the pasted lines matched a fund in our Cala data.</p>`}
+    ${ranked.length ? `<div class="listview${isMap ? " hidden" : ""}" id="listview">${readLine(req, showWay)}<div class="cols" aria-hidden="true"><span>Fund</span><span>Lead record, oldest first</span><span>Round size${req.target_eur_m ? ` vs your ${fmtM(req.target_eur_m)}m` : " it leads"}</span><span class="c-last">Last lead</span>${showWay ? "<span>Way in</span>" : ""}</div>${list}</div>
+      <div class="mapview${isMap ? "" : " hidden"}" id="mapview"><div class="radar-wrap"><div class="radar" id="radar"><div class="rsweep" aria-hidden="true"></div><svg viewBox="-320 -320 640 640" role="group" aria-label="Fund map. Closer to You means the fund leads rounds like yours more often. Around the dial is when it last led, newest at the top."></svg></div><p class="map-note" id="map-note"></p></div><div class="rail" id="rail"></div></div>`
+      : `<p class="empty">None of the pasted lines matched a fund in our Cala data.</p>`}
     <div class="after">${afterHtml(d)}</div>`;
   $("#csv").onclick = () => copyCsv(ranked);
-  $("#print").onclick = () => window.print();
+  $("#print").onclick = () => { landAll(); window.print(); };
   $("#ask-live")?.addEventListener("click", () => startLookup(d.lookup_candidates));
   const f2 = $("#li-file-2");
-  if (f2) { f2.addEventListener("change", () => { readNetworkFile(f2.files[0]); }); setupDrop($("#netbar")); }
+  if (f2) { f2.addEventListener("change", () => { readNetworkFile(f2.files[0]); f2.value = ""; }); setupDrop($("#netbar")); }
   $$(".row", out).forEach((row) => row.addEventListener("click", (e) => { if (!e.target.closest("button, a")) openFund(+row.dataset.i, row.querySelector(".nm")); }));
   $$("[data-open]", out).forEach((b) => b.addEventListener("click", () => openFund(+b.dataset.open, b)));
+  $$("[data-view]", out).forEach((b) => b.addEventListener("click", () => setResultView(b.dataset.view)));
+  setupCounting(out);
+  if (isMap) drawMap({reveal: !state.mapRevealed, linesIn: state.mapRevealed});
+  else stopMap();
   announce(`${plural(ranked.length, "fund", "funds")}. ${out.querySelector(".summary")?.textContent || ""}`);
+  tourAfterResults();
+}
+
+const viewToggleHtml = (isMap) => `<div class="viewtog" role="group" aria-label="View">
+  <button type="button" data-view="list" aria-pressed="${!isMap}"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 4.5h10M3 8h10M3 11.5h10"/></svg>List</button>
+  <button type="button" data-view="map" aria-pressed="${isMap}"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6"/><circle cx="8" cy="8" r="3"/><path d="M8 8 12.2 3.8"/></svg>Map</button></div>`;
+
+/* How to read a row's dots, said once above the list. Rings only show once there is something to ring. */
+function readLine(req, showWay) {
+  const comps = req.competitors || [];
+  return `<p class="read"><span class="legend" aria-hidden="true"><span><i class="l"></i>Led the round</span><span><i></i>Joined it</span>${showWay ? `<span><i class="w"></i>Your way in</span>` : ""}${comps.length ? `<span><i class="x"></i>Backed ${esc(comps.join(" or "))}</span>` : ""}</span><span>One dot per round with a named lead, oldest first. Hover a dot for the round.</span></p>`;
+}
+
+function setResultView(v) {
+  if (state.resultView === v) return;
+  state.resultView = v;
+  const isMap = v === "map";
+  $$("#results [data-view]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.view === v)));
+  $("#listview")?.classList.toggle("hidden", isMap);
+  $("#mapview")?.classList.toggle("hidden", !isMap);
+  hideTip();
+  if (isMap) { drawMap({reveal: !state.mapRevealed}); announce("Map view. Closer to You means the fund leads rounds like yours more often."); }
+  else { stopMap(); announce("List view."); }
 }
 
 function afterHtml(d) {
@@ -906,6 +1165,638 @@ function sourceHtml(src, fresh) {
   </div>`;
 }
 
+/* ---------------- first run: two real funds recounted on a loop ---------------- */
+const andList = (xs) => (xs.length < 2 ? xs.join("") : `${xs.slice(0, -1).join(", ")} and ${xs[xs.length - 1]}`);
+let proofTimer = 0, proofPaused = false;
+
+async function loadProof() {
+  let d;
+  try { d = await api("/api/proof"); } catch { return; }
+  if (!d.funds?.length) return;
+  state.proof = d;
+  $("#proof-h").textContent = `${d.funds.length === 2 ? "Two funds" : "A fund"} from the sample list, recounted for a EUR ${fmtM(d.target_eur_m)}m ${d.stage} round`;
+  $("#proof-rows").innerHTML = d.funds.map((r, p) => `<div class="proof-row v-${esc(r.verdict)}" data-p="${p}">
+      <div class="c-fund"><span class="nm">${esc(r.name)}</span><span class="pill v-${esc(r.verdict)}"><span class="g" aria-hidden="true"></span>${esc(r.verdict === "leads" ? "Leads rounds like this" : verdictText(r))}</span></div>
+      ${tallyHtml(r, {plain: true, cols: 60, cap: 120})}${counterHtml(r)}</div>`).join("");
+  const unnamed = d.funds.filter((r) => r.unknown).map((r) => `${r.unknown} more ${r.name} rounds`);
+  const disputed = d.funds.reduce((n, r) => n + (r.disputed || 0), 0);
+  $("#proof-foot").textContent = `One dot per round where Cala names the lead, oldest first.${unnamed.length ? ` ${andList(unnamed)} name no lead, so they are not counted.` : ""}${disputed ? ` ${plural(disputed, "round is", "rounds are")} disputed by the source and left out.` : ""} Hover a dot to see the round.`;
+  $("#proof").classList.remove("hidden");
+  const box = $("#proof");
+  box.addEventListener("mouseenter", () => { proofPaused = true; });
+  box.addEventListener("mouseleave", () => { proofPaused = false; });
+  box.addEventListener("focusin", () => { proofPaused = true; });
+  box.addEventListener("focusout", () => { proofPaused = false; });
+  runProof();
+}
+
+function proofLive() { return document.body.dataset.screen === "paste" && location.pathname !== "/method" && !document.hidden; }
+function stopProof() { clearTimeout(proofTimer); }
+
+/* Same speed per dot in both rows, so the short all-led record lands first while the long one keeps counting. */
+function runProof() {
+  clearTimeout(proofTimer);
+  const d = state.proof;
+  if (!d) return;
+  const rows = $$("#proof .proof-row");
+  if (reduceMotion()) return;
+  rows.forEach((el, i) => startCount(el, d.funds[i], 250, 34));
+  const total = 250 + Math.max(...d.funds.map((r) => tallyRounds(r).length)) * 34 + 300;
+  proofTimer = setTimeout(function hold() {
+    if (proofPaused || !proofLive()) { proofTimer = setTimeout(hold, 600); return; }
+    $("#proof").classList.add("resetting");
+    proofTimer = setTimeout(() => { $("#proof").classList.remove("resetting"); runProof(); }, 420);
+  }, total + 3600);
+}
+
+/* ---------------- map: the shortlist as a radar ----------------
+   Ring: the group, same as the list. Inside a ring, closer to You = higher lead score (the list's ranking).
+   Around the dial: months since it last led a round (log scale), Now at 12 o'clock. Dot area: rounds it led.
+   Orange ring: backed your competitor. Green line: a way in, from You through your investor or a contact. */
+const SVGNS = "http://www.w3.org/2000/svg";
+const R_YOU = 22, R_VIA = 70, R_IN = 98, R_OUT = 282;
+const RING = {pitch: [R_IN, 172], size: [172, 214], few: [214, 248], avoid: [248, R_OUT]};
+const RING_LABEL = {pitch: "PITCH FIRST", size: "DIFFERENT SIZE", few: "TOO LITTLE DATA", avoid: "FOLLOWS OR SOMETIMES LEADS"};
+const DIAL_MAX = 300, NONE_A = 328;
+const TICKS = [[0, "Now"], [1, "1 mo"], [3, "3 mo"], [6, "6 mo"], [12, "1 yr"], [24, "2 yrs"], [36, "3+ yrs"]];
+const angleOf = (months) => (DIAL_MAX * Math.log1p(Math.min(months, 36))) / Math.log1p(36);
+const polar = (r, deg) => [r * Math.sin((deg * Math.PI) / 180), -r * Math.cos((deg * Math.PI) / 180)];
+const blipR = (led) => 5 + 2.05 * Math.sqrt(Math.min(led, 80));
+let MAP = null, mapRaf = 0, arcId = 0;
+
+function nowT() {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(state.meta?.retrieved || "");
+  return m ? +m[1] + (+m[2] - 1 + +m[3] / 30) / 12 : 2026.87;
+}
+function svgEl(tag, attrs, parent) {
+  const n = document.createElementNS(SVGNS, tag);
+  for (const [k, v] of Object.entries(attrs || {})) n.setAttribute(k, v);
+  if (parent) parent.appendChild(n);
+  return n;
+}
+function arcPath(r0, r1, a0, a1) {
+  const [x0, y0] = polar(r1, a0), [x1, y1] = polar(r1, a1), [x2, y2] = polar(r0, a1), [x3, y3] = polar(r0, a0);
+  const large = a1 - a0 > 180 ? 1 : 0;
+  return `M${x0} ${y0}A${r1} ${r1} 0 ${large} 1 ${x1} ${y1}L${x2} ${y2}A${r0} ${r0} 0 ${large} 0 ${x3} ${y3}Z`;
+}
+/* Text that follows a ring, centred on angle a, flipped on the lower half so it never reads upside down. */
+function arcText(g, defs, r, a, span, text, cls, fs) {
+  const lower = a > 90 && a < 270;
+  const [s, e] = lower ? [a + span, a - span] : [a - span, a + span];
+  const [x0, y0] = polar(r, s), [x1, y1] = polar(r, e);
+  const id = `arc${arcId++}`;
+  svgEl("path", {id, d: `M${x0} ${y0}A${r} ${r} 0 0 ${lower ? 0 : 1} ${x1} ${y1}`, fill: "none"}, defs);
+  const t = svgEl("text", {class: cls, "font-size": fs, dy: lower ? fs * 0.75 : fs * 0.1}, g);
+  svgEl("textPath", {href: `#${id}`, startOffset: "50%", "text-anchor": "middle"}, t).textContent = text;
+}
+/* Ring names go in the widest empty stretch of the dial, so they never sit under a fund; inside that stretch,
+   as close to the bottom as they fit, where the text runs flat. */
+function quietAngle(items) {
+  const as = items.map((P) => (P.a + 360) % 360).sort((x, y) => x - y);
+  if (!as.length) return 200;
+  let lo = 0, hi = 360, gap = -1;
+  as.forEach((a, i) => {
+    const b = i + 1 < as.length ? as[i + 1] : as[0] + 360;
+    if (b - a > gap) { gap = b - a; lo = a; hi = b; }
+  });
+  if (hi - lo < 100) return ((lo + hi) / 2) % 360;
+  const want = [190, 550].find((x) => x > lo + 50 && x < hi - 50);
+  return (want ?? Math.max(lo + 50, Math.min(hi - 50, 190 + (lo > 190 ? 360 : 0)))) % 360;
+}
+
+function drawField(svg, k, items) {
+  const defs = svgEl("defs", {}, svg);
+  const f = svgEl("filter", {id: "glow", x: "-20%", y: "-20%", width: "140%", height: "140%"}, defs);
+  svgEl("feGaussianBlur", {stdDeviation: 3.2}, f);
+  const g = svgEl("g", {class: "rfield", "aria-hidden": "true"}, svg);
+  svgEl("circle", {class: "band-few", r: RING.few[1]}, g);
+  svgEl("circle", {class: "band-size", r: RING.size[1]}, g);
+  svgEl("circle", {class: "band-pitch", r: RING.pitch[1]}, g);
+  svgEl("path", {class: "stale-arc", d: arcPath(R_IN, R_OUT, angleOf(24), DIAL_MAX)}, g);
+  svgEl("path", {class: "none-arc", d: arcPath(R_IN, R_OUT, DIAL_MAX + 5, 354)}, g);
+  for (const [m] of TICKS) {
+    const [x0, y0] = polar(R_IN, angleOf(m)), [x1, y1] = polar(R_OUT, angleOf(m));
+    svgEl("line", {class: "spoke", x1: x0, y1: y0, x2: x1, y2: y1}, g);
+  }
+  svgEl("circle", {class: "ring pitch", r: RING.pitch[1]}, g);
+  svgEl("circle", {class: "ring dash", r: RING.size[1]}, g);
+  svgEl("circle", {class: "ring dash", r: RING.few[1]}, g);
+  svgEl("circle", {class: "ring", r: R_OUT}, g);
+  svgEl("circle", {class: "ring dash", r: R_IN}, g);
+  const fs = 10.5 * k;
+  for (const [m, label] of TICKS) {
+    const a = angleOf(m), [x0, y0] = polar(R_OUT, a), [x1, y1] = polar(R_OUT + 5, a), [lx, ly] = polar(R_OUT + 9 + fs * 0.6, a);
+    svgEl("line", {class: "tick", x1: x0, y1: y0, x2: x1, y2: y1}, g);
+    svgEl("text", {class: `tick-l${m === 0 ? " now" : ""}`, x: lx, y: ly, "font-size": fs, "text-anchor": Math.abs(lx) < 8 ? "middle" : lx > 0 ? "start" : "end", "dominant-baseline": "central"}, g).textContent = label;
+  }
+  const zfs = 9 * k;
+  arcText(g, defs, R_OUT + 10, (angleOf(24) + DIAL_MAX) / 2, 30, "OVER 2 YRS", "dial-l stale", zfs);
+  arcText(g, defs, R_OUT + 10, (DIAL_MAX + 5 + 354) / 2, 30, "NO LEAD FOUND", "dial-l", zfs);
+  const qa = quietAngle(items), bl = 9 * k;
+  for (const [grp, [lo, hi]] of Object.entries(RING)) {
+    arcText(g, defs, (lo + hi) / 2 - 3, qa, grp === "avoid" ? 52 : 40, RING_LABEL[grp], `band-l ${grp}`, bl);
+  }
+}
+function drawYou(svg, k) {
+  const you = svgEl("g", {class: "youg", "aria-hidden": "true"}, svg);
+  svgEl("circle", {class: "you-halo", r: R_YOU + 12}, you);
+  svgEl("circle", {class: "you", r: R_YOU}, you);
+  svgEl("text", {class: "you-t", "font-size": Math.min(11.5 * k, 15), y: 0.5}, you).textContent = "You";
+}
+
+/* Each fund sits on its own ring at its last-lead angle; overlapping dots push apart a little, never off their ring. */
+function layoutBlips(rows) {
+  const now = nowT();
+  const items = rows.map((r, idx) => {
+    const months = r.last_lead ? Math.max(0, (now - r.last_lead.t) * 12) : null;
+    const a0 = months == null ? NONE_A : angleOf(months);
+    const [lo0, hi0] = RING[r.group] || RING.avoid;
+    const lo = lo0 + 6, hi = hi0 - 6;
+    const rb = blipR(r.led), score = Math.max(0, leadScore(r));
+    const rad = lo + rb * 0.4 + (1 - score) * Math.max(0, hi - lo - rb * 0.8);
+    return {r, idx, a0, a: a0, rad, rb, lo, hi, months};
+  });
+  const SLACK = 13;
+  for (let it = 0; it < 240; it++) {
+    for (let i = 0; i < items.length; i++) for (let j = i + 1; j < items.length; j++) {
+      const A = items[i], B = items[j];
+      const [ax, ay] = polar(A.rad, A.a), [bx, by] = polar(B.rad, B.a);
+      const dx = bx - ax, dy = by - ay, d = Math.hypot(dx, dy) || 0.01, need = A.rb + B.rb + 8;
+      if (d >= need) continue;
+      const push = (need - d) / 2, ux = dx / d, uy = dy / d;
+      const move = (P, s) => {
+        const [px, py] = polar(P.rad, P.a), nx = px + ux * s, ny = py + uy * s;
+        P.rad = Math.hypot(nx, ny);
+        P.a = ((Math.atan2(nx, -ny) * 180) / Math.PI + 360) % 360;
+        if (P.a > 350 && P.a0 < 40) P.a -= 360;
+      };
+      move(A, -push); move(B, push);
+    }
+    for (const P of items) {
+      P.a = Math.max(Math.max(P.a0 - SLACK, 4), Math.min(P.a0 + SLACK, P.a));
+      P.rad = Math.max(P.lo + P.rb * 0.4, Math.min(P.hi - P.rb * 0.4, P.rad));
+    }
+  }
+  for (const P of items) [P.x, P.y] = polar(P.rad, P.a);
+  return items;
+}
+
+/* Who stands between you and a fund: your investor (a small round together), or people at a company it backed.
+   One node per investor or company, strongest first, at most 12 so the middle stays readable. */
+function viaNodes(items) {
+  const nodes = new Map();
+  const add = (key, kind, label, P, strength, detail) => {
+    if (!nodes.has(key)) nodes.set(key, {key, kind, label, links: [], people: new Set()});
+    const n = nodes.get(key);
+    if (!n.links.some((l) => l.item === P)) n.links.push({item: P, strength, detail});
+    if (detail?.person) n.people.add(personName(detail.person));
+  };
+  for (const P of items) {
+    const r = P.r;
+    if (r.tie) add(`inv:${r.tie.investor}`, "inv", r.tie.investor, P, 2, r.tie);
+    for (const m of r.way.matches) if (m.strength > 2) add(`co:${m.round.ckey}`, "person", m.round.company, P, m.strength, m);
+  }
+  const top = (n) => Math.max(...n.links.map((l) => l.strength));
+  const all = [...nodes.values()].sort((p, q) => (q.kind === "inv") - (p.kind === "inv") || top(q) - top(p) || q.links.length - p.links.length);
+  const list = all.slice(0, 12);
+  list.extra = all.length - list.length;
+  for (const n of list) {
+    let sx = 0, sy = 0;
+    for (const l of n.links) { sx += l.strength * Math.sin((l.item.a * Math.PI) / 180); sy += l.strength * Math.cos((l.item.a * Math.PI) / 180); }
+    n.a0 = ((Math.atan2(sx, sy) * 180) / Math.PI + 360) % 360;
+    n.a = n.a0; n.rad = R_VIA;
+  }
+  for (let it = 0; it < 200; it++) {
+    for (let i = 0; i < list.length; i++) for (let j = i + 1; j < list.length; j++) {
+      const A = list[i], B = list[j];
+      const [ax, ay] = polar(A.rad, A.a), [bx, by] = polar(B.rad, B.a);
+      const dx = bx - ax, dy = by - ay, d = Math.hypot(dx, dy) || 0.01;
+      if (d >= 21) continue;
+      const s = (21 - d) / 2, ux = dx / d, uy = dy / d;
+      for (const [P, sg] of [[A, -s], [B, s]]) {
+        const [px, py] = polar(P.rad, P.a), nx = px + ux * sg, ny = py + uy * sg;
+        P.rad = Math.hypot(nx, ny);
+        P.a = ((Math.atan2(nx, -ny) * 180) / Math.PI + 360) % 360;
+      }
+    }
+    for (const n of list) {
+      const da = Math.max(-28, Math.min(28, ((n.a - n.a0 + 540) % 360) - 180));
+      n.a = (n.a0 + da + 360) % 360;
+      n.rad = Math.max(R_YOU + 26, Math.min(R_IN - 10, n.rad));
+    }
+  }
+  for (const n of list) [n.x, n.y] = polar(n.rad, n.a);
+  return list;
+}
+function curve(n, P) {
+  const da = ((P.a - n.a + 540) % 360) - 180;
+  const [cx, cy] = polar(n.rad + (P.rad - n.rad) * 0.5, n.a + da * 0.2);
+  return `M${n.x} ${n.y}Q${cx} ${cy} ${P.x} ${P.y}`;
+}
+
+const boxHit = (a, b) => !(a.x > b.x + b.w || a.x + a.w < b.x || a.y > b.y + b.h || a.y + a.h < b.y);
+const circleHit = (box, x, y, r) => x + r > box.x && x - r < box.x + box.w && y + r > box.y && y - r < box.y + box.h;
+
+/* Labels use their measured width and try eight spots around the dot, most important funds first.
+   A label that fits nowhere is hidden and shows on hover or focus, so two names never print over each other. */
+function placeLabels(items, nodes, fs, sfs) {
+  const placed = [];
+  const free = (box, self) => !placed.some((b) => boxHit(box, b))
+    && !items.some((Q) => Q !== self && circleHit(box, Q.x, Q.y, Q.rb + (Q.r.conflicts?.length ? 6 : 2)))
+    && !nodes.some((m) => circleHit(box, m.x, m.y, 11))
+    && !circleHit(box, 0, 0, R_YOU + 10)
+    && Math.hypot(box.x + box.w / 2, box.y + box.h / 2) < R_OUT + 4
+    && box.x > -318 && box.x + box.w < 318;
+  for (const n of nodes.filter((x) => x.labelEl)) {
+    const t = n.labelEl, w = t.getComputedTextLength(), h = fs * 1.2;
+    const ox = n.x >= 0 ? 1 : -1, oy = n.y >= 0 ? 1 : -1;
+    const spots = [[ox, oy], [0, oy], [ox, 0], [-ox, 0], [0, -oy], [-ox, -oy]];
+    let pick = null;
+    for (const [cx, cy] of spots) {
+      const box = {x: cx > 0 ? n.x + 13 : cx < 0 ? n.x - 13 - w : n.x - w / 2, y: cy > 0 ? n.y + 12 : cy < 0 ? n.y - 12 - h : n.y - h / 2, w, h};
+      if (free(box, null)) { pick = box; break; }
+    }
+    if (!pick) { t.classList.add("off"); continue; }
+    placed.push(pick);
+    t.setAttribute("x", pick.x); t.setAttribute("y", pick.y + h * 0.8);
+  }
+  const order = [...items].sort((a, b) => (a.r.group === "pitch" ? 0 : 1) - (b.r.group === "pitch" ? 0 : 1) || b.r.led - a.r.led);
+  for (const P of order) {
+    const t = P.labelEl, s = P.subEl;
+    const w = Math.max(t.getComputedTextLength(), s ? s.getComputedTextLength() : 0), lh = fs * 1.15, h = lh + (s ? sfs * 1.25 : 0);
+    const pad = P.rb + (P.r.conflicts?.length ? 7 : 5), out = P.x >= 0 ? 1 : -1, d = pad * 0.72;
+    const spots = [[out, 0], [-out, 0], [0, -1], [0, 1], [out, -1], [out, 1], [-out, -1], [-out, 1]];
+    let pick = null;
+    for (const [sx, sy] of spots) {
+      const diag = sx && sy;
+      const bx = sx > 0 ? (diag ? d : pad) : sx < 0 ? -(diag ? d : pad) - w : -w / 2;
+      const by = sy < 0 ? -(diag ? d : pad) - h : sy > 0 ? (diag ? d : pad) : -h / 2;
+      const box = {x: P.x + bx, y: P.y + by, w, h};
+      if (free(box, P)) { pick = {box, bx, by, sx}; break; }
+    }
+    if (!pick) {  // hidden until hover or focus, then shown on the outer side
+      const bx = out > 0 ? pad : -pad - w;
+      pick = {box: null, bx, by: -h / 2, sx: out};
+      t.classList.add("off"); s?.classList.add("off");
+    } else placed.push(pick.box);
+    const anchor = pick.sx > 0 ? "start" : pick.sx < 0 ? "end" : "middle";
+    const tx = pick.sx > 0 ? pick.bx : pick.sx < 0 ? pick.bx + w : 0;
+    t.setAttribute("x", tx); t.setAttribute("y", pick.by + lh * 0.8); t.setAttribute("text-anchor", anchor);
+    if (s) { s.setAttribute("x", tx); s.setAttribute("y", pick.by + lh * 0.8 + sfs * 1.25); s.setAttribute("text-anchor", anchor); }
+  }
+}
+
+function blipLabel(r) {
+  const parts = [`${r.name}. ${GROUP_NAME[r.group]}.`, r.known ? `Led ${r.led} of ${r.known} rounds with a named lead.` : "No rounds with a named lead.",
+    r.last_lead ? `Last lead ${r.last_lead.date}.` : "No lead found."];
+  if (r.way.strength > 1) parts.push(`Way in: ${r.way.text}.`);
+  if (r.conflicts?.length) parts.push(`Backed ${r.conflicts[0].competitor}.`);
+  return `${parts.join(" ")} Opens the rounds behind it.`;
+}
+
+function stopMap() { cancelAnimationFrame(mapRaf); mapRaf = 0; }
+
+function drawMap({reveal = false, linesIn = false} = {}) {
+  const wrap = $("#radar");
+  if (!wrap) return;
+  stopMap();
+  const svg = $("svg", wrap);
+  svg.innerHTML = "";
+  arcId = 0;
+  const width = wrap.clientWidth || 640, compact = width < 520;
+  const k = 640 / Math.max(300, width);
+  wrap.classList.toggle("compact", compact);
+  const items = layoutBlips(state.ranked);
+  const nodes = viaNodes(items);
+  drawField(svg, k, items);
+  const pathsG = svgEl("g", {class: "paths", "aria-hidden": "true"}, svg);
+  const viaG = svgEl("g", {class: "vias", "aria-hidden": "true"}, svg);
+  drawYou(svg, k);
+  const blipsG = svgEl("g", {class: "blips"}, svg);
+  const fs = 12 * k, sfs = 10.5 * k;
+  for (const n of nodes) {
+    n.g = svgEl("g", {class: "pg"}, pathsG);
+    const [sx, sy] = polar(R_YOU + 3, n.a);
+    const segs = [`M${sx} ${sy}L${n.x} ${n.y}`, ...n.links.map((l) => curve(n, l.item))];
+    n.segEls = segs.map((d, i) => {
+      const weak = i > 0 && n.links[i - 1].strength === 3;
+      const sg = svgEl("g", {class: "sg"}, n.g);
+      svgEl("path", {class: "path-glow", d, "stroke-width": weak ? 3 : 6}, sg);
+      svgEl("path", {class: `path${weak ? " weak" : ""}`, d, ...(weak ? {} : {pathLength: 1})}, sg);
+      return sg;
+    });
+    n.links.forEach((l) => { (l.item.links = l.item.links || []).push(n); });
+    const vg = svgEl("g", {class: `via ${n.kind}`, transform: `translate(${n.x} ${n.y})`}, viaG);
+    n.vg = vg;
+    if (n.kind === "inv") {
+      svgEl("rect", {x: -10, y: -10, width: 20, height: 20, rx: 6}, vg);
+      svgEl("text", {"font-size": 11, y: 0.5}, vg).textContent = n.label[0].toUpperCase();
+      if (!compact) { n.labelEl = svgEl("text", {class: "via-l", "font-size": fs}, viaG); n.labelEl.textContent = shortFund(n.label); }
+    } else {
+      svgEl("circle", {r: 8}, vg);
+      svgEl("circle", {class: "person", cy: -2, r: 2.3}, vg);
+      svgEl("path", {class: "person", d: "M-3.9 4.4c.7-2.3 2.1-3.2 3.9-3.2s3.2.9 3.9 3.2"}, vg);
+    }
+  }
+  for (const P of items) {
+    const r = P.r;
+    P.links = P.links || [];
+    const kind = r.verdict === "public" ? "public" : r.group;
+    const g = svgEl("g", {class: `blip ${kind}`, transform: `translate(${P.x} ${P.y})`, tabindex: 0, role: "button", "aria-label": blipLabel(r)}, blipsG);
+    P.g = g;
+    svgEl("circle", {class: "hit", r: Math.max(P.rb + 6, 14)}, g);
+    svgEl("circle", {class: "ping", r: P.rb}, g);
+    const core = svgEl("g", {class: "core"}, g);
+    svgEl("circle", {class: "dotc", r: P.rb}, core);
+    if (r.conflicts?.length) svgEl("circle", {class: "cfr", r: P.rb + 4}, core);
+    svgEl("circle", {class: "sel", r: P.rb + (r.conflicts?.length ? 8 : 5)}, g);
+    const lg = svgEl("g", {class: "labels"}, blipsG);
+    P.lg = lg;
+    lg.setAttribute("transform", `translate(${P.x} ${P.y})`);
+    P.labelEl = svgEl("text", {class: "bl", "font-size": fs}, lg);
+    P.labelEl.textContent = r.name;
+    if (r.conflicts?.length) { P.subEl = svgEl("text", {class: "bl-sub", "font-size": sfs}, lg); P.subEl.textContent = `Backed ${r.conflicts[0].competitor}`; }
+    if (compact) { P.labelEl.classList.add("off"); P.subEl?.classList.add("off"); }
+    g.addEventListener("click", () => openFund(P.idx, g));
+    g.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openFund(P.idx, g); } });
+    g.addEventListener("mouseenter", () => focusOn(P));
+    g.addEventListener("mouseleave", () => focusOn(null));
+    g.addEventListener("focus", () => focusOn(P));
+    g.addEventListener("blur", () => focusOn(null));
+  }
+  if (!compact) placeLabels(items, nodes, fs, sfs);
+  MAP = {items, nodes, wrap};
+  paintRail(nodes);
+  $("#map-note").textContent = compact
+    ? "Tap a dot to open the fund. Turn your phone sideways to see names, or use List."
+    : "Hover a fund to light its way in. Click it to see the rounds behind it.";
+  if (reveal && !reduceMotion()) revealMap();
+  else {
+    for (const n of nodes) n.g.querySelectorAll("path:not(.weak)").forEach((p) => p.classList.add("drawn"));
+    if (linesIn && !reduceMotion()) drawPaths();
+    ambient(0);
+  }
+  state.mapRevealed = true;
+}
+
+/* One pass of the sweep (about 1.15 s) shows each fund as it passes, then the ways in draw from You outward. */
+function ping(P, strong) {
+  if (reduceMotion() || !P.g) return;
+  $(".ping", P.g).animate([{opacity: strong ? 0.55 : 0.2, transform: "scale(1)"}, {opacity: 0, transform: `scale(${1 + (strong ? 16 : 10) / P.rb})`}], {duration: strong ? 650 : 900, easing: "cubic-bezier(.2,.7,.2,1)"});
+}
+function revealMap() {
+  const {items, nodes, wrap} = MAP;
+  const sweep = $(".rsweep", wrap);
+  wrap.classList.remove("ambient");
+  wrap.classList.add("revealing");
+  items.forEach((P) => { P.g.classList.add("pre"); P.lg.classList.add("pre"); P.shown = false; });
+  nodes.forEach((n) => [n.g, n.vg, n.labelEl].forEach((x) => x?.classList.add("pre")));
+  const T = 1150, t0 = performance.now();
+  const ease = (x) => 1 - Math.pow(1 - x, 2.2);
+  const step = (now) => {
+    const x = Math.min(1, (now - t0) / T), th = ease(x) * 360;
+    sweep.style.transform = `rotate(${th}deg)`;
+    for (const P of items) {
+      if (!P.shown && ((P.a + 360) % 360) <= th + 1) { P.shown = true; P.g.classList.remove("pre"); P.lg.classList.remove("pre"); ping(P, true); }
+    }
+    if (x < 1) { mapRaf = requestAnimationFrame(step); return; }
+    items.forEach((P) => { P.g.classList.remove("pre"); P.lg.classList.remove("pre"); });
+    wrap.classList.remove("revealing");
+    drawPaths();
+    ambient(360);
+  };
+  mapRaf = requestAnimationFrame(step);
+}
+function drawPaths() {
+  MAP.nodes.forEach((n, i) => {
+    [n.g, n.vg, n.labelEl].forEach((x) => x?.classList.remove("pre"));
+    n.labelEl?.animate([{opacity: 0}, {opacity: 1}], {duration: 300, delay: 250, fill: "backwards"});
+    n.vg.animate([{opacity: 0}, {opacity: 1}], {duration: 260, delay: i * 40, fill: "backwards"});
+    n.segEls.forEach((sg, j) => sg.querySelectorAll("path").forEach((p) => {
+      const delay = (j === 0 ? 0 : 200) + i * 45;
+      if (p.classList.contains("weak")) { p.animate([{opacity: 0}, {opacity: 1}], {duration: 400, delay, fill: "backwards"}); return; }
+      p.classList.add("drawn");
+      p.animate([{strokeDashoffset: 1}, {strokeDashoffset: 0}], {duration: j === 0 ? 220 : 380, delay, easing: "cubic-bezier(.3,.6,.2,1)", fill: "backwards"});
+    }));
+  });
+}
+/* After the reveal a faint sweep keeps turning, 12 s a lap, and touches each fund it passes. */
+function ambient(start) {
+  if (reduceMotion() || !MAP) return;
+  const wrap = MAP.wrap, sweep = $(".rsweep", wrap);
+  wrap.classList.add("ambient");
+  let last = performance.now(), th = start % 360;
+  const step = (now) => {
+    if (!wrap.isConnected) { mapRaf = 0; return; }
+    const prev = th;
+    th = (th + ((now - last) / 12000) * 360) % 360; last = now;
+    sweep.style.transform = `rotate(${th}deg)`;
+    for (const P of MAP.items) {
+      const a = (P.a + 360) % 360;
+      if ((prev < a && th >= a) || (th < prev && (a > prev || a <= th))) ping(P, false);
+    }
+    mapRaf = requestAnimationFrame(step);
+  };
+  mapRaf = requestAnimationFrame(step);
+}
+
+/* Hover lights a fund and every route into it; everything else steps back. */
+function focusOn(P) {
+  if (!MAP) return;
+  MAP.wrap.classList.toggle("focus", !!P);
+  for (const Q of MAP.items) {
+    Q.g.classList.toggle("lit", Q === P);
+    Q.lg.classList.toggle("lit", Q === P);
+  }
+  for (const n of MAP.nodes) {
+    const on = !!P && n.links.some((l) => l.item === P);
+    n.g.classList.toggle("lit", on); n.vg.classList.toggle("lit", on); n.labelEl?.classList.toggle("lit", on);
+    n.segEls.forEach((s, i) => s.classList.toggle("off", on && i > 0 && n.links[i - 1].item !== P));
+  }
+  $$("#rail [data-node]").forEach((b) => b.classList.toggle("on", !!P && MAP.nodes[+b.dataset.node].links.some((l) => l.item === P)));
+}
+function focusNode(n) {
+  if (!MAP) return;
+  MAP.wrap.classList.toggle("focus", !!n);
+  for (const m of MAP.nodes) {
+    m.g.classList.toggle("lit", m === n); m.vg.classList.toggle("lit", m === n); m.labelEl?.classList.toggle("lit", m === n);
+    m.segEls.forEach((s) => s.classList.remove("off"));
+  }
+  for (const Q of MAP.items) {
+    const on = !!n && n.links.some((l) => l.item === Q);
+    Q.g.classList.toggle("lit", on); Q.lg.classList.toggle("lit", on);
+  }
+}
+
+const PERSON = `<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="5.5" r="2.5"/><path d="M3.5 13.5c.8-2.8 2.4-4 4.5-4s3.7 1.2 4.5 4"/></svg>`;
+function paintRail(nodes) {
+  const comps = state.req?.competitors || [];
+  const funds = new Set(nodes.flatMap((n) => n.links.map((l) => l.item))).size;
+  const fake = sampleNet();
+  const ways = nodes.length
+    ? `<ul class="ways">${nodes.map((n, i) => {
+        const names = andList(n.links.map((l) => esc(l.item.r.name)));
+        const who = n.kind === "inv" ? `<b>${esc(n.label)}</b>, your investor, was in a small round with ${names}`
+          : `<b>${n.people.size > 1 ? `${n.people.size} people` : "Someone"} at ${esc(n.label)}</b>${fake ? " (made-up sample)" : ""}, backed by ${names}`;
+        return `<li><button type="button" data-node="${i}"><span class="ic${n.kind === "inv" ? " inv" : ""}">${n.kind === "inv" ? esc(n.label[0].toUpperCase()) : PERSON}</span><span>${who}</span></button></li>`;
+      }).join("")}</ul>${nodes.extra > 0 ? `<p class="rail-more">And ${plural(nodes.extra, "more way in", "more ways in")}. The list shows the best one per fund.</p>` : ""}`
+    : `<p class="rail-none">${askedForPaths() ? "No one among your investors or connections links to these funds yet." : "Add your investors or LinkedIn connections to see who can introduce you."}</p>`;
+  const legend = `<ul class="legend-map">
+    <li><svg viewBox="0 0 28 20" aria-hidden="true"><circle cx="4" cy="10" r="3" class="lg-ink"/><path d="M10 10a10 10 0 0 1 16 -6" class="lg-ring"/><path d="M10 10a10 10 0 0 1 16 6" class="lg-dash"/></svg><span><b>Closer to You</b> means it leads rounds like yours more often. Rings are the list's groups.</span></li>
+    <li><svg viewBox="0 0 28 20" aria-hidden="true"><path d="M14 2a8 8 0 1 1 -8 8" class="lg-arc"/><path d="M14 0v5" class="lg-now"/></svg><span><b>Around the dial</b> is when it last led a round. Newest at the top.</span></li>
+    <li><svg viewBox="0 0 28 20" aria-hidden="true"><circle cx="6" cy="10" r="3.5" class="lg-pitch"/><circle cx="19" cy="10" r="7" class="lg-pitch"/></svg><span><b>Bigger dot</b> means more rounds led.</span></li>
+    <li><svg viewBox="0 0 40 20" aria-hidden="true"><circle cx="5" cy="10" r="4.5" class="lg-pitch"/><circle cx="15" cy="10" r="4.5" class="lg-size"/><circle cx="25" cy="10" r="4.5" class="lg-few"/><circle cx="35" cy="10" r="4.5" class="lg-avoid"/></svg><span><b>Green</b> leads at your stage, <b>pale green</b> at another size, <b>dashed</b> too little data or a public funder, <b>grey</b> rarely leads.</span></li>
+    <li><svg viewBox="0 0 28 20" aria-hidden="true"><path d="M2 14Q12 2 26 8" class="lg-line"/></svg><span><b>Green line</b> is a way in, through your investor or someone you know.</span></li>
+    ${comps.length ? `<li><svg viewBox="0 0 28 20" aria-hidden="true"><circle cx="14" cy="10" r="4.5" class="lg-pitch"/><circle cx="14" cy="10" r="8" class="lg-conf"/></svg><span><b>Orange ring</b> means it backed ${esc(comps.join(" or "))}.</span></li>` : ""}
+  </ul>`;
+  $("#rail").innerHTML = `<section class="panel"><h2>Ways in ${funds ? `<span class="n">${plural(funds, "fund", "funds")}</span>` : ""}</h2>${ways}</section>
+    <section class="panel"><h2>How to read it</h2>${legend}</section>`;
+  $$("#rail [data-node]").forEach((b) => {
+    const n = nodes[+b.dataset.node];
+    b.addEventListener("mouseenter", () => focusNode(n));
+    b.addEventListener("focus", () => focusNode(n));
+    b.addEventListener("mouseleave", () => focusOn(null));
+    b.addEventListener("blur", () => focusOn(null));
+    b.addEventListener("click", () => openFund(n.links[0].item.idx, b));
+  });
+}
+
+let mapResizeT = 0;
+window.addEventListener("resize", () => {
+  clearTimeout(mapResizeT);
+  mapResizeT = setTimeout(() => { if (state.resultView === "map" && $("#mapview:not(.hidden)")) drawMap(); }, 200);
+});
+
+/* ---------------- green-dot guide: four short steps on the first visit ---------------- */
+const TOUR_KEY = "recount.tour.v1";
+const tourGet = () => { try { return localStorage.getItem(TOUR_KEY); } catch { return "done"; } };
+const tourSet = (v) => { try { localStorage.setItem(TOUR_KEY, v); } catch { /* private mode: the guide just shows again */ } };
+const TOUR = [
+  {screen: "paste", title: "Start with your list", text: "Paste the funds you plan to pitch, one per line. No list yet? Press Try a sample.",
+    anchor: () => (state.mode === "find" ? $("#mode-find") : $("#mode-list"))},
+  {screen: "paste", title: "Your round", text: "Pick your stage and how much you want to raise. We check if each fund leads rounds like that.",
+    anchor: () => $(".round-fields")},
+  {screen: "paste", title: "Who can introduce you", text: "Optional: add your investors or LinkedIn connections. We show who can introduce you to each fund.",
+    anchor: () => $("#opt > summary")},
+  {screen: "results", title: "Read your shortlist", text: "Funds come in groups, best first. Click a fund to see the rounds behind every number. Try Map for the big picture.",
+    anchor: () => [$("#results .grp"), $("#results .grp-list .row"), innerWidth >= 600 ? $("#results .viewtog") : null]},
+];
+const tour = {i: -1, back: null, raf: 0, dotAt: null};
+
+function tourRect(anchor) {
+  const els = (Array.isArray(anchor) ? anchor : [anchor]).filter((x) => x && x.getClientRects().length);
+  if (!els.length) return null;
+  const rs = els.map((x) => x.getBoundingClientRect());
+  const top = Math.min(...rs.map((r) => r.top)), left = Math.min(...rs.map((r) => r.left));
+  return {top, left, right: Math.max(...rs.map((r) => r.right)), bottom: Math.max(...rs.map((r) => r.bottom)), els};
+}
+
+function tourOpen(i) {
+  const root = $("#tour-root");
+  if (!root.firstChild) {
+    tour.back = document.activeElement;
+    root.innerHTML = `<div class="tour-ring" aria-hidden="true"></div><span class="guide" aria-hidden="true"></span>
+      <div class="tour-card" role="dialog" aria-modal="false" aria-labelledby="tour-h" aria-describedby="tour-t">
+        <div class="tour-top"><span class="tour-dot" aria-hidden="true"></span><span class="tour-step" id="tour-step"></span><span class="sp"></span><button type="button" class="linkbtn" data-tour="skip">Skip</button></div>
+        <h2 id="tour-h"></h2><p id="tour-t"></p>
+        <div class="tour-act"><button type="button" class="btn line" data-tour="back">Back</button><button type="button" class="btn primary" data-tour="next">Next</button></div>
+      </div>`;
+    root.addEventListener("click", onTourClick);
+    document.addEventListener("keydown", onTourKey, true);
+    window.addEventListener("scroll", tourPlaceSoon, true);
+    window.addEventListener("resize", tourPlaceSoon);
+    const logo = $(".brand .logo")?.getBoundingClientRect();
+    if (logo) tour.dotAt = [logo.left + logo.width * 0.486 - 6, logo.top + logo.height * 0.575 - 6];  // the dot in the logo's o
+  }
+  tourShow(i);
+}
+
+function tourShow(i) {
+  const step = TOUR[i];
+  tour.i = i;
+  if (step.screen === "results" && !state.view) return tourClose("p");
+  if (document.body.dataset.screen !== step.screen) {
+    setScreen(step.screen);
+    if (step.screen === "paste") window.scrollTo(0, 0);
+  }
+  $("#tour-step").textContent = `Step ${i + 1} of ${TOUR.length}`;
+  $("#tour-h").textContent = step.title;
+  $("#tour-t").textContent = step.text;
+  const back = $("[data-tour='back']"), next = $("[data-tour='next']");
+  back.classList.toggle("hidden", i === 0);
+  next.textContent = i === TOUR.length - 1 ? "Done" : i === 2 && !state.view ? "Got it" : "Next";
+  const r = tourRect(step.anchor());
+  const roomBelow = innerWidth < 600 ? 200 : 40;  // the card sits under the anchor, or as a sheet on phones
+  if (r && (r.top < 64 || r.bottom > innerHeight - roomBelow)) r.els[0].scrollIntoView({block: "center", behavior: reduceMotion() ? "auto" : "smooth"});
+  tourPlace();
+  next.focus({preventScroll: true});
+  announce(`${step.title}. ${step.text}`);
+}
+
+function tourPlaceSoon() { cancelAnimationFrame(tour.raf); tour.raf = requestAnimationFrame(tourPlace); }
+function tourPlace() {
+  const card = $(".tour-card"), ring = $(".tour-ring"), dot = $(".guide");
+  if (!card || tour.i < 0) return;
+  const r = tourRect(TOUR[tour.i].anchor());
+  if (!r) { ring.classList.add("hidden"); return; }
+  ring.classList.remove("hidden");
+  const pad = 6, top = r.top - pad, left = r.left - pad, w = r.right - r.left + pad * 2, h = r.bottom - r.top + pad * 2;
+  ring.style.transform = `translate(${Math.round(left)}px, ${Math.round(top)}px)`;
+  ring.style.width = `${Math.round(w)}px`;
+  ring.style.height = `${Math.round(h)}px`;
+  const [dx, dy] = [left - 7, top - 7];
+  if (tour.dotAt) { dot.style.transform = `translate(${tour.dotAt[0]}px, ${tour.dotAt[1]}px)`; tour.dotAt = null; void dot.offsetWidth; }
+  dot.style.transform = `translate(${Math.round(dx)}px, ${Math.round(dy)}px)`;
+  const narrow = innerWidth < 600;
+  card.classList.toggle("sheet", narrow);
+  if (narrow) { card.style.transform = ""; return; }
+  const cw = card.offsetWidth, ch = card.offsetHeight;
+  const x = Math.max(16, Math.min(innerWidth - cw - 16, left));
+  let y = top + h + 12;
+  if (y + ch > innerHeight - 12) y = top - ch - 12;
+  if (y < 12) y = Math.min(innerHeight - ch - 12, Math.max(12, top + 24));
+  card.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
+}
+
+function tourClose(flag) {
+  const root = $("#tour-root");
+  if (!root.firstChild) return;
+  tourSet(flag);
+  root.removeEventListener("click", onTourClick);
+  document.removeEventListener("keydown", onTourKey, true);
+  window.removeEventListener("scroll", tourPlaceSoon, true);
+  window.removeEventListener("resize", tourPlaceSoon);
+  root.innerHTML = "";
+  tour.i = -1;
+  const back = tour.back;
+  tour.back = null;
+  if (back && back.isConnected && back.getClientRects().length) back.focus({preventScroll: true});
+}
+
+function onTourClick(e) {
+  const b = e.target.closest("[data-tour]");
+  if (!b) return;
+  const act = b.dataset.tour;
+  if (act === "skip") return tourClose("done");
+  if (act === "back") return tourShow(Math.max(0, tour.i - 1));
+  if (tour.i === TOUR.length - 1) return tourClose("done");
+  if (tour.i === 2 && !state.view) return tourClose("p");  // step 4 waits for the first results
+  tourShow(tour.i + 1);
+}
+function onTourKey(e) {
+  if (e.key === "Escape" && !$("#pane-root .pane")) { e.stopPropagation(); tourClose("done"); }
+}
+
+/* First results after steps 1 to 3 (or the guide still open on them): show step 4 once. */
+function tourAfterResults() {
+  const open = !!$("#tour-root").firstChild;
+  if (open || tourGet() === "p") setTimeout(() => { if (state.view && $("#results .grp")) tourOpen(3); }, reduceMotion() ? 0 : 600);
+}
+function tourMaybeStart() {
+  if (location.pathname === "/method" || location.hash === "#demo") return;
+  if (tourGet() == null) tourOpen(0);
+}
+
 /* ---------------- method ---------------- */
 function renderMethod() {
   const m = state.meta || {};
@@ -979,5 +1870,15 @@ document.addEventListener("DOMContentLoaded", () => {
   $("#net-sample").addEventListener("click", () => { setNetwork(parseConnections(SAMPLE_NETWORK), "sample", true); });
   $("#li-file").addEventListener("change", (e) => { readNetworkFile(e.target.files[0]); e.target.value = ""; });
   setupDrop($("#drop"));
-  init().then(() => { if (location.hash === "#demo") $("#sample").click(); });
+  setupTips();
+  window.addEventListener("beforeprint", landAll);
+  $("#nav-tour").addEventListener("click", () => {
+    if (location.pathname === "/method") go("/");
+    tourOpen(document.body.dataset.screen === "results" && state.view ? 3 : 0);
+  });
+  init().then(async () => {
+    await loadProof();
+    if (location.hash === "#demo") $("#sample").click();
+    else tourMaybeStart();
+  });
 });
