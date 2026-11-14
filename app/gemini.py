@@ -1,4 +1,4 @@
-"""Gemini's one job in Lead Check: read pasted lines our deterministic parser could not match, return fund names.
+"""Gemini's one job in Recount: read pasted lines our deterministic parser could not match, return fund names.
 
 Pasted text is sent as quoted data with a fixed JSON schema; nothing it says is followed as an instruction.
 The pasted text is never stored. Person names are discarded by the schema (organisations only).

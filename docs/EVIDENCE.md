@@ -1,4 +1,4 @@
-# Evidence: every number Lead Check claims, and how to check it
+# Evidence: every number Recount claims, and how to check it
 
 All numbers come from snapshot `20261114013628` (built 14 November 2026) unless stated. Cala is the only data source.
 

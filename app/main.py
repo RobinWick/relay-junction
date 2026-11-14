@@ -1,4 +1,4 @@
-"""Lead Check web app: FastAPI serving the API and the static page from one origin, behind a passcode gate."""
+"""Recount web app: FastAPI serving the API and the static page from one origin, behind a passcode gate."""
 from __future__ import annotations
 
 import json
@@ -27,7 +27,7 @@ from parse import parse_list
 
 HERE = Path(__file__).parent
 STATIC = HERE / "static"
-app = FastAPI(title="Lead Check", docs_url=None, redoc_url=None, openapi_url=None)
+app = FastAPI(title="Recount", docs_url=None, redoc_url=None, openapi_url=None)
 app.add_middleware(GZipMiddleware, minimum_size=2000)  # check responses carry each fund's portfolio
 SNAP: Optional[Snapshot] = None
 SNAP_DICT: Optional[dict] = None

@@ -1,4 +1,4 @@
-"""Lead Check engine: deterministic counting over the merged Cala snapshot. No model is used here.
+"""Recount engine: deterministic counting over the merged Cala snapshot. No model is used here.
 
 Verdict rules (shown verbatim on the Method page):
   Public body or programme : fund is on the hand list.

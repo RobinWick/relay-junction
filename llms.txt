@@ -1,6 +1,6 @@
-# Lead Check
+# Recount
 
-> Funds say they lead. See if they did. Lead Check counts, from Cala funding-round data, whether a VC fund actually leads rounds at a founder's stage and size or mostly follows, when it last led, whether it led a competitor's round, and which of the founder's investors has sat in a small round with it (an intro path). Every number opens the Cala record and source documents behind it. Built at Junction 2026 for Cala's "Make Unicorns Real" challenge. Counting, not AI.
+> Funds say they lead. See if they did. Recount counts, from Cala funding-round data, whether a VC fund actually leads rounds at a founder's stage and size or mostly follows, when it last led, whether it led a competitor's round, and which of the founder's investors has sat in a small round with it (an intro path). Every number opens the Cala record and source documents behind it. Built at Junction 2026 for Cala's "Make Unicorns Real" challenge. Counting, not AI.
 
 Key facts:
 - Data: 5,200 rounds, 3,393 companies, 195 funds asked investor-first, 4,406 Cala entity IDs. Cala is the only data source.
@@ -12,7 +12,7 @@ Key facts:
 ## Start here
 - [README](https://github.com/RobinWick/relay-junction/blob/main/README.md): need, what it does, judging criteria map, architecture, how to run
 - [Evidence](https://github.com/RobinWick/relay-junction/blob/main/docs/EVIDENCE.md): every claimed number with its source file and method
-- [Live demo](https://robin-81988--lead-check.us-east.modal.run): no login; add #demo to run the sample list
+- [Live demo](https://robin-81988--recount.us-east.modal.run): no login; add #demo to run the sample list
 
 ## Code
 - [app/engine.py](https://github.com/RobinWick/relay-junction/blob/main/app/engine.py): verdicts, lead ratios, size fit, conflicts, intro paths (ties), discovery

@@ -1,6 +1,6 @@
 # Cala data-quality notes from Team Wicflow
 
-A thank-you from Lead Check (Junction 2026). Lead Check counts, for each fund a founder will meet at Slush, how often it actually led a round. To count leads we asked Cala's `/v1/knowledge/query` two ways and compared the answers. These are the issues we had to clean up, with checkable examples. Some field drift comes from our own free-form prompts; we list it because a fixed schema would help every Cala user.
+A thank-you from Recount (Junction 2026). Recount counts, for each fund a founder will meet at Slush, how often it actually led a round. To count leads we asked Cala's `/v1/knowledge/query` two ways and compared the answers. These are the issues we had to clean up, with checkable examples. Some field drift comes from our own free-form prompts; we list it because a fixed schema would help every Cala user.
 
 **Data checked (2026-11-14 01:50):** 1816 rows from 421 company-first answers ("List every funding round of X ..."), 1200 rows from 43 investor-first answers ("every round fund X invested in and whether X led it"). The investor-first crawl was still running, so counts are a snapshot. Full raw rows for every example are in `cala-data-quality.json`.
 

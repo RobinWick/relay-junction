@@ -1,6 +1,6 @@
 "use strict";
 /* The product name lives here and only here. Rename = change this one line. */
-window.APP_NAME = "Lead Check";
+window.APP_NAME = "Recount";
 
 document.title = window.APP_NAME;
 document.querySelectorAll("[data-app-name]").forEach((el) => { el.textContent = window.APP_NAME; });

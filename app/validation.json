@@ -23,7 +23,7 @@
   },
   {
    "test": "Predicting the next round's new lead from earlier rounds (top 5)",
-   "result": "1.4%, the same as chance. So Lead Check reports what funds did, not odds.",
+   "result": "1.4%, the same as chance. So Recount reports what funds did, not odds.",
    "n": 140
   },
   {

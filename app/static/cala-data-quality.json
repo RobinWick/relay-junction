@@ -1,7 +1,7 @@
 {
  "title": "Cala data-quality notes from Team Wicflow (Junction 2026)",
  "generated": "2026-11-14 (query-layer findings 01:50; entity-graph findings 03:40 EET)",
- "context": "Lead Check counts, per fund, how often it led a round. We asked Cala /v1/knowledge/query two ways: company-first (round history of each company) and investor-first (every round fund X invested in and whether X led it). Below is what we had to clean up to count leads reliably, offered as a thank-you. Some drift comes from our own free-form prompts; we flag it because a fixed schema would help every user.",
+ "context": "Recount counts, per fund, how often it led a round. We asked Cala /v1/knowledge/query two ways: company-first (round history of each company) and investor-first (every round fund X invested in and whether X led it). Below is what we had to clean up to count leads reliably, offered as a thank-you. Some drift comes from our own free-form prompts; we flag it because a fixed schema would help every user.",
  "inputs": {
   "histories.jsonl": {
    "companies": 421,

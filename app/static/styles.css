@@ -36,10 +36,8 @@ a:hover{text-decoration-color:currentColor}
 .work{margin:8px 8px 8px 0;background:var(--panel);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:0 1px 2px rgba(16,17,20,.04);min-width:0}
 
 .brand{display:flex;align-items:center;gap:9px;height:36px;padding:0 8px;margin-bottom:10px;color:var(--ink);text-decoration:none;font-weight:640;font-size:15px;letter-spacing:-.02em}
-.mark{width:20px;height:20px;border-radius:5px;background:var(--accent);position:relative;flex:none}
-.mark::before,.mark::after{content:"";position:absolute;left:5px;height:2px;background:#fff;border-radius:1px}
-.mark::before{top:6px;right:8px}
-.mark::after{top:11px;right:5px}
+.logo{height:20px;width:auto;display:block}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 .nav{display:flex;flex-direction:column;gap:1px}
 .nav a,.nav button{display:flex;align-items:center;gap:9px;height:32px;padding:0 8px;border-radius:var(--r);color:var(--ink-2);font-weight:500;font-size:14px;text-decoration:none;border:0;background:none;text-align:left;width:100%}
 .nav a:hover,.nav button:hover{background:var(--press);color:var(--ink)}

@@ -122,7 +122,7 @@ def main() -> None:
          "result": f"{pct(wr['hit'])} vs {pct(wr['random'])} for a random pick from the same cap table "
                    f"(95% CI {pct(wr['ci_low'])} to {pct(wr['ci_high'])})", "n": wr["n"]},
         {"test": "Predicting the next round's new lead from earlier rounds (top 5)",
-         "result": "1.4%, the same as chance. So Lead Check reports what funds did, not odds.", "n": 140},
+         "result": "1.4%, the same as chance. So Recount reports what funds did, not odds.", "n": 140},
         {"test": "Seed rounds where Cala names the lead",
          "result": pct(cov.get("seed", {}).get("with_lead", 0) / max(1, cov.get("seed", {}).get("total", 1))),
          "n": cov.get("seed", {}).get("total", 0)},
