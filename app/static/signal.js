@@ -1549,9 +1549,9 @@
   const TOUR_KEY = "recount.signal.tour.v1";
   const TOUR = [
     { sel: ["#chat-form"], title: "Ask in your own words",
-      body: "Type what you want, like a good fintech company. Recount picks the filters for you." },
+      body: "Type what you want, like Nordic fintech. Recount picks the filters for you." },
     { sel: ["#hero .due-card"], title: "See who ranks first",
-      body: "Companies are ranked on round size for their stage. Click a row to see why.",
+      body: "Companies are ranked on round size for their stage. Click a company to see why.",
       bodyMobile: "Companies are ranked on round size for their stage. Tap a company to see why." },
     { sel: ["#rail", ".filters-btn"], title: "Narrow it down",
       body: "Filter by country, stage, sector, downturn or founders." },
@@ -1559,7 +1559,7 @@
       body: "We tested 35 signals on years the model never saw. Only one held up, so that is what we rank on." },
     { sel: ['#nav a[href="#/funds"], #nav a[href="#/founders"]', '#tabbar a[href="#/funds"], #tabbar a[href="#/founders"]'],
       title: "Funds and founders too",
-      body: "Switch tabs to see funds and founders the same way. Every number links to its Cala record." },
+      body: "Use these tabs to see funds and founders. Open any row to see the Cala data behind it." },
   ];
   const T = { on: false, steps: [], i: 0, root: null, ret: null, pending: false, autoChecked: false, raf: 0 };
   const isPhone = () => innerWidth <= 719;
