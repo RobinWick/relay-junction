@@ -781,3 +781,27 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
   .tour-card{width:calc(100vw - 32px);padding:18px 16px 14px}
   .tour-card__foot{flex-wrap:wrap}
 }
+
+/* Ranking card: our test + where the top 40 are */
+.rk-sec{margin:10px 0 0;display:flex;flex-direction:column;gap:8px}
+.rk-sec>.overline{margin:0}
+.rk-test{display:flex;flex-direction:column;gap:7px;text-decoration:none;color:inherit;border-radius:var(--r-2xs)}
+.rk-test:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.rk-test__bar{display:flex;gap:2px;height:12px;border-radius:var(--r-pill);overflow:hidden}
+.rk-test__seg{display:block;min-width:4px}
+.rk-test__seg--kept{background:var(--sea)}
+.rk-test__seg--noise{background:color-mix(in srgb,var(--ink) 26%,var(--surface))}
+.rk-test__seg--nt{background:var(--hatch-fine),var(--sunken);box-shadow:inset 0 0 0 1px var(--line-2)}
+.rk-test__line{font-size:13px;color:var(--ink-2);text-decoration:underline;text-decoration-color:var(--line-3);text-underline-offset:3px}
+.rk-test:hover .rk-test__line{color:var(--accent-text);text-decoration-color:currentColor}
+.rk-ctys{display:flex;flex-wrap:wrap;gap:4px}
+.rk-cty{display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 6px;border-radius:var(--r-2xs);box-shadow:inset 0 0 0 1px var(--line-2);font:550 11px/1 var(--mono);color:var(--ink-2)}
+.rk-cty .flag{font-family:"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif;font-size:13px;line-height:1}
+.rk-cty b{font-weight:650;color:var(--ink)}
+.rk-cty--more{color:var(--muted);font-family:var(--sans);font-weight:500;cursor:help}
+.rk-sts{list-style:none;margin:2px 0 0;padding:0;display:flex;flex-direction:column;gap:4px}
+.rk-st{display:grid;grid-template-columns:84px minmax(0,1fr) 22px;gap:10px;align-items:center;font-size:13px}
+.rk-st__l{color:var(--ink-2)}
+.rk-st__bar{height:6px;border-radius:var(--r-pill);background:var(--sunken);overflow:hidden}
+.rk-st__bar i{display:block;height:100%;width:0;border-radius:inherit;background:var(--accent);transition:width var(--d-bar) var(--ease)}
+.rk-st__n{font:550 12px var(--mono);color:var(--ink);text-align:right}

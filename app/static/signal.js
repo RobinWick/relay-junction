@@ -448,8 +448,18 @@
         <ul class="due-card__list">${scored.slice(1, 4).map((r, i) => `<li><a href="${entHref(v, r.id)}"><span class="due-card__rank">${String(r._pos).padStart(2, "0")}</span><span class="due-card__lname">${esc(r.name)}</span><span class="due-card__score">${fe ? `${(r.founder_evidence || {}).k} of 4` : r.score}</span></a></li>`).join("")}</ul>
       </div>`;
     }
-    host.innerHTML = due + sonarPanel(v, scored) + rankedOnPanel(v);
+    host.innerHTML = due + sonarPanel(v, scored) + rankedOnPanel(v, scored.slice(0, 40));
     paint(host);
+    if (v === "companies") ensureLab();
+  }
+
+  /* Lab counts feed the Ranking card. Fetched once, shared with the Lab page. */
+  async function ensureLab() {
+    if (S.lab || S.labErr || S.labLoading) return;
+    S.labLoading = true;
+    try { S.lab = await api("/api/signal/lab"); } catch (e) { S.labErr = e.message; }
+    S.labLoading = false;
+    if (!S.route.page && S.route.view === "companies") renderHero();
   }
 
   function stageWedge(s) {
@@ -492,7 +502,7 @@
       </div></div>`;
   }
 
-  function rankedOnPanel(v) {
+  function rankedOnPanel(v, top) {
     const rows = [];
     S.fv[v].forEach((x) => { // active filters only; the ranking itself is not a coverage row
       const f = spec(v, x.key); if (!f) return;
@@ -504,14 +514,50 @@
         <span class="cov-row__name" title="${esc(r.name)}">${esc(r.name)}</span>
         <span class="cov-row__n">${isNum(r.n) ? `${fmtInt(r.n)} / ${fmtInt(r.of)}` : ""}</span>
         <span class="cov-row__bar"><i data-w="${isNum(r.pct) ? r.pct.toFixed(1) : 0}" data-i="${i}"></i></span></li>`).join("");
+    const lc = (S.lab && S.lab.counts) || null;
     const head = v !== "companies" ? ""
       : S.thesis ? `<p class="ranked-on">Ranked on: <b>Thesis mix</b> <span class="chip chip--amber">No measured lift</span></p>`
-      : `<p class="ranked-on">Ranked on: <b>Size for stage</b></p><p class="ranked-on__line">Held up in our test of 35 signals. <a class="link" href="#/lab">See Lab</a></p>`;
+      : `<p class="ranked-on">Ranked on: <b>Size for stage</b></p><p class="ranked-on__line">${lc && isNum(lc.tested) ? `The one signal that held up in our test of ${fmtInt(lc.tested)}.` : "The one signal that held up in our test."}</p>`;
+    const extra = v === "companies" ? labBlock(lc) + whereBlock(top || []) : "";
     const list = body ? `<p class="overline cov-head">FILTER COVERAGE</p><ul class="cov-list">${body}</ul>`
       : v === "companies" ? "" : `<ul class="cov-list"><li class="muted">No filter set.</li></ul>`;
     return `<div class="panel panel--cov">
       <div class="panel__head"><h2 class="panel__title">${v === "companies" ? "Ranking" : "Coverage"}</h2></div>
-      <div class="panel__body">${head}${list}</div></div>`;
+      <div class="panel__body">${head}${extra}${list}</div></div>`;
+  }
+
+  function labBlock(c) {
+    if (!c) return S.labErr ? "" : `<div class="rk-sec"><p class="overline">OUR TEST</p><span class="skel"></span></div>`;
+    const parts = [["kept", "Held up", c.kept], ["noise", "Noise", c.noise], ["nt", "Not enough data", c.not_testable]].filter((p) => isNum(p[2]) && p[2] > 0);
+    const bar = parts.map(([k, l, n]) => `<i class="rk-test__seg rk-test__seg--${k}" data-flex="${n}" title="${esc(l)}: ${fmtInt(n)}"></i>`).join("");
+    const line = [[c.tested, "tested"], [c.kept, "held up"], [c.noise, "noise"], [c.not_testable, "not enough data"]]
+      .filter(([n]) => isNum(n)).map(([n, l]) => `${fmtInt(n)} ${l}`).join(" · ");
+    return `<div class="rk-sec"><p class="overline">OUR TEST</p>
+      <a class="rk-test" href="#/lab" aria-label="${esc(line)}. Open the Lab"><span class="rk-test__bar">${bar}</span>
+      <span class="rk-test__line">${esc(line)}</span></a></div>`;
+  }
+
+  function whereBlock(top) {
+    if (!top.length) return "";
+    const byC = new Map();
+    top.forEach((r) => {
+      const c = r.country || {}, code = c.code && c.code !== "XX" ? c.code : null;
+      const k = code || "Unknown";
+      const e = byC.get(k) || { code, name: code ? (c.name || code) : "Unknown", flag: c.flag, n: 0 };
+      e.n++; byC.set(k, e);
+    });
+    const cs = [...byC.values()].sort((a, b) => b.n - a.n || (a.code ? 0 : 1) - (b.code ? 0 : 1) || a.name.localeCompare(b.name));
+    const shown = cs.slice(0, 5), rest = cs.slice(5);
+    const badge = (e) => `<span class="rk-cty" title="${esc(e.name)}: ${e.n}">${e.code ? `<span class="flag" aria-hidden="true">${e.flag || flagEmoji(e.code)}</span>${esc(e.code)}` : "Unknown"}<b>${e.n}</b></span>`;
+    const more = rest.length ? `<span class="rk-cty rk-cty--more" title="${esc(rest.map((e) => `${e.name} ${e.n}`).join(", "))}">+${rest.length} more</span>` : "";
+    const st = [0, 0, 0, 0], unk = { n: 0 };
+    top.forEach((r) => { if (!r.last_stage) unk.n++; else st[stageWedge(r.last_stage)]++; });
+    const names = ["Pre-seed", "Seed", "Series A", "B and later"];
+    const max = Math.max(...st, unk.n, 1);
+    const srow = (l, n, i) => `<li class="rk-st"><span class="rk-st__l">${l}</span><span class="rk-st__bar"><i data-w="${(n / max * 100).toFixed(1)}" data-i="${i}"></i></span><span class="rk-st__n">${n}</span></li>`;
+    return `<div class="rk-sec"><p class="overline">WHERE THE TOP ${top.length} ARE</p>
+      <div class="rk-ctys">${shown.map(badge).join("")}${more}</div>
+      <ul class="rk-sts">${names.map((l, i) => srow(l, st[i], i)).join("")}${unk.n ? srow("Unknown", unk.n, 4) : ""}</ul></div>`;
   }
 
   /* ---------------- filter rail ---------------- */
