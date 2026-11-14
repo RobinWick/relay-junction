@@ -107,7 +107,7 @@ Pitch-safe line: "We spot-checked 41 Cala lead calls against press releases: 31 
 
 ## What this means for the product
 
-- The headline claim holds. When Cala names a lead, it matches public sources about 85% of the time on a random draw (22 of 26 verifiable). For the sample-list funds, the named fund really did lead every time (11 of 11), though 2 of those rounds had co-leads we did not show.
+- The headline claim holds. When Cala names a lead, this first draw matched public sources in 22 of 26 verifiable rounds. Pooled with two later draws (`accuracy-2a`, `accuracy-2b`, see `README.md` in this folder) the lead is exactly right in 55 of 74 verifiable random rounds (74%, 95% CI 63 to 83%), and the right lead fund is named in 66 of 74 (89%). Investor-first-only rows are weaker (about 70%) than company-first or both (about 82%). For the sample-list funds, the named fund really did lead every time (11 of 11), though 2 of those rounds had co-leads we did not show.
 - The most common error is a **missing co-lead**, not a wrong fund. That inflates "sole lead" impressions but not "Led X of Y".
 - Two cheap pipeline fixes remove 2 of the 8 problems:
   - treat "Not confirmed"-style strings as no lead;

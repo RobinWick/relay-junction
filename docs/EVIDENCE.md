@@ -6,14 +6,14 @@ All numbers come from snapshot `20261114102039` (built 14 November 2026) and `ap
 
 | Claim | Value | Where it comes from |
 |---|---|---|
-| Funding rounds | 5,200 | `pipeline/build_snapshot.py`, `stats.rounds` in the snapshot |
-| Companies | 3,393 | `stats.companies` |
-| Funds asked investor-first | 195 | `stats.funds_queried`, list in `pipeline/fetch_funds.py` |
+| Funding rounds | 5,146 | `pipeline/build_snapshot.py`, `stats.rounds` in the snapshot |
+| Companies | 3,390 | `stats.companies` |
+| Funds asked investor-first | 194 (KFund and K Fund are one fund) | `stats.funds_queried`, list in `pipeline/fetch_funds.py` |
 | Companies asked company-first | 421 asked, 410 returned a round history | `pipeline/fetch.py` (one line per company in its `histories.jsonl` output); 410 is the number of companies with a company-first round in the snapshot |
 | Investors after name canonicalisation | 5,971 | `stats.investors` |
-| Cala entity IDs attached to records | 4,406 | `stats.entity_ids`, `app/merge.py` (`add_entities`) |
-| Rounds with source documents from `/v1/knowledge/search` | 211 | `stats.sourced_rounds`, `pipeline/fetch_sources.py` |
-| Rounds disputed by their own source text | 12 of the 211 | `stats.disputed_rounds`, `app/dispute.py`, called from `pipeline/build_snapshot.py` (`flag_disputes`) |
+| Cala entity IDs attached to records | 4,414 | `stats.entity_ids`, `app/merge.py` (`add_entities`) |
+| Rounds with source documents from `/v1/knowledge/search` | 209 | `stats.sourced_rounds`, `pipeline/fetch_sources.py` |
+| Rounds disputed by their own source text | 9 of the 209 (of the first 12 flagged, 10 confirmed by press; the 2 false alarms are fixed) | `stats.disputed_rounds`, `app/dispute.py`, called from `pipeline/build_snapshot.py` (`flag_disputes`) |
 | Rounds cross-checked in Cala's entity graph | 90, of which the graph had 12 | `stats.graph_checked`, `pipeline/fetch_graph.py`, `app/graph.py` |
 | Rounds seen from both query paths where both name a lead | 191, sharing a lead in 172 | counted from the raw rows of each `both` round in the snapshot; the count is printed by `pitch/deck/build.py` (outside this repo), not by `pipeline/validate.py` |
 
@@ -21,10 +21,10 @@ All numbers come from snapshot `20261114102039` (built 14 November 2026) and `ap
 
 | Claim | Value | Method |
 |---|---|---|
-| Hand check against press, 30 random rounds (2022+) | 22 of 26 verifiable correct, 2 partly, 2 wrong, 4 with no public source | `research/accuracy/accuracy.md`, one source URL per row in `accuracy.json`, sample drawn with `random.seed(14)` from the first 1,828 rounds, before the investor-first crawl |
+| Hand check against press, 80 random rounds (2022+), three draws | Lead exactly right in 55 of 74 verifiable (74%, 95% CI 63 to 83%), 11 partly, 8 wrong, 6 with no public source; right lead fund named in 66 of 74 (89%, CI 80 to 94%). By query path: investor-first only 35 of 50 (about 70%), company-first or both 18 of 22 (about 82%) | `research/accuracy/README.md`; draws in `accuracy.json` (`random.seed(14)`, first 1,828 rounds), `accuracy-2a.json` and `accuracy-2b.json` (`random.seed(1401)`, 2,554-round pool). Lane B rests partly on search-result text, see the note |
 | Last lead of 11 sample funds | 9 of 11 correct, 2 missing a co-lead, none wrong | same file |
-| Lead record carries signal | In 1,599 past rounds with a named lead, the investor with the stronger earlier lead record was the real lead 50% of the time, vs 36% for a random pick from the same cap table (95% CI 47 to 52%) | `pipeline/validate.py`, output `app/validation.json`, shown on the Method page |
-| The lead comes back | Across 1,489 cases, the lead of a round came back in the company's next round 60% of the time and led it again 17% of the time | `pipeline/validate.py` (`lead_comes_back` in `app/validation.json`); per fund in the app via `app/engine.py` (`lead_comes_back`) |
+| Lead record carries signal | In 1,584 past rounds with a named lead, the investor with the stronger earlier lead record was the real lead 48% of the time, vs 36% for a random pick from the same cap table (95% CI 46 to 51%) | `pipeline/validate.py`, output `app/validation.json`, shown on the Method page |
+| The lead comes back | Across 1,405 cases, the lead of a round came back in the company's next round 60% of the time and led it again 15% of the time | `pipeline/validate.py` (`lead_comes_back` in `app/validation.json`); per fund in the app via `app/engine.py` (`lead_comes_back`) |
 | Entity graph agreement | On 60 random rounds the graph had the round 7 times; where it marks `is_lead`, it agrees with our lead 6 of 6 | `pipeline/fetch_graph.py`, `pipeline/validate.py` (`graph_check`) |
 | Sample lead card checked against press | The sample's "Will your lead come back?" card (Lifeline Ventures, 10 rounds in 8 companies) holds on "led 3"; two of its 10 cases are not supported by press, so we do not quote the card as a fact, and the sample no longer marks Lifeline as its lead, so the card does not show there | `research/accuracy/lifeline-check.md` |
 

@@ -5,14 +5,14 @@
 Built at Junction 2026 for Cala's "Make Unicorns Real" challenge. Live demo: https://robin-81988--recount.us-east.modal.run (no login).
 
 Key facts:
-- Data: 5,200 rounds, 3,393 companies, 195 funds asked investor-first, 421 companies asked company-first, 4,406 Cala entity IDs. Cala is the only data source.
-- Cala layers used: POST /v1/knowledge/query (investor-first and company-first), POST /v1/knowledge/search (source documents for 211 rounds), /v1/entities (FundingRound entities with is_lead, as a cross-check on 90 rounds).
-- Where both query paths name a lead for the same round, they share it in 172 of 191 rounds.
-- Validation: the investor with the stronger earlier lead record is the real lead 50% vs 36% random in 1,599 rounds (95% CI 47 to 52%); hand check against press 22 of 26 sourced leads correct; entity graph agrees 6 of 6 where it marks a lead.
-- Disputed rounds: 12 of 211 sourced rounds have source text naming a different lead; they are marked and left out of every count.
+- Data: 5,146 rounds, 3,390 companies, 194 funds asked investor-first, 421 companies asked company-first, 4,414 Cala entity IDs. Cala is the only data source.
+- Cala layers used: POST /v1/knowledge/query (investor-first and company-first), POST /v1/knowledge/search (source documents for 209 rounds), /v1/entities (FundingRound entities with is_lead, as a cross-check on 90 rounds).
+- Where both query paths name a lead for the same round, they share it in 176 of 192 rounds.
+- Validation: the investor with the stronger earlier lead record is the real lead 48% vs 36% random in 1,584 rounds (95% CI 46 to 51%); hand check against press: lead exactly right in 55 of 74 verifiable random rounds (74%, 95% CI 63 to 83%); right lead fund named in 66 of 74 (89%); investor-first only about 70%, company-first or both about 82%; entity graph agrees 6 of 6 where it marks a lead.
+- Disputed rounds: 9 of 209 sourced rounds have source text naming a different lead; they are marked and left out of every count. Of the first 12 flagged, 10 confirmed by press; the 2 false alarms are fixed.
 - Way in: investor co-round ties from Cala rounds (one of your investors and the fund in the same round with at most 6 investors), plus the founder's LinkedIn Connections export, parsed in the browser and matched by company name to companies each fund led or joined. Nothing is uploaded. A same-company match is a lead to check, not proof of a relationship. The Map view draws these ways in as lines from you, through the person, to each fund (solid: the fund led that company's round; dashed: it only joined; dotted: your investor's shared round), with funds in the list's groups and order.
 - Prediction tested on 558 held-out rounds with 8 methods and a leakage audit: a current investor leads about 1 in 4 next rounds; the previous round's lead itself about 1 in 6 (17%). A new outside lead is in the top 5 only 4 to 5% of the time (random 0.15%, 462 rounds), so the product shows evidence, not odds.
-- Need: the lead of a round came back in the company's next round 60% of the time but led it again only 17% (1,489 cases), so most founders need a new lead each round.
+- Need: the lead of a round came back in the company's next round 60% of the time but led it again only 15% (1,405 cases), so most founders need a new lead each round.
 - Stack: Cala, Aiven for PostgreSQL (system of record and spending caps), Modal (FastAPI app and background live lookups), Gemini only for reading messy pasted lines.
 
 ## Check us in 60 seconds

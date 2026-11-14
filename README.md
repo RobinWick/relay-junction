@@ -22,14 +22,14 @@ Built at Junction 2026 (Espoo, 13 to 15 November 2026) for Cala's "Make Unicorns
 
 | Criterion | What we did | One number | Proof |
 |---|---|---|---|
-| **Real need** | A round needs a lead, and the last lead rarely leads again, so most founders must find a new lead each round. Fund sites list portfolios, not who led. Recount answers "does this fund lead rounds like mine, and how do I get in" for any list, before any raise. | The lead of a round came back in the company's next round 60% of the time but led it again only 17% (1,489 cases) | `app/validation.json`, [Need](#the-need) |
-| **Execution** | Deployed end to end: crawl, merge, Postgres, API, UI, live Cala lookups with spending caps. Wrong amounts and leads the source disputes are caught and left out. | 5,200 rounds, 3,393 companies, 195 funds; hand check 22 of 26 leads correct against press | [`docs/EVIDENCE.md`](docs/EVIDENCE.md), `pipeline/validate.py` |
+| **Real need** | A round needs a lead, and the last lead rarely leads again, so most founders must find a new lead each round. Fund sites list portfolios, not who led. Recount answers "does this fund lead rounds like mine, and how do I get in" for any list, before any raise. | The lead of a round came back in the company's next round 60% of the time but led it again only 15% (1,405 cases) | `app/validation.json`, [Need](#the-need) |
+| **Execution** | Deployed end to end: crawl, merge, Postgres, API, UI, live Cala lookups with spending caps. Wrong amounts are left out; rounds whose own source text names a different lead are flagged and left out of counts (10 of the first 12 flagged confirmed by press). | 5,146 rounds, 3,390 companies, 194 funds; hand check against press: lead exactly right in 55 of 74 random rounds (74%) | [`docs/EVIDENCE.md`](docs/EVIDENCE.md), `pipeline/validate.py` |
 | **Originality** | A lead count at your stage and size with its denominator and the rounds behind it, plus a way in from the same round records and your LinkedIn export, read in the browser. We tested prediction honestly and published that it does not work for outside funds. | Next outside lead in the top 5: 4 to 5% vs 0.15% random (462 rounds), so Recount shows evidence, not odds | [`research/prediction/RESULTS.md`](research/prediction/RESULTS.md), [How this differs](#how-this-differs-from-existing-tools) |
-| **Use of Cala as the core** | Cala is the only data source, through three layers: `/v1/knowledge/query` (investor-first and company-first), `/v1/knowledge/search` (source documents) and `/v1/entities` (FundingRound entities, as a cross-check). We wrote up 19 data-quality findings for Cala. | Where both query paths name a lead, they share it in 172 of 191 rounds | [How Cala is used](#how-cala-is-used), `data_quality/cala-data-quality.json` |
+| **Use of Cala as the core** | Cala is the only data source, through three layers: `/v1/knowledge/query` (investor-first and company-first), `/v1/knowledge/search` (source documents) and `/v1/entities` (FundingRound entities, as a cross-check). We wrote up 19 data-quality findings for Cala. | Where both query paths name a lead, they share it in 176 of 192 rounds | [How Cala is used](#how-cala-is-used), `data_quality/cala-data-quality.json` |
 
 ## The need
 
-Every priced round needs a lead investor, and most funds do not lead: they join once someone else has set the terms. The previous lead is rarely the answer: in our data the lead of a round came back in the next round 60% of the time but led it only 17% of the time. A seed or Series A founder can book only a few dozen investor meetings per raise, so pitching funds that only follow costs months. The question is simple: which of these funds actually leads rounds like mine, which only follows, and how do I get in? Fund websites list portfolio companies, not who led which round. Recount answers it for any list a founder has, and it is just as useful to accelerators and venture builders who prepare a whole cohort for investor meetings.
+Every priced round needs a lead investor, and most funds do not lead: they join once someone else has set the terms. The previous lead is rarely the answer: in our data the lead of a round came back in the next round 60% of the time but led it only 15% of the time. A seed or Series A founder can book only a few dozen investor meetings per raise, so pitching funds that only follow costs months. The question is simple: which of these funds actually leads rounds like mine, which only follows, and how do I get in? Fund websites list portfolio companies, not who led which round. Recount answers it for any list a founder has, and it is just as useful to accelerators and venture builders who prepare a whole cohort for investor meetings.
 
 ## What it does
 
@@ -71,24 +71,24 @@ What Recount adds: the lead count at the founder's own stage and size, with how 
 
 Cala is the only data source. We ask Cala two kinds of questions through `POST /v1/knowledge/query`:
 
-1. **Investor-first** (195 funds): "List every funding round that {fund} invested in, with ... whether {fund} led the round." Cala's answer includes a per-round flag for whether the fund led. Large funds get one question per year when the open question is too broad.
+1. **Investor-first** (194 funds): "List every funding round that {fund} invested in, with ... whether {fund} led the round." Cala's answer includes a per-round flag for whether the fund led. Large funds get one question per year when the open question is too broad.
 2. **Company-first** (421 companies asked, 410 returned a history): "List every funding round of {company} with announcement date, round type, amount, lead investor and all participating investors."
 
 A round seen from both sides is merged when company, stage and date agree, and the record view says so. Investor names are canonicalised (for example "Point Nine Capital" and "Point Nine"). Grants, loans and prizes are excluded from lead counts.
 
-- `POST /v1/knowledge/search` gives the documents behind 211 rounds, fetched ahead of time for each queried fund's last lead; any other round can ask live from its record. The cached source text is also how 12 of those 211 rounds were found to be disputed (`app/dispute.py`, no extra Cala call).
-- `/v1/entities` was checked for 90 rounds; Cala's graph had 12 of them. 4,406 Cala entity IDs are attached to records.
+- `POST /v1/knowledge/search` gives the documents behind 209 rounds, fetched ahead of time for each queried fund's last lead; any other round can ask live from its record. The cached source text is also how 9 of those 209 rounds were found to be disputed (`app/dispute.py`, no extra Cala call).
+- `/v1/entities` was checked for 90 rounds; Cala's graph had 12 of them. 4,414 Cala entity IDs are attached to records.
 - The same investor-first question runs live from the app for funds a founder pastes that are not in the snapshot yet.
 
 ## What we tested
 
 | Test | Result |
 |---|---|
-| In 1,599 past rounds with a named lead, is the investor with the stronger earlier lead record the real lead? | Yes 50% of the time, vs 36% for a random pick from the same round (95% CI 47 to 52%). `pipeline/validate.py` |
-| 30 random rounds checked by hand against press (drawn from the first 1,828 rounds, before the investor-first crawl) | 22 of 26 sourced rounds correct, 2 partly, 2 wrong, 4 with no public source. Sample-fund last leads 9 of 11 correct, 2 missing a co-lead |
-| Both query paths name a lead for the same round | They share it in 172 of 191 rounds |
+| In 1,584 past rounds with a named lead, is the investor with the stronger earlier lead record the real lead? | Yes 48% of the time, vs 36% for a random pick from the same round (95% CI 46 to 51%). `pipeline/validate.py` |
+| 80 random 2022+ rounds checked by hand against press, three draws (`random.seed(14)` and `random.seed(1401)`) | Lead exactly right in 55 of 74 verifiable (74%, 95% CI 63 to 83%), 11 partly, 8 wrong, 6 with no public source; right lead fund named in 66 of 74 (89%). By query path: investor-first only about 70% (35 of 50), company-first or both about 82% (18 of 22). Sample-fund last leads (not random) 9 of 11 correct, 2 missing a co-lead. [`research/accuracy/`](research/accuracy/) |
+| Both query paths name a lead for the same round | They share it in 176 of 192 rounds |
 | Cala entity graph cross-check (60 random rounds) | Round present 7 times; where the graph marks a lead, it agrees with ours 6 of 6 |
-| A round's own Cala source text names a different lead | 12 of 211 sourced rounds, marked disputed and left out of every count |
+| A round's own Cala source text names a different lead | 9 of 209 sourced rounds in this build, marked disputed and left out of every count. Of the first 12 flagged, 10 confirmed by press; the 2 false alarms (OlsAro, Anthropic) are fixed |
 | Predict who leads a company's next round (558 held-out rounds, only earlier data used, 8 methods) | Real lead in the top 5: **26 to 27%**, almost all of it from current investors |
 | Predict which **new outside** fund leads (462 rounds) | Top 5: **4 to 5%** (random: 0.15%); top 20: 11 to 12%. Too weak to promise |
 
@@ -136,10 +136,10 @@ cd ../app && uvicorn main:app --port 8765
 ## Limits
 
 - Fund level, not partner level. A tie means two funds sat in the same round; ask your investor which partner was on it.
-- About a third of seed rounds in our data name no lead (Cala names the lead in 68% of 1,418 seed rounds). They are left out of the lead ratio, which pushes thinly covered funds toward "Too little data", so every row shows how many rounds had no named lead.
+- About a third of seed rounds in our data name no lead (Cala names the lead in 68% of 1,401 seed rounds). They are left out of the lead ratio, which pushes thinly covered funds toward "Too little data", so every row shows how many rounds had no named lead.
 - Answers to "which rounds did this fund invest in" name rounds a fund led more often than rounds it only joined, so the lead share is an upper bound.
 - Size verdicts need 5 or more sized led rounds; below that the range is shown in grey as "size unclear".
-- The disputed-round check is a text rule over the 211 rounds with cached source documents. Rounds without a cached source are not checked.
+- The disputed-round check is a text rule over the 209 rounds with cached source documents. Rounds without a cached source are not checked.
 - A LinkedIn match is a person at a company the fund backed, matched by company name. It is not proof of a relationship.
 - Coverage is what Cala returned to our questions: mostly European venture rounds from 2021 to 2026. A fund missing here is missing from our snapshot, not necessarily from Cala.
 - Company discovery started from startups that raised more than EUR 2m, so very small rounds are under-represented.
