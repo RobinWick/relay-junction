@@ -308,6 +308,34 @@ def test_fund_led_in_downturn_filter():
     assert d["meta"]["matched"] <= _get("/funds").json()["meta"]["matched"]
     assert all((r.get("downturn_lead_share") or {}).get("led", 0) >= 1 for r in d["rows"] if "downturn_lead_share" in r)
 
+
+def test_lab_lists_every_signal_with_an_honest_headline():
+    if not signal_api.LAB_PATH.exists():
+        pytest.skip("run signal/hunt/build_lab.py first")
+    r = client.get("/api/signal/lab")
+    assert r.status_code == 200
+    d = r.json()
+    rows, c = d["rows"], d["counts"]
+    assert c["tested"] == len(rows) == c["existing"] + c["hunt"] + c["models"]
+    assert c["kept"] == sum(x["verdict"] == "Kept" for x in rows) == len(d["kept"])
+    assert d["headline"] == f"We tested {c['tested']} signals on years the model never saw. {c['kept']} held up."
+    assert {x["verdict"] for x in rows} <= {"Kept", "Noise", "Not testable"}
+    assert len({x["key"] for x in rows}) == len(rows)
+    for x in rows:
+        assert x["name"] and x["family"] and x["reason"]
+        for o in ("next_round_24m", "graduate_b_plus_36m"):
+            cell = x["outcomes"][o]
+            assert isinstance(cell["n"], int)
+            if x["verdict"] == "Kept":
+                assert cell["n"] >= 100 or o == "graduate_b_plus_36m"
+        if x["verdict"] == "Kept":
+            assert any(x["outcomes"][o]["passes_bar"] for o in ("next_round_24m", "graduate_b_plus_36m"))
+        if all(x["outcomes"][o]["n"] < 100 for o in ("next_round_24m", "graduate_b_plus_36m")):
+            assert x["verdict"] == "Not testable"  # n < 100 is noise and can never be kept
+    for s in _strings(d):
+        assert not DASH.search(s), s
+
+
 if __name__ == "__main__":
     import minitest
     minitest.main(globals())

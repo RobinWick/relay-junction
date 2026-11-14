@@ -3,7 +3,7 @@
 Deploy:  python3 -m modal deploy modal_signal.py      (app and label 'recount-signal'; 'recount' is not touched)
 Secrets: Modal secret `relay-secrets` (GEMINI_API_KEY, GEMINI_API_KEY_FALLBACK, RELAY_DATABASE_URL, COOKIE_KEY,
 CALA_API_KEY). Signal files ship inside app/: signal_*.py, signal_extra.json (built by signal_extra_build.py),
-signal_weights.json, signal_backtest.json and static/signal*.
+signal_weights.json, signal_backtest.json, signal_lab.json (built by signal/hunt/build_lab.py) and static/signal*.
 """
 from pathlib import Path
 

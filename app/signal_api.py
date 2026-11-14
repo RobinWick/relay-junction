@@ -595,6 +595,26 @@ def backtest(request: Request):
     return {**st.backtest, "claim_line": _backtest_line(st)}
 
 
+LAB_PATH = HERE / "signal_lab.json"
+_lab_cache: dict = {}
+
+
+def load_lab(path: Path = LAB_PATH) -> dict:
+    """Every signal tested on held-out years (signal/hunt/build_lab.py). Read once; the file only changes on deploy."""
+    if path not in _lab_cache:
+        _lab_cache[path] = json.loads(path.read_text()) if path.exists() else {}
+    return _lab_cache[path]
+
+
+@router.get("/lab")
+def lab(request: Request):
+    _limit(request, "signal-get", GET_PER_MIN)
+    d = load_lab()
+    if not d.get("rows"):
+        raise HTTPException(404, "Lab not built. Run signal/hunt/build_lab.py.")
+    return d
+
+
 # ---------------------------------------------------------------- detail
 def _strip(prefix: str, id_: str) -> str:
     return id_[len(prefix):] if id_.startswith(prefix) else id_

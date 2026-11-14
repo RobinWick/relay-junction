@@ -47,6 +47,7 @@
     user: '<circle cx="12" cy="8" r="4"/><path d="M4 21c.9-4 4-6 8-6s7.1 2 8 6"/>',
     target: '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
     book: '<path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>',
+    flask: '<path d="M9 3h6M10 3v6L4.5 18.5A1.7 1.7 0 0 0 6 21h12a1.7 1.7 0 0 0 1.5-2.5L14 9V3"/><path d="M7 15h10"/>',
     hash: '<path d="M4 9h16M4 15h16M10 3 8 21M16 3l-2 18"/>',
     link: '<path d="M9 17H7A5 5 0 0 1 7 7h2M15 7h2a5 5 0 1 1 0 10h-2M8 12h8"/>',
     filter: '<path d="M22 3H2l8 9.5V19l4 2v-8.5z"/>',
@@ -171,6 +172,7 @@
     userKey: "",
     detail: new Map(),
     bt: null, btErr: null, btOutcome: "next_round_24m", btSplit: "held_out",
+    lab: null, labErr: null, labFilter: "all",
     openGroups: new Set(), railQ: "", railSheet: false,
     layer: null,
   };
@@ -235,7 +237,7 @@
   function parseHash() {
     const parts = (location.hash.replace(/^#\/?/, "") || "companies").split("/").map(decodeURIComponent);
     const head = parts[0];
-    if (head === "backtest" || head === "method") return { page: head, view: S.route.view || "companies" };
+    if (head === "backtest" || head === "lab" || head === "method") return { page: head, view: S.route.view || "companies" };
     const view = VIEWS.includes(head) ? head : "companies";
     return { view, id: parts[1] || null, tab: parts[2] || "overview", page: null };
   }
@@ -248,7 +250,7 @@
     renderNav();
     if (r.page) {
       closeLayer();
-      if (r.page === "backtest") renderBacktest(); else renderMethod();
+      if (r.page === "backtest") renderBacktest(); else if (r.page === "lab") renderLab(); else renderMethod();
       window.scrollTo(0, 0);
       return;
     }
@@ -265,6 +267,7 @@
       ["funds", "Funds", c.funds_queried, "funds"],
       ["founders", "Founders", c.founders, "user"],
       ["backtest", "Backtest", null, "target"],
+      ["lab", "Lab", null, "flask"],
       ["method", "Method", null, "book"],
     ];
     const cur = S.route.page || S.route.view;
@@ -1359,6 +1362,69 @@
       <div class="sp12"></div>
       <div class="ribbon ribbon--sunken">${ic("info")}<span><b>In-sample.</b> ${b.selection ? `Weights: ${esc(b.selection.chosen || "")}, picked by ${esc(noDash(b.selection.criterion || ""))}. ` : ""}Held-out cutoffs were looked at during the design debate, so no clean holdout exists. Small n: treat every number here as a direction, not a measurement.</span></div>`;
   }
+  /* ---------------- lab: every signal tested on held-out years ---------------- */
+  const LAB_OUT = [["next_round_24m", "Next round 24m"], ["graduate_b_plus_36m", "Series B+ 36m"]];
+  const LAB_CHIP = { "Kept": "chip--teal", "Noise": "chip--grey", "Not testable": "chip--hatch" };
+  async function renderLab() {
+    const main = $("#main");
+    main.innerHTML = `<div class="page-header"><div><h1 class="page-header__title">Lab</h1><div class="page-header__meta">Every signal we tried, scored once on held-out years, full-history companies</div></div></div><div id="lab"><span class="skel"></span></div>`;
+    if (!S.lab && !S.labErr) {
+      try { S.lab = await api("/api/signal/lab"); } catch (e) { S.labErr = e.message; }
+    }
+    drawLab();
+  }
+  const f3 = (x) => (isNum(x) ? x.toFixed(3) : "");
+  const sgn = (x) => (isNum(x) ? (x > 0 ? "+" : "") + x.toFixed(3) : "");
+  // CI whisker against chance (0.5) and the noise band, on a fixed 0.30 to 0.80 axis so rows compare at a glance
+  function ciBar(c) {
+    if (!c || !isNum(c.auc) || !c.ci90) return "";
+    const W = 120, lo = 0.3, hi = 0.8, x = (v) => Math.max(0, Math.min(W, ((v - lo) / (hi - lo)) * W));
+    const nb = c.null_band90;
+    return `<svg class="cibar" viewBox="0 0 ${W} 14" width="${W}" height="14" aria-hidden="true">
+      ${nb ? `<rect class="cibar__band" x="${x(nb[0])}" y="2" width="${Math.max(1, x(nb[1]) - x(nb[0]))}" height="10" rx="2"/>` : ""}
+      <line class="cibar__half" x1="${x(0.5)}" x2="${x(0.5)}" y1="0" y2="14"/>
+      <line class="cibar__ci${c.passes_bar ? " is-pass" : ""}" x1="${x(c.ci90[0])}" x2="${x(c.ci90[1])}" y1="7" y2="7"/>
+      <circle class="cibar__dot${c.passes_bar ? " is-pass" : ""}" cx="${x(c.auc)}" cy="7" r="3"/></svg>`;
+  }
+  function labCell(c) {
+    if (!c || !c.n) return '<span class="faint">no data</span>';
+    if (!isNum(c.auc)) return `<span class="faint">n ${fmtInt(c.n)}, no score</span>`;
+    const small = c.n < 100;
+    return `<div class="labc"><span class="labc__auc num${c.passes_bar ? " pos" : ""}">${f3(c.auc)}</span>${ciBar(c)}
+      <span class="labc__sub num">${c.ci90 ? `CI ${f3(c.ci90[0])} to ${f3(c.ci90[1])}` : ""}${c.null_band90 ? `<br>noise ${f3(c.null_band90[0])} to ${f3(c.null_band90[1])}` : ""}<br>n ${fmtInt(c.n)}${small ? ' <span class="chip chip--amber">n&lt;100</span>' : ""}</span></div>`;
+  }
+  function labAdds(r) {
+    const parts = LAB_OUT.map(([k]) => { const c = r.outcomes[k] || {}; return c.delta_ci90 ? `<span class="${c.adds_over_size ? "pos" : ""}">${k === "next_round_24m" ? "Next" : "B+"} ${sgn(c.delta_vs_size)}<br><span class="faint">${f3(c.delta_ci90[0])} to ${f3(c.delta_ci90[1])}</span></span>` : ""; }).filter(Boolean);
+    const any = LAB_OUT.some(([k]) => (r.outcomes[k] || {}).adds_over_size);
+    if (r.key === "size_for_stage") return '<span class="faint">is the baseline</span>';
+    if (!parts.length) return '<span class="faint">not fitted</span>';
+    return `<div class="labadd num"><span class="chip ${any ? "chip--teal" : "chip--outline"}">${any ? "Yes" : "No"}</span>${parts.join("")}</div>`;
+  }
+  function drawLab() {
+    const host = $("#lab"); if (!host) return;
+    if (S.labErr || !S.lab) { host.innerHTML = `<div class="state state--error"><b>The lab could not load.</b><p>${esc(S.labErr || "")}</p></div>`; return; }
+    const d = S.lab, c = d.counts || {}, ref = d.reference || {};
+    const fl = [["all", "All", c.tested], ["Kept", "Kept", c.kept], ["Noise", "Noise", c.noise], ["Not testable", "Not testable", c.not_testable]];
+    const rows = (d.rows || []).filter((r) => S.labFilter === "all" || r.verdict === S.labFilter);
+    const refChip = (k, l) => ref[k] ? `<span class="chip chip--outline num">${l}: size alone ${f3(ref[k].size_alone)}, current score ${f3(ref[k].composite)}</span>` : "";
+    const verdict = (r) => `<span class="chip ${LAB_CHIP[r.verdict] || "chip--grey"}">${r.verdict === "Kept" ? ic("check") : ""}${esc(r.verdict)}</span>`;
+    const name = (r) => `<div class="labn"><b>${esc(noDash(r.name))}</b><span class="labn__fam">${esc(r.family)}</span></div><p class="labn__def">${esc(noDash(r.definition))}</p>`;
+    host.innerHTML = `
+      <div class="bt-sentence lab-head"><span class="overline">HELD-OUT RESULT</span><p class="lab-head__big">${esc(noDash(d.headline || ""))}</p>
+        <p class="sub">${esc(noDash(d.subline || ""))}</p>
+        <div class="chat__chips"><span class="chip chip--teal">${fmtInt(c.kept)} kept</span><span class="chip chip--grey">${fmtInt(c.noise)} noise</span><span class="chip chip--hatch">${fmtInt(c.not_testable)} not testable</span>
+          <span class="chip chip--grey">${fmtInt(c.existing)} current parts, ${fmtInt(c.hunt)} new, ${fmtInt(c.models)} learned model</span>
+          ${refChip("next_round_24m", "Next round")}${refChip("graduate_b_plus_36m", "Series B+")}${d.meta && d.meta.snapshot_version ? `<span class="chip chip--mono">snapshot ${esc(d.meta.snapshot_version)}</span>` : ""}</div></div>
+      <div class="tbar bt-tabs"><div class="seg" role="group" aria-label="Verdict">${fl.map(([k, l, n]) => `<button class="seg__btn" type="button" data-lab-f="${esc(k)}" aria-pressed="${S.labFilter === k}">${l} <span class="seg__count">${fmtInt(n || 0)}</span></button>`).join("")}</div></div>
+      <div class="tbl-wrap lab-tbl"><table class="tbl"><thead><tr><th>Signal</th>${LAB_OUT.map(([, l]) => `<th>${l}<br><span class="faint">AUC, 90% CI, noise band</span></th>`).join("")}<th>Adds over size<br><span class="faint">change in AUC, 90% CI</span></th><th>Verdict</th></tr></thead>
+        <tbody>${rows.map((r) => `<tr class="lab-row lab-row--${r.verdict === "Kept" ? "kept" : "x"}"><td class="lab-sig">${name(r)}<p class="labn__why">${esc(noDash(r.reason))}</p></td>${LAB_OUT.map(([k]) => `<td>${labCell(r.outcomes[k])}</td>`).join("")}<td>${labAdds(r)}</td><td>${verdict(r)}</td></tr>`).join("") || `<tr><td colspan="5" class="faint">Nothing here.</td></tr>`}</tbody></table></div>
+      <div class="lab-cards">${rows.map((r) => `<article class="lab-card${r.verdict === "Kept" ? " is-kept" : ""}"><div class="lab-card__top">${name(r)}${verdict(r)}</div>
+        <div class="lab-card__grid">${LAB_OUT.map(([k, l]) => `<div><span class="overline">${l.toUpperCase()}</span>${labCell(r.outcomes[k])}</div>`).join("")}</div>
+        <div class="lab-card__adds"><span class="overline">ADDS OVER SIZE</span>${labAdds(r)}</div><p class="labn__why">${esc(noDash(r.reason))}</p></article>`).join("")}</div>
+      <div class="sp12"></div>
+      <div class="ribbon ribbon--sunken">${ic("info")}<span><b>The bar.</b> ${esc(noDash(d.rule || ""))} Directions and weights were chosen on 2018 to 2020 only. ${d.meta && d.meta.multiple_comparisons ? `Corrected for ${fmtInt(d.meta.multiple_comparisons.hunt_tests + d.meta.multiple_comparisons.existing_tests)} tests (Holm). ` : ""}Every number comes from Cala's record only; the snapshot only holds companies Cala returns today.</span></div>`;
+  }
+
   function renderMethod() {
     const m = S.meta || {};
     const c = m.counts || {};
@@ -1386,6 +1452,7 @@
     }
     const bo = t.closest("[data-bt-outcome]"); if (bo) { S.btOutcome = bo.dataset.btOutcome; drawBacktest(); return; }
     const bs = t.closest("[data-bt-split]"); if (bs) { S.btSplit = bs.dataset.btSplit; drawBacktest(); return; }
+    const lf = t.closest("[data-lab-f]"); if (lf) { S.labFilter = lf.dataset.labF; drawLab(); return; }
     const fseg = t.closest('[data-f="seg"]'); if (fseg) { onFilterInput(fseg, true); return; }
     const pi = t.closest("[data-pi]"); if (pi) { closeLayer(); return; }
     const a = t.closest("[data-act]");
@@ -1512,7 +1579,7 @@
     loadList(S.route.view);
     if (S.route.id) openDetail(S.route.view, S.route.id, S.route.tab);
   }
-  function onRouteFirst() { if (S.route.page === "backtest") renderBacktest(); else renderMethod(); }
+  function onRouteFirst() { if (S.route.page === "backtest") renderBacktest(); else if (S.route.page === "lab") renderLab(); else renderMethod(); }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
 })();

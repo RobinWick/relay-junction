@@ -1,0 +1,1773 @@
+{
+ "meta": {
+  "snapshot_version": "20261114133847",
+  "built_by": "signal/hunt/build_lab.py",
+  "validation_cutoffs": [
+   2018,
+   2019,
+   2020
+  ],
+  "held_out_cutoffs": {
+   "next_round_24m": [
+    2021,
+    2022,
+    2023
+   ],
+   "graduate_b_plus_36m": [
+    2021,
+    2022
+   ]
+  },
+  "stratum": "full-history companies",
+  "min_n": 100,
+  "cala_calls": 0,
+  "llm_calls": 0,
+  "multiple_comparisons": {
+   "hunt_tests": 42,
+   "hunt_holm_survivors": 0,
+   "existing_tests": 24,
+   "existing_holm_survivors": 0
+  }
+ },
+ "counts": {
+  "tested": 35,
+  "kept": 1,
+  "noise": 26,
+  "not_testable": 8,
+  "existing": 13,
+  "hunt": 21,
+  "models": 1
+ },
+ "kept": [
+  "Size for stage"
+ ],
+ "headline": "We tested 35 signals on years the model never saw. 1 held up.",
+ "subline": "The one that held is size for stage, the baseline the score already leans on, and only just. Every new signal and the learned model failed after correcting for many tests, stage and rounds on file. The score is unchanged.",
+ "reference": {
+  "next_round_24m": {
+   "composite": 0.539,
+   "composite_ci90": [
+    0.491,
+    0.582
+   ],
+   "size_alone": 0.551,
+   "size_alone_ci90": [
+    0.505,
+    0.599
+   ],
+   "null_band90": [
+    0.463,
+    0.542
+   ],
+   "n": 608
+  },
+  "graduate_b_plus_36m": {
+   "composite": 0.555,
+   "composite_ci90": [
+    0.471,
+    0.633
+   ],
+   "size_alone": 0.552,
+   "size_alone_ci90": [
+    0.471,
+    0.63
+   ],
+   "null_band90": [
+    0.437,
+    0.569
+   ],
+   "n": 234
+  }
+ },
+ "rule": "Kept: on held-out years (2021 to 2023), at least 100 rows, 90% CI above 0.5 and above the noise band, and either the fixed baseline or adds over size for stage after multiple-test correction. Not testable: under 100 rows on both outcomes. Noise: the rest.",
+ "rows": [
+  {
+   "key": "size_for_stage",
+   "name": "Size for stage",
+   "family": "Current score",
+   "origin": "existing",
+   "definition": "Percentile of the last sized round among rounds of the same stage in nearby years.",
+   "outcomes": {
+    "next_round_24m": {
+     "n": 571,
+     "auc": 0.55,
+     "ci90": [
+      0.505,
+      0.598
+     ],
+     "null_band90": [
+      0.46,
+      0.54
+     ],
+     "delta_vs_size": null,
+     "delta_ci90": null,
+     "passes_bar": true,
+     "adds_over_size": false,
+     "direction": "higher is better"
+    },
+    "graduate_b_plus_36m": {
+     "n": 215,
+     "auc": 0.561,
+     "ci90": [
+      0.484,
+      0.643
+     ],
+     "null_band90": [
+      0.433,
+      0.57
+     ],
+     "delta_vs_size": null,
+     "delta_ci90": null,
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": "higher is better"
+    }
+   },
+   "verdict": "Kept",
+   "reason": "The baseline every other row must beat, fixed before the backtest. Next round 0.550 (CI 0.505 to 0.598), company-block p 0.0392. Series B+ 0.561 is inside the noise band. Held up only just, and only on next round."
+  },
+  {
+   "key": "syndicate_breadth",
+   "name": "Syndicate breadth",
+   "family": "Current score",
+   "origin": "existing",
+   "definition": "Named non-public investors on the last round, percentile within stage and history depth.",
+   "outcomes": {
+    "next_round_24m": {
+     "n": 576,
+     "auc": 0.524,
+     "ci90": [
+      0.476,
+      0.571
+     ],
+     "null_band90": [
+      0.459,
+      0.54
+     ],
+     "delta_vs_size": -0.031,
+     "delta_ci90": [
+      -0.074,
+      0.017
+     ],
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": "higher is better"
+    },
+    "graduate_b_plus_36m": {
+     "n": 224,
+     "auc": 0.497,
+     "ci90": [
+      0.424,
+      0.572
+     ],
+     "null_band90": [
+      0.429,
+      0.569
+     ],
+     "delta_vs_size": -0.032,
+     "delta_ci90": [
+      -0.081,
+      0.018
+     ],
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": "higher is better"
+    }
+   },
+   "verdict": "Noise",
+   "reason": "Next round: 0.524, CI includes 0.5; Series B+: 0.497, CI includes 0.5."
+  },
+  {
+   "key": "lead_named",
+   "name": "Cala names a lead",
+   "family": "Current score",
+   "origin": "existing",
+   "definition": "1 when Cala names a lead on the last round, else 0.",
+   "outcomes": {
+    "next_round_24m": {
+     "n": 579,
+     "auc": 0.483,
+     "ci90": [
+      0.452,
+      0.514
+     ],
+     "null_band90": [
+      0.472,
+      0.526
+     ],
+     "delta_vs_size": -0.002,
+     "delta_ci90": [
+      -0.01,
+      0.005
+     ],
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": "lower is better (flipped on validation)"
+    },
+    "graduate_b_plus_36m": {
+     "n": 224,
+     "auc": 0.569,
+     "ci90": [
+      0.526,
+      0.611
+     ],
+     "null_band90": [
+      0.455,
+      0.548
+     ],
+     "delta_vs_size": 0.049,
+     "delta_ci90": [
+      0.014,
+      0.086
+     ],
+     "passes_bar": true,
+     "adds_over_size": true,
+     "direction": "higher is better"
+    }
+   },
+   "verdict": "Noise",
+   "reason": "Series B+ 0.569 clears the bar (raw p 0.0095, company-block p 0.0278), but fails Holm over 24 tests and adds nothing once stage, size and rounds on file are in (change -0.005 to 0.022). Next round 0.483. Already in the score; weight unchanged."
+  },
+  {
+   "key": "acceleration",
+   "name": "Acceleration",
+   "family": "Current score",
+   "origin": "existing",
+   "definition": "log2(previous gap / last gap) between dated raises, needs 3 raises.",
+   "outcomes": {
+    "next_round_24m": {
+     "n": 296,
+     "auc": 0.456,
+     "ci90": [
+      0.396,
+      0.525
+     ],
+     "null_band90": [
+      0.443,
+      0.556
+     ],
+     "delta_vs_size": -0.031,
+     "delta_ci90": [
+      -0.07,
+      0.008
+     ],
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": "lower is better (flipped on validation)"
+    },
+    "graduate_b_plus_36m": {
+     "n": 53,
+     "auc": 0.635,
+     "ci90": [
+      0.458,
+      0.816
+     ],
+     "null_band90": [
+      0.356,
+      0.639
+     ],
+     "delta_vs_size": -0.044,
+     "delta_ci90": [
+      -0.27,
+      0.191
+     ],
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": "higher is better"
+    }
+   },
+   "verdict": "Noise",
+   "reason": "Next round: 0.456, CI includes 0.5; Series B+: n 53, too few."
+  },
+  {
+   "key": "backer_graduation",
+   "name": "Backer graduation rate",
+   "family": "Current score",
+   "origin": "existing",
+   "definition": "Best backer's shrunk rate of early bets that raised again within 24 months, percentile.",
+   "outcomes": {
+    "next_round_24m": {
+     "n": 245,
+     "auc": 0.502,
+     "ci90": [
+      0.426,
+      0.575
+     ],
+     "null_band90": [
+      0.443,
+      0.569
+     ],
+     "delta_vs_size": 0.0,
+     "delta_ci90": [
+      -0.035,
+      0.037
+     ],
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": "higher is better"
+    },
+    "graduate_b_plus_36m": {
+     "n": 58,
+     "auc": 0.41,
+     "ci90": [
+      0.265,
+      0.563
+     ],
+     "null_band90": [
+      0.389,
+      0.63
+     ],
+     "delta_vs_size": -0.142,
+     "delta_ci90": [
+      -0.256,
+      -0.031
+     ],
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": "higher is better"
+    }
+   },
+   "verdict": "Noise",
+   "reason": "Next round: 0.502, CI includes 0.5; Series B+: n 58, too few."
+  },
+  {
+   "key": "insider_follow_on",
+   "name": "Insiders came back",
+   "family": "Current score",
+   "origin": "existing",
+   "definition": "Share of the previous raise's investors back in the last raise.",
+   "outcomes": {
+    "next_round_24m": {
+     "n": 393,
+     "auc": 0.5,
+     "ci90": [
+      0.443,
+      0.556
+     ],
+     "null_band90": [
+      0.45,
+      0.547
+     ],
+     "delta_vs_size": -0.009,
+     "delta_ci90": [
+      -0.032,
+      0.016
+     ],
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": "higher is better"
+    },
+    "graduate_b_plus_36m": {
+     "n": 109,
+     "auc": 0.474,
+     "ci90": [
+      0.373,
+      0.583
+     ],
+     "null_band90": [
+      0.409,
+      0.583
+     ],
+     "delta_vs_size": -0.178,
+     "delta_ci90": [
+      -0.314,
+      -0.037
+     ],
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": "higher is better"
+    }
+   },
+   "verdict": "Noise",
+   "reason": "Next round: 0.500, CI includes 0.5; Series B+: 0.474, CI includes 0.5."
+  },
+  {
+   "key": "named_angels",
+   "name": "Named operator angels",
+   "family": "Current score",
+   "origin": "existing",
+   "definition": "Person-named backers on the record (name heuristic).",
+   "outcomes": {
+    "next_round_24m": {
+     "n": 158,
+     "auc": 0.485,
+     "ci90": [
+      0.408,
+      0.573
+     ],
+     "null_band90": [
+      0.445,
+      0.573
+     ],
+     "delta_vs_size": -0.074,
+     "delta_ci90": [
+      -0.16,
+      0.015
+     ],
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": "lower is better (flipped on validation)"
+    },
+    "graduate_b_plus_36m": {
+     "n": 49,
+     "auc": 0.675,
+     "ci90": [
+      0.553,
+      0.795
+     ],
+     "null_band90": [
+      0.405,
+      0.646
+     ],
+     "delta_vs_size": 0.091,
+     "delta_ci90": [
+      0.008,
+      0.174
+     ],
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": "lower is better (flipped on validation)"
+    }
+   },
+   "verdict": "Noise",
+   "reason": "Next round: 0.485, CI includes 0.5; Series B+: n 49, too few."
+  },
+  {
+   "key": "lead_supply",
+   "name": "Next-stage lead supply at home",
+   "family": "Current score",
+   "origin": "existing",
+   "definition": "Funds that led the next stage in the company's country in the last 36 months, percentile.",
+   "outcomes": {
+    "next_round_24m": {
+     "n": 605,
+     "auc": 0.522,
+     "ci90": [
+      0.474,
+      0.567
+     ],
+     "null_band90": [
+      0.461,
+      0.537
+     ],
+     "delta_vs_size": 0.004,
+     "delta_ci90": [
+      -0.011,
+      0.02
+     ],
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": "lower is better (flipped on validation)"
+    },
+    "graduate_b_plus_36m": {
+     "n": 234,
+     "auc": 0.539,
+     "ci90": [
+      0.458,
+      0.616
+     ],
+     "null_band90": [
+      0.433,
+      0.568
+     ],
+     "delta_vs_size": 0.008,
+     "delta_ci90": [
+      -0.019,
+      0.038
+     ],
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": "lower is better (flipped on validation)"
+    }
+   },
+   "verdict": "Noise",
+   "reason": "Next round: 0.522, CI includes 0.5; Series B+: 0.539, CI includes 0.5."
+  },
+  {
+   "key": "cross_border",
+   "name": "Foreign backers",
+   "family": "Current score",
+   "origin": "existing",
+   "definition": "Share of queried backers whose main market is another country.",
+   "outcomes": {
+    "next_round_24m": {
+     "n": 406,
+     "auc": 0.461,
+     "ci90": [
+      0.413,
+      0.507
+     ],
+     "null_band90": [
+      0.451,
+      0.545
+     ],
+     "delta_vs_size": 0.01,
+     "delta_ci90": [
+      -0.004,
+      0.023
+     ],
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": "higher is better"
+    },
+    "graduate_b_plus_36m": {
+     "n": 123,
+     "auc": 0.554,
+     "ci90": [
+      0.46,
+      0.652
+     ],
+     "null_band90": [
+      0.423,
+      0.588
+     ],
+     "delta_vs_size": 0.006,
+     "delta_ci90": [
+      -0.026,
+      0.036
+     ],
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": "higher is better"
+    }
+   },
+   "verdict": "Noise",
+   "reason": "Next round: 0.461, CI includes 0.5; Series B+: 0.554, CI includes 0.5."
+  },
+  {
+   "key": "step_up",
+   "name": "Step-up on last raise",
+   "family": "Current score",
+   "origin": "existing",
+   "definition": "Last raise vs previous raise, down rounds floored.",
+   "outcomes": {
+    "next_round_24m": {
+     "n": 401,
+     "auc": 0.472,
+     "ci90": [
+      0.414,
+      0.525
+     ],
+     "null_band90": [
+      0.444,
+      0.54
+     ],
+     "delta_vs_size": -0.019,
+     "delta_ci90": [
+      -0.054,
+      0.014
+     ],
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": "lower is better (flipped on validation)"
+    },
+    "graduate_b_plus_36m": {
+     "n": 110,
+     "auc": 0.575,
+     "ci90": [
+      0.484,
+      0.666
+     ],
+     "null_band90": [
+      0.419,
+      0.597
+     ],
+     "delta_vs_size": 0.006,
+     "delta_ci90": [
+      -0.017,
+      0.028
+     ],
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": "higher is better"
+    }
+   },
+   "verdict": "Noise",
+   "reason": "Next round: 0.472, CI includes 0.5; Series B+: 0.575, CI includes 0.5."
+  },
+  {
+   "key": "backer_exits",
+   "name": "Backers with exit receipts",
+   "family": "Current score",
+   "origin": "existing",
+   "definition": "Exit receipts of checked backers, log scaled.",
+   "outcomes": {
+    "next_round_24m": {
+     "n": 181,
+     "auc": 0.482,
+     "ci90": [
+      0.394,
+      0.565
+     ],
+     "null_band90": [
+      0.432,
+      0.566
+     ],
+     "delta_vs_size": -0.015,
+     "delta_ci90": [
+      -0.065,
+      0.033
+     ],
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": "higher is better"
+    },
+    "graduate_b_plus_36m": {
+     "n": 44,
+     "auc": 0.506,
+     "ci90": [
+      0.363,
+      0.652
+     ],
+     "null_band90": [
+      0.37,
+      0.638
+     ],
+     "delta_vs_size": -0.112,
+     "delta_ci90": [
+      -0.245,
+      0.005
+     ],
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": "higher is better"
+    }
+   },
+   "verdict": "Noise",
+   "reason": "Next round: 0.482, CI includes 0.5; Series B+: n 44, too few."
+  },
+  {
+   "key": "freshness",
+   "name": "On the stage clock",
+   "family": "Current score",
+   "origin": "existing",
+   "definition": "Months since last raise vs the stage median gap.",
+   "outcomes": {
+    "next_round_24m": {
+     "n": 603,
+     "auc": 0.508,
+     "ci90": [
+      0.475,
+      0.537
+     ],
+     "null_band90": [
+      0.472,
+      0.539
+     ],
+     "delta_vs_size": -0.005,
+     "delta_ci90": [
+      -0.026,
+      0.016
+     ],
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": "higher is better"
+    },
+    "graduate_b_plus_36m": {
+     "n": 234,
+     "auc": 0.487,
+     "ci90": [
+      0.426,
+      0.547
+     ],
+     "null_band90": [
+      0.442,
+      0.556
+     ],
+     "delta_vs_size": -0.032,
+     "delta_ci90": [
+      -0.071,
+      0.007
+     ],
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": "higher is better"
+    }
+   },
+   "verdict": "Noise",
+   "reason": "Next round: 0.508, CI includes 0.5; Series B+: 0.487, CI includes 0.5."
+  },
+  {
+   "key": "sector_heat",
+   "name": "Sector momentum",
+   "family": "Current score",
+   "origin": "existing",
+   "definition": "Sector rounds in the last 24 months vs the 24 before. Only with a sector query.",
+   "outcomes": {
+    "next_round_24m": {
+     "n": 0,
+     "auc": null,
+     "ci90": null,
+     "null_band90": null,
+     "delta_vs_size": null,
+     "delta_ci90": null,
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": "higher is better"
+    },
+    "graduate_b_plus_36m": {
+     "n": 0,
+     "auc": null,
+     "ci90": null,
+     "null_band90": null,
+     "delta_vs_size": null,
+     "delta_ci90": null,
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": "higher is better"
+    }
+   },
+   "verdict": "Not testable",
+   "reason": "No sector-tagged rows among held-out full-history companies. Only used with a sector query."
+  },
+  {
+   "key": "syndicate_pagerank",
+   "name": "Syndicate PageRank",
+   "family": "Investor graph",
+   "origin": "hunt",
+   "definition": "Mean PageRank (x node count, damping 0.85) of the latest equity round's investors on the weighted co-investment graph of all equity rounds dated before as_of.",
+   "outcomes": {
+    "next_round_24m": {
+     "n": 566,
+     "auc": 0.513,
+     "ci90": [
+      0.463,
+      0.561
+     ],
+     "null_band90": [
+      0.452,
+      0.53
+     ],
+     "delta_vs_size": -0.016,
+     "delta_ci90": [
+      -0.049,
+      0.015
+     ],
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": "higher is better"
+    },
+    "graduate_b_plus_36m": {
+     "n": 216,
+     "auc": 0.536,
+     "ci90": [
+      0.458,
+      0.615
+     ],
+     "null_band90": [
+      0.428,
+      0.571
+     ],
+     "delta_vs_size": -0.014,
+     "delta_ci90": [
+      -0.092,
+      0.068
+     ],
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": "higher is better"
+    }
+   },
+   "verdict": "Noise",
+   "reason": "Next round: 0.513, CI includes 0.5; Series B+: 0.536, CI includes 0.5."
+  },
+  {
+   "key": "co_investor_quality",
+   "name": "Co-investor quality",
+   "family": "Investor graph",
+   "origin": "hunt",
+   "definition": "Share of latest-round investors with at least  3 observable early bets (24m window closed before as_of, own company excluded) whose bets raised again within 24 months above the pooled rate.",
+   "outcomes": {
+    "next_round_24m": {
+     "n": 200,
+     "auc": 0.528,
+     "ci90": [
+      0.464,
+      0.602
+     ],
+     "null_band90": [
+      0.434,
+      0.562
+     ],
+     "delta_vs_size": 0.017,
+     "delta_ci90": [
+      -0.022,
+      0.06
+     ],
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": "higher is better"
+    },
+    "graduate_b_plus_36m": {
+     "n": 55,
+     "auc": 0.46,
+     "ci90": [
+      0.338,
+      0.591
+     ],
+     "null_band90": [
+      0.38,
+      0.616
+     ],
+     "delta_vs_size": -0.07,
+     "delta_ci90": [
+      -0.151,
+      0.01
+     ],
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": "higher is better"
+    }
+   },
+   "verdict": "Noise",
+   "reason": "Next round: 0.528, CI includes 0.5; Series B+: n 55, too few."
+  },
+  {
+   "key": "smart_money_early",
+   "name": "Smart money early",
+   "family": "Investor graph",
+   "origin": "hunt",
+   "definition": "1 if a top-decile fund by shrunk early-bet -> Series B+ within 36m rate (at least  3 observable bets, own company excluded, point-in-time) was on a pre-seed/seed round dated on or before the company's largest round; 0 otherwise; None without a named pre-seed/seed round.",
+   "outcomes": {
+    "next_round_24m": {
+     "n": 448,
+     "auc": 0.477,
+     "ci90": [
+      0.46,
+      0.491
+     ],
+     "null_band90": [
+      0.486,
+      0.514
+     ],
+     "delta_vs_size": -0.036,
+     "delta_ci90": [
+      -0.061,
+      -0.014
+     ],
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": "flipped (lower is better)"
+    },
+    "graduate_b_plus_36m": {
+     "n": 196,
+     "auc": 0.496,
+     "ci90": [
+      0.473,
+      0.521
+     ],
+     "null_band90": [
+      0.471,
+      0.52
+     ],
+     "delta_vs_size": 0.0,
+     "delta_ci90": [
+      0.0,
+      0.0
+     ],
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": "higher is better"
+    }
+   },
+   "verdict": "Noise",
+   "reason": "Next round: 0.477, CI includes 0.5; Series B+: 0.496, CI includes 0.5."
+  },
+  {
+   "key": "contrarian",
+   "name": "Contrarian backing",
+   "family": "Investor graph",
+   "origin": "hunt",
+   "definition": "1 if a backer is top-quartile by shrunk 24m graduation (at least  3 bets, own excluded) AND the latest round has at most  3 named investors AND no outside lead (no lead, or every lead already a backer); else 0.",
+   "outcomes": {
+    "next_round_24m": {
+     "n": 243,
+     "auc": 0.476,
+     "ci90": [
+      0.439,
+      0.511
+     ],
+     "null_band90": [
+      0.476,
+      0.528
+     ],
+     "delta_vs_size": 0.0,
+     "delta_ci90": [
+      0.0,
+      0.0
+     ],
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": "higher is better"
+    },
+    "graduate_b_plus_36m": {
+     "n": 61,
+     "auc": 0.519,
+     "ci90": [
+      0.468,
+      0.58
+     ],
+     "null_band90": [
+      0.453,
+      0.552
+     ],
+     "delta_vs_size": 0.0,
+     "delta_ci90": [
+      0.0,
+      0.0
+     ],
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": "higher is better"
+    }
+   },
+   "verdict": "Noise",
+   "reason": "Next round: 0.476, CI includes 0.5; Series B+: n 61, too few."
+  },
+  {
+   "key": "syndicate_novelty",
+   "name": "Syndicate novelty",
+   "family": "Investor graph",
+   "origin": "hunt",
+   "definition": "Share of latest-round investor pairs that never co-invested in any equity round dated before that round (needs at least  2 named investors).",
+   "outcomes": {
+    "next_round_24m": {
+     "n": 460,
+     "auc": 0.557,
+     "ci90": [
+      0.505,
+      0.614
+     ],
+     "null_band90": [
+      0.466,
+      0.552
+     ],
+     "delta_vs_size": 0.009,
+     "delta_ci90": [
+      -0.027,
+      0.047
+     ],
+     "passes_bar": true,
+     "adds_over_size": false,
+     "direction": "higher is better"
+    },
+    "graduate_b_plus_36m": {
+     "n": 172,
+     "auc": 0.578,
+     "ci90": [
+      0.502,
+      0.656
+     ],
+     "null_band90": [
+      0.434,
+      0.56
+     ],
+     "delta_vs_size": 0.039,
+     "delta_ci90": [
+      -0.038,
+      0.124
+     ],
+     "passes_bar": true,
+     "adds_over_size": false,
+     "direction": "flipped (lower is better)"
+    }
+   },
+   "verdict": "Noise",
+   "reason": "Raw pass on both outcomes, refuted. It stands in for rounds on file (Spearman -0.494); inside rounds-on-file groups next round is 0.497. Adds nothing over size, rounds and stage (change -0.019 to 0.009). Fails Holm."
+  },
+  {
+   "key": "lead_stretch",
+   "name": "Lead size stretch",
+   "family": "Lead investor",
+   "origin": "hunt",
+   "definition": "Latest round's lead led it above that lead's own p75 led size at the stage (at least 3 prior sized leads at stage)",
+   "outcomes": {
+    "next_round_24m": {
+     "n": 32,
+     "auc": null,
+     "ci90": null,
+     "null_band90": null,
+     "delta_vs_size": null,
+     "delta_ci90": null,
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": null
+    },
+    "graduate_b_plus_36m": {
+     "n": 12,
+     "auc": 0.375,
+     "ci90": [
+      0.2,
+      0.5
+     ],
+     "null_band90": [
+      0.375,
+      0.562
+     ],
+     "delta_vs_size": 0.0,
+     "delta_ci90": [
+      0.0,
+      0.0
+     ],
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": "higher is better"
+    }
+   },
+   "verdict": "Not testable",
+   "reason": "Fewer than 100 held-out rows with data on both outcomes (n 32 and 12). Too few to read."
+  },
+  {
+   "key": "lead_stage_stretch",
+   "name": "Lead stage stretch",
+   "family": "Lead investor",
+   "origin": "hunt",
+   "definition": "Latest round's lead has never led a round this late before (at least 2 prior staged leads)",
+   "outcomes": {
+    "next_round_24m": {
+     "n": 145,
+     "auc": 0.499,
+     "ci90": [
+      0.438,
+      0.565
+     ],
+     "null_band90": [
+      0.441,
+      0.543
+     ],
+     "delta_vs_size": 0.002,
+     "delta_ci90": [
+      -0.041,
+      0.048
+     ],
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": "lower is better (inverted, chosen on validation)"
+    },
+    "graduate_b_plus_36m": {
+     "n": 44,
+     "auc": 0.538,
+     "ci90": [
+      0.5,
+      0.603
+     ],
+     "null_band90": [
+      0.444,
+      0.538
+     ],
+     "delta_vs_size": 0.026,
+     "delta_ci90": [
+      0.0,
+      0.083
+     ],
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": "lower is better (inverted, chosen on validation)"
+    }
+   },
+   "verdict": "Noise",
+   "reason": "Next round: 0.499, CI includes 0.5; Series B+: n 44, too few."
+  },
+  {
+   "key": "new_outside_lead",
+   "name": "New outside lead",
+   "family": "Lead investor",
+   "origin": "hunt",
+   "definition": "Latest round led by a fund not on the cap table of any earlier raise (at least 3 months before)",
+   "outcomes": {
+    "next_round_24m": {
+     "n": 357,
+     "auc": 0.509,
+     "ci90": [
+      0.463,
+      0.556
+     ],
+     "null_band90": [
+      0.463,
+      0.532
+     ],
+     "delta_vs_size": -0.003,
+     "delta_ci90": [
+      -0.028,
+      0.023
+     ],
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": "lower is better (inverted, chosen on validation)"
+    },
+    "graduate_b_plus_36m": {
+     "n": 107,
+     "auc": 0.5,
+     "ci90": [
+      0.436,
+      0.566
+     ],
+     "null_band90": [
+      0.444,
+      0.556
+     ],
+     "delta_vs_size": -0.041,
+     "delta_ci90": [
+      -0.093,
+      0.002
+     ],
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": "lower is better (inverted, chosen on validation)"
+    }
+   },
+   "verdict": "Noise",
+   "reason": "Next round: 0.509, CI includes 0.5; Series B+: 0.500, CI includes 0.5."
+  },
+  {
+   "key": "lead_strength",
+   "name": "Lead strength",
+   "family": "Lead investor",
+   "origin": "hunt",
+   "definition": "log1p(most rounds any latest lead led at the same stage in the prior 48 months)",
+   "outcomes": {
+    "next_round_24m": {
+     "n": 468,
+     "auc": 0.512,
+     "ci90": [
+      0.471,
+      0.554
+     ],
+     "null_band90": [
+      0.474,
+      0.542
+     ],
+     "delta_vs_size": 0.011,
+     "delta_ci90": [
+      -0.008,
+      0.028
+     ],
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": "lower is better (inverted, chosen on validation)"
+    },
+    "graduate_b_plus_36m": {
+     "n": 176,
+     "auc": 0.476,
+     "ci90": [
+      0.412,
+      0.547
+     ],
+     "null_band90": [
+      0.445,
+      0.557
+     ],
+     "delta_vs_size": -0.005,
+     "delta_ci90": [
+      -0.019,
+      0.007
+     ],
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": "higher is better"
+    }
+   },
+   "verdict": "Noise",
+   "reason": "Next round: 0.512, CI includes 0.5; Series B+: 0.476, CI includes 0.5."
+  },
+  {
+   "key": "lead_upgrade",
+   "name": "Lead upgrade",
+   "family": "Lead investor",
+   "origin": "hunt",
+   "definition": "Latest lead's median led size > previous led raise's lead median (at least 2 sized prior leads each)",
+   "outcomes": {
+    "next_round_24m": {
+     "n": 52,
+     "auc": 0.463,
+     "ci90": [
+      0.333,
+      0.605
+     ],
+     "null_band90": [
+      0.381,
+      0.625
+     ],
+     "delta_vs_size": 0.022,
+     "delta_ci90": [
+      -0.131,
+      0.169
+     ],
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": "higher is better"
+    },
+    "graduate_b_plus_36m": {
+     "n": 6,
+     "auc": 0.5,
+     "ci90": [
+      0.167,
+      0.875
+     ],
+     "null_band90": [
+      0.167,
+      0.5
+     ],
+     "delta_vs_size": 0.0,
+     "delta_ci90": [
+      0.0,
+      0.0
+     ],
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": "higher is better"
+    }
+   },
+   "verdict": "Not testable",
+   "reason": "Fewer than 100 held-out rows with data on both outcomes (n 52 and 6). Too few to read."
+  },
+  {
+   "key": "insider_lead",
+   "name": "Insider led",
+   "family": "Lead investor",
+   "origin": "hunt",
+   "definition": "An investor from an earlier raise led the latest round",
+   "outcomes": {
+    "next_round_24m": {
+     "n": 357,
+     "auc": 0.504,
+     "ci90": [
+      0.453,
+      0.55
+     ],
+     "null_band90": [
+      0.453,
+      0.533
+     ],
+     "delta_vs_size": -0.001,
+     "delta_ci90": [
+      -0.029,
+      0.024
+     ],
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": "higher is better"
+    },
+    "graduate_b_plus_36m": {
+     "n": 107,
+     "auc": 0.47,
+     "ci90": [
+      0.389,
+      0.548
+     ],
+     "null_band90": [
+      0.432,
+      0.564
+     ],
+     "delta_vs_size": -0.022,
+     "delta_ci90": [
+      -0.058,
+      0.01
+     ],
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": "higher is better"
+    }
+   },
+   "verdict": "Noise",
+   "reason": "Next round: 0.504, CI includes 0.5; Series B+: 0.470, CI includes 0.5."
+  },
+  {
+   "key": "prior_founder",
+   "name": "Prior founder",
+   "family": "People",
+   "origin": "hunt",
+   "definition": "Founders who founded another company before the cutoff (dated edge only).",
+   "outcomes": {
+    "next_round_24m": {
+     "n": 23,
+     "auc": 0.471,
+     "ci90": [
+      0.389,
+      0.5
+     ],
+     "null_band90": [
+      0.375,
+      0.567
+     ],
+     "delta_vs_size": null,
+     "delta_ci90": null,
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": null
+    },
+    "graduate_b_plus_36m": {
+     "n": 12,
+     "auc": 0.455,
+     "ci90": [
+      0.357,
+      0.5
+     ],
+     "null_band90": [
+      0.455,
+      0.455
+     ],
+     "delta_vs_size": null,
+     "delta_ci90": null,
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": null
+    }
+   },
+   "verdict": "Not testable",
+   "reason": "Value known for 28 of 922 full-history rows and nonzero for only 2; constant on validation rows, so nothing to test. Founder careers are thin in Cala."
+  },
+  {
+   "key": "research_alumni",
+   "name": "Research alumni",
+   "family": "People",
+   "origin": "hunt",
+   "definition": "Founders with a university or research lab role dated before the cutoff.",
+   "outcomes": {
+    "next_round_24m": {
+     "n": 23,
+     "auc": 0.5,
+     "ci90": null,
+     "null_band90": null,
+     "delta_vs_size": null,
+     "delta_ci90": null,
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": null
+    },
+    "graduate_b_plus_36m": {
+     "n": 12,
+     "auc": 0.5,
+     "ci90": null,
+     "null_band90": null,
+     "delta_vs_size": null,
+     "delta_ci90": null,
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": null
+    }
+   },
+   "verdict": "Not testable",
+   "reason": "Value known for 28 of 922 full-history rows and never nonzero; constant on validation rows, so nothing to test. Founder careers are thin in Cala."
+  },
+  {
+   "key": "unicorn_alumni",
+   "name": "Unicorn alumni",
+   "family": "People",
+   "origin": "hunt",
+   "definition": "Founders with a dated role at a Nordic unicorn or big tech employer.",
+   "outcomes": {
+    "next_round_24m": {
+     "n": 23,
+     "auc": 0.471,
+     "ci90": [
+      0.389,
+      0.5
+     ],
+     "null_band90": [
+      0.375,
+      0.567
+     ],
+     "delta_vs_size": null,
+     "delta_ci90": null,
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": null
+    },
+    "graduate_b_plus_36m": {
+     "n": 12,
+     "auc": 0.455,
+     "ci90": [
+      0.357,
+      0.5
+     ],
+     "null_band90": [
+      0.455,
+      0.455
+     ],
+     "delta_vs_size": null,
+     "delta_ci90": null,
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": null
+    }
+   },
+   "verdict": "Not testable",
+   "reason": "Value known for 28 of 922 full-history rows and nonzero for only 2; constant on validation rows, so nothing to test. Founder careers are thin in Cala."
+  },
+  {
+   "key": "mafia_density",
+   "name": "Alumni density",
+   "family": "People",
+   "origin": "hunt",
+   "definition": "Other companies whose founders share an employer with this company's founders.",
+   "outcomes": {
+    "next_round_24m": {
+     "n": 3,
+     "auc": 0.5,
+     "ci90": null,
+     "null_band90": null,
+     "delta_vs_size": null,
+     "delta_ci90": null,
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": null
+    },
+    "graduate_b_plus_36m": {
+     "n": 1,
+     "auc": null,
+     "ci90": null,
+     "null_band90": null,
+     "delta_vs_size": null,
+     "delta_ci90": null,
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": null
+    }
+   },
+   "verdict": "Not testable",
+   "reason": "Value known for 3 of 922 full-history rows and never nonzero; constant on validation rows, so nothing to test. Founder careers are thin in Cala."
+  },
+  {
+   "key": "named_operator_angels",
+   "name": "Operator angels",
+   "family": "People",
+   "origin": "hunt",
+   "definition": "Person-named backers who founded or run another company on file.",
+   "outcomes": {
+    "next_round_24m": {
+     "n": 158,
+     "auc": 0.5,
+     "ci90": null,
+     "null_band90": null,
+     "delta_vs_size": null,
+     "delta_ci90": null,
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": null
+    },
+    "graduate_b_plus_36m": {
+     "n": 49,
+     "auc": 0.5,
+     "ci90": null,
+     "null_band90": null,
+     "delta_vs_size": null,
+     "delta_ci90": null,
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": null
+    }
+   },
+   "verdict": "Not testable",
+   "reason": "Value known for 230 of 922 full-history rows and never nonzero; constant on validation rows, so nothing to test. Founder careers are thin in Cala."
+  },
+  {
+   "key": "overdue",
+   "name": "Overdue to raise",
+   "family": "Timing",
+   "origin": "hunt",
+   "definition": "Months since the last equity round at as_of divided by the point-in-time median gap between dated raises for that stage (stage of the earlier raise, at least 5 gaps).",
+   "outcomes": {
+    "next_round_24m": {
+     "n": 603,
+     "auc": 0.511,
+     "ci90": [
+      0.47,
+      0.551
+     ],
+     "null_band90": [
+      0.471,
+      0.549
+     ],
+     "delta_vs_size": -0.0,
+     "delta_ci90": [
+      -0.016,
+      0.016
+     ],
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": "lower is better (flipped on validation)"
+    },
+    "graduate_b_plus_36m": {
+     "n": 234,
+     "auc": 0.494,
+     "ci90": [
+      0.427,
+      0.563
+     ],
+     "null_band90": [
+      0.437,
+      0.574
+     ],
+     "delta_vs_size": -0.015,
+     "delta_ci90": [
+      -0.037,
+      0.008
+     ],
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": "lower is better (flipped on validation)"
+    }
+   },
+   "verdict": "Noise",
+   "reason": "Next round: 0.511, CI includes 0.5; Series B+: 0.494, CI includes 0.5."
+  },
+  {
+   "key": "cadence_vs_cohort",
+   "name": "Cadence vs cohort",
+   "family": "Timing",
+   "origin": "hunt",
+   "definition": "Months between the last two dated raises, mid-rank percentile within companies whose last raise has the same stage and year (fallback same stage, at least 15 peers).",
+   "outcomes": {
+    "next_round_24m": {
+     "n": 415,
+     "auc": 0.543,
+     "ci90": [
+      0.488,
+      0.599
+     ],
+     "null_band90": [
+      0.452,
+      0.551
+     ],
+     "delta_vs_size": 0.012,
+     "delta_ci90": [
+      -0.041,
+      0.067
+     ],
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": "lower is better (flipped on validation)"
+    },
+    "graduate_b_plus_36m": {
+     "n": 122,
+     "auc": 0.509,
+     "ci90": [
+      0.409,
+      0.624
+     ],
+     "null_band90": [
+      0.418,
+      0.588
+     ],
+     "delta_vs_size": -0.034,
+     "delta_ci90": [
+      -0.09,
+      0.027
+     ],
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": "lower is better (flipped on validation)"
+    }
+   },
+   "verdict": "Noise",
+   "reason": "Next round: 0.543, CI includes 0.5; Series B+: 0.509, CI includes 0.5."
+  },
+  {
+   "key": "step_up_vs_peers",
+   "name": "Step up vs peers",
+   "family": "Timing",
+   "origin": "hunt",
+   "definition": "Last sized raise / previous sized raise (raises collapsed at 3 months), percentile of the log ratio within companies with the same last sized stage (fallback all stages, at least 15 peers).",
+   "outcomes": {
+    "next_round_24m": {
+     "n": 401,
+     "auc": 0.475,
+     "ci90": [
+      0.422,
+      0.525
+     ],
+     "null_band90": [
+      0.45,
+      0.546
+     ],
+     "delta_vs_size": -0.012,
+     "delta_ci90": [
+      -0.048,
+      0.021
+     ],
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": "lower is better (flipped on validation)"
+    },
+    "graduate_b_plus_36m": {
+     "n": 110,
+     "auc": 0.532,
+     "ci90": [
+      0.436,
+      0.636
+     ],
+     "null_band90": [
+      0.414,
+      0.591
+     ],
+     "delta_vs_size": -0.001,
+     "delta_ci90": [
+      -0.019,
+      0.021
+     ],
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": "higher is better"
+    }
+   },
+   "verdict": "Noise",
+   "reason": "Next round: 0.475, CI includes 0.5; Series B+: 0.532, CI includes 0.5."
+  },
+  {
+   "key": "recency_x_size",
+   "name": "Recency x size",
+   "family": "Timing",
+   "origin": "hunt",
+   "definition": "Size-for-stage percentile (signal_score pools) x max(0, 1 - months since last round / 36).",
+   "outcomes": {
+    "next_round_24m": {
+     "n": 571,
+     "auc": 0.552,
+     "ci90": [
+      0.507,
+      0.591
+     ],
+     "null_band90": [
+      0.465,
+      0.547
+     ],
+     "delta_vs_size": -0.001,
+     "delta_ci90": [
+      -0.032,
+      0.03
+     ],
+     "passes_bar": true,
+     "adds_over_size": false,
+     "direction": "higher is better"
+    },
+    "graduate_b_plus_36m": {
+     "n": 215,
+     "auc": 0.535,
+     "ci90": [
+      0.458,
+      0.617
+     ],
+     "null_band90": [
+      0.432,
+      0.57
+     ],
+     "delta_vs_size": 0.001,
+     "delta_ci90": [
+      -0.001,
+      0.001
+     ],
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": "higher is better"
+    }
+   },
+   "verdict": "Noise",
+   "reason": "Raw pass on next round, refuted. It is size for stage in disguise (Spearman 0.871 with size); recency alone scores 0.474. Company-block p 0.0922. Fails Holm."
+  },
+  {
+   "key": "syndicate_growth",
+   "name": "Syndicate growth",
+   "family": "Timing",
+   "origin": "hunt",
+   "definition": "log2((1 + named investors on last raise) / (1 + named investors on the raise before)); missing if either raise names nobody.",
+   "outcomes": {
+    "next_round_24m": {
+     "n": 387,
+     "auc": 0.521,
+     "ci90": [
+      0.461,
+      0.585
+     ],
+     "null_band90": [
+      0.45,
+      0.543
+     ],
+     "delta_vs_size": 0.003,
+     "delta_ci90": [
+      -0.008,
+      0.015
+     ],
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": "lower is better (flipped on validation)"
+    },
+    "graduate_b_plus_36m": {
+     "n": 115,
+     "auc": 0.446,
+     "ci90": [
+      0.354,
+      0.543
+     ],
+     "null_band90": [
+      0.413,
+      0.583
+     ],
+     "delta_vs_size": -0.037,
+     "delta_ci90": [
+      -0.066,
+      -0.011
+     ],
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": "higher is better"
+    }
+   },
+   "verdict": "Noise",
+   "reason": "Next round: 0.521, CI includes 0.5; Series B+: 0.446, CI includes 0.5."
+  },
+  {
+   "key": "learned_model",
+   "name": "Learned model (59 features)",
+   "family": "Learned model",
+   "origin": "model",
+   "definition": "All 13 parts and 21 hunt signals plus missing-value flags, model type picked by cross-validation inside 2018 to 2020.",
+   "outcomes": {
+    "next_round_24m": {
+     "n": 608,
+     "auc": 0.504,
+     "ci90": [
+      0.455,
+      0.55
+     ],
+     "null_band90": [
+      0.458,
+      0.539
+     ],
+     "delta_vs_size": -0.047,
+     "delta_ci90": [
+      -0.109,
+      0.017
+     ],
+     "passes_bar": false,
+     "adds_over_size": false,
+     "direction": null,
+     "model": "L2 logistic"
+    },
+    "graduate_b_plus_36m": {
+     "n": 234,
+     "auc": 0.697,
+     "ci90": [
+      0.627,
+      0.768
+     ],
+     "null_band90": [
+      0.435,
+      0.566
+     ],
+     "delta_vs_size": 0.145,
+     "delta_ci90": [
+      0.071,
+      0.217
+     ],
+     "passes_bar": true,
+     "adds_over_size": true,
+     "direction": null,
+     "model": "Gradient boosting"
+    }
+   },
+   "verdict": "Noise",
+   "reason": "Next round 0.504, below size alone. Series B+ 0.697 beats size alone only because it rebuilds stage from empty fields: a stage + size logistic fitted on validation scores 0.759; the model minus that is -0.122 to -0.003."
+  }
+ ]
+}

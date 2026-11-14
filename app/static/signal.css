@@ -682,3 +682,45 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
 .chat__note{margin-top:10px}
 .drawer--side{z-index:calc(var(--z-header) + 2)}
 .wsec .seg{flex-wrap:wrap;border-radius:18px}
+
+/* lab */
+.lab-head{box-shadow:0 0 0 1.5px var(--line-2),var(--sh-1)}
+.lab-head .lab-head__big{font:620 24px/1.2 var(--sans);letter-spacing:-.025em}
+.lab-tbl .tbl th{vertical-align:bottom;white-space:normal}
+.lab-tbl .tbl th .faint{font-weight:450;font-size:11px}
+.lab-tbl td{min-width:0}
+.lab-sig{max-width:380px}
+.lab-row--kept td{background:color-mix(in srgb,var(--sea) 6%,var(--surface))}
+.labn{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.labn b{font-weight:600;font-size:13.5px}
+.labn__fam{font:500 11px/1 var(--mono);color:var(--muted)}
+.labn__def{margin:4px 0 0;font-size:12px;line-height:1.4;color:var(--ink-2)}
+.labn__why{margin:6px 0 0;font-size:12px;line-height:1.45;color:var(--muted)}
+.labc{display:grid;gap:4px;min-width:130px}
+.labc__auc{font-size:15px;font-weight:600}
+.labc__sub{font-size:11px;line-height:1.45;color:var(--muted)}
+.labc .chip{height:18px;font-size:10px;vertical-align:middle}
+.labadd{display:grid;gap:6px;font-size:11.5px;justify-items:start}
+.cibar{display:block;overflow:visible}
+.cibar__band{fill:var(--line-2)}
+.cibar__half{stroke:var(--faint);stroke-width:1;stroke-dasharray:2 2}
+.cibar__ci{stroke:var(--muted);stroke-width:2;stroke-linecap:round}
+.cibar__dot{fill:var(--ink-2)}
+.cibar__ci.is-pass{stroke:var(--sea)}
+.cibar__dot.is-pass{fill:var(--sea)}
+.lab-cards{display:none}
+@media (width<=899px){
+  .lab-tbl{display:none}
+  .lab-cards{display:grid;gap:12px}
+  .lab-card{border-radius:var(--r-lg);background:var(--surface);box-shadow:var(--sh-1);padding:14px 16px;display:grid;gap:12px;min-width:0}
+  .lab-card.is-kept{box-shadow:0 0 0 1.5px var(--sea),var(--sh-1)}
+  .lab-card__top{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;align-items:start}
+  .lab-card__top .labn__def{grid-column:1/2}
+  .lab-card__top>.chip{grid-column:2;grid-row:1}
+  .lab-card__grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+  .lab-card__grid .overline,.lab-card__adds .overline{display:block;margin-bottom:6px}
+  .lab-card .labc{min-width:0}
+  .lab-card .labn__why{margin:0}
+  .lab-card__adds .labadd{grid-template-columns:auto auto auto;align-items:start;gap:6px 14px}
+}
+@media (width<=719px){.lab-head .lab-head__big{font-size:20px}}
