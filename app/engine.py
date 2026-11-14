@@ -128,12 +128,20 @@ def fund_profile(snap: Snapshot, key: str, stage: str, target_m: float | None) -
     band = stage_band(stage)
     led, joined_known, unknown, led_at_stage = [], [], [], []
     all_led = []
+    first_t: dict[str, float] = {}
+    for rid in ids:  # when did this fund first appear in each company?
+        r = snap.rounds[rid]
+        first_t[r["ckey"]] = min(first_t.get(r["ckey"], r["t"]), r["t"])
+    follow_ons = []
     for rid in ids:
         r = snap.rounds[rid]
         is_lead = key in r["leads"]
         if is_lead:
             all_led.append(r)
         if r["t"] < since or (band and r["stage"] not in band):
+            continue
+        if r["t"] > first_t[r["ckey"]] + 0.17 and not is_lead:
+            follow_ons.append(r)  # joining its own company's next round says nothing about leading new deals
             continue
         if not r["leads"]:
             unknown.append(r)
@@ -182,6 +190,7 @@ def fund_profile(snap: Snapshot, key: str, stage: str, target_m: float | None) -
     return {
         "key": key, "name": snap.name(key), "verdict": verdict[0], "verdict_label": verdict[1],
         "led": len(led), "known": known, "unknown": len(unknown), "led_at_stage": len(led_at_stage),
+        "follow_ons": len(follow_ons),
         "size": size, "last_lead": round_brief(snap, last_lead) if last_lead and not snap.is_hub(key) else None,
         "queried": key in snap.fund_keys, "total_rounds": len(ids),
         "rounds_led": [round_brief(snap, r) for r in sorted(led, key=lambda r: -r["t"])],

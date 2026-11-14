@@ -321,7 +321,7 @@ async function startLookup(names) {
 function rowHtml(r, i) {
   const vClass = `v-${r.verdict}`;
   const leads = r.known
-    ? `<div><span class="big">Led ${r.led}</span> <span class="muted">of ${r.known} rounds it joined</span></div><div class="cell-sub">${r.led_at_stage} at your exact stage${r.unknown ? ` · ${r.unknown} more with no named lead` : ""}</div>`
+    ? `<div><span class="big">Led ${r.led}</span> <span class="muted">of ${r.known} new investments</span></div><div class="cell-sub">${r.led_at_stage} at your exact stage${r.unknown ? ` · ${r.unknown} with no named lead` : ""}${r.follow_ons ? ` · ${plural(r.follow_ons, "follow-on", "follow-ons")} not counted` : ""}</div>`
     : `<div class="none">No rounds with a named lead near your stage</div>`;
   const size = r.size
     ? `<div class="num">EUR ${fmtM(r.size.lo)}${r.size.hi !== r.size.lo ? `–${fmtM(r.size.hi)}` : ""}m${r.size.fit ? ` <span class="fit fit-${r.size.fit}">${r.size.fit === "fits" ? "fits your raise" : r.size.fit === "larger" ? "smaller than yours" : "larger than yours"}</span>` : ""}</div><div class="cell-sub">from ${plural(r.size.n, "led round", "led rounds")}${r.size.basis === "exact" ? ` at ${esc(state.last?.stage || "your stage")}` : " near your stage"}</div>`
@@ -462,9 +462,9 @@ function renderMethod() {
       <section class="panel"><h2>Verdict rules</h2>
         <p class="muted">Counted over the last four years, at your stage and the stages next to it. A round counts as "known" when Cala names its lead.</p>
         <ul class="rules">
-          <li><span class="verdict v-leads"><span class="v-icon"></span>Leads rounds like yours</span><span>Led 2 or more rounds at your stage, led at least 30% of the rounds it joined where Cala names the lead, and your target raise sits inside the range of rounds it led (the middle half of its led round sizes, from 0.8x the low end to 1.25x the high end).</span></li>
+          <li><span class="verdict v-leads"><span class="v-icon"></span>Leads rounds like yours</span><span>Led 2 or more rounds at your stage, and led at least 30% of its new investments where Cala names the lead (follow-on rounds in its own portfolio companies are not counted), and your target raise sits inside the range of rounds it led (the middle half of its led round sizes, from 0.8x the low end to 1.25x the high end).</span></li>
           <li><span class="verdict v-leads_size"><span class="v-icon"></span>Leads, but larger or smaller rounds</span><span>Leads at your stage, but your target is outside that size range. Sizes come from its leads at your exact stage when there are at least 2, otherwise from the stages next to it (the row says which).</span></li>
-          <li><span class="verdict v-follows"><span class="v-icon"></span>Mostly follows</span><span>5 or more known rounds, and led fewer than 15% of them.</span></li>
+          <li><span class="verdict v-follows"><span class="v-icon"></span>Mostly follows</span><span>5 or more new investments with a named lead, and led fewer than 15% of them.</span></li>
           <li><span class="verdict v-stale"><span class="v-icon"></span>No lead since …</span><span>Has led before, but not in the last 24 months.</span></li>
           <li><span class="verdict v-mixed"><span class="v-icon"></span>Mixed</span><span>Everything in between.</span></li>
           <li><span class="verdict v-few"><span class="v-icon"></span>Too few rounds</span><span>Fewer than 3 known rounds in the window. We show the rounds, not a verdict.</span></li>
