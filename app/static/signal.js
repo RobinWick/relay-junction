@@ -470,7 +470,7 @@
       const ev = r.evidence && isNum(r.evidence.value) ? r.evidence.value : 0.4;
       const band = r.band || (r.score >= 70 ? "strong" : r.score >= 50 ? "watch" : "low");
       const x = (Math.cos(a) * rr).toFixed(1), y = (Math.sin(a) * rr).toFixed(1);
-      blips += `<a href="${entHref(v, r.id)}" aria-label="${esc(r.name)}, score ${r.score}"><circle class="sonar__blip sonar__blip--${esc(band)}" cx="${x}" cy="${y}" r="${(2.4 + ev * 4.2).toFixed(1)}"><title>${esc(r.name)} · ${r.score}</title></circle></a>`;
+      blips += `<a href="${entHref(v, r.id)}" class="sonar__hit" data-tip-name="${esc(r.name)}" data-tip-score="${esc(r.score)}" data-tip-why="${esc(r.why_short ? noDash(r.why_short) : "")}" aria-label="${esc(r.name)}, score ${r.score}"><circle class="sonar__blip sonar__blip--${esc(band)}" cx="${x}" cy="${y}" r="${(2.4 + ev * 4.2).toFixed(1)}"/><circle class="sonar__hitarea" cx="${x}" cy="${y}" r="9"/></a>`;
       if (i < 10) blips += `<text class="sonar__num" x="${(+x + 6).toFixed(1)}" y="${(+y + 2.5).toFixed(1)}">${String(r._pos).padStart(2, "0")}</text>`;
     });
     const rings = [0.25, 0.5, 0.75].map((f) => `<circle class="sonar__ring" r="${(f * R).toFixed(1)}"/>`).join("");
@@ -1566,6 +1566,26 @@
     if (S.route.id) openDetail(S.route.view, S.route.id, S.route.tab);
   }
   function onRouteFirst() { if (S.route.page === "backtest") renderBacktest(); else if (S.route.page === "lab") renderLab(); else renderMethod(); }
+
+  // Instant Sonar tooltip: the native SVG <title> waited about a second before showing.
+  (function sonarTip() {
+    let tip = null;
+    const hide = () => { if (tip) tip.hidden = true; };
+    const show = (a, x, y) => {
+      if (!tip) { tip = document.createElement("div"); tip.className = "sonar-tip"; tip.setAttribute("role", "tooltip"); document.body.appendChild(tip); }
+      const why = a.getAttribute("data-tip-why");
+      tip.innerHTML = `<b>${esc(a.getAttribute("data-tip-name"))}</b><span class="sonar-tip__score">${esc(a.getAttribute("data-tip-score"))}</span>${why ? `<span class="sonar-tip__why">${esc(why)}</span>` : ""}`;
+      tip.hidden = false;
+      const w = tip.offsetWidth, h = tip.offsetHeight;
+      tip.style.left = Math.min(Math.max(8, x - w / 2), innerWidth - w - 8) + "px";
+      tip.style.top = (y - h - 12 < 8 ? y + 16 : y - h - 12) + "px";
+    };
+    document.addEventListener("pointerover", (e) => { const a = e.target.closest && e.target.closest(".sonar__hit"); if (a) { const r = a.getBoundingClientRect(); show(a, r.left + r.width / 2, r.top + r.height / 2); } });
+    document.addEventListener("pointerout", (e) => { const a = e.target.closest && e.target.closest(".sonar__hit"); if (a && !a.contains(e.relatedTarget)) hide(); });
+    document.addEventListener("focusin", (e) => { const a = e.target.closest && e.target.closest(".sonar__hit"); if (a) { const r = a.getBoundingClientRect(); show(a, r.left + r.width / 2, r.top + r.height / 2); } });
+    document.addEventListener("focusout", hide);
+    addEventListener("scroll", hide, { passive: true });
+  })();
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
 })();
