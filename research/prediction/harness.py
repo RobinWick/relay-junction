@@ -26,7 +26,10 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
 
-SNAP = Path(__file__).resolve().parents[2] / "cala" / "data" / "snapshot.json"
+import os
+
+# Same variable the app reads; default is the crawl output next to the repo (junction-2026/cala/data).
+SNAP = Path(os.environ.get("RELAY_SNAPSHOT_PATH") or Path(__file__).resolve().parents[3] / "cala" / "data" / "snapshot.json")
 EPS = 0.01  # about 4 days: same-day duplicates of the test round are not "the past"
 KS = (1, 5, 10, 20)
 
@@ -176,6 +179,14 @@ def last_lead_again(ctx: Context) -> list[str]:
     return out + stage_leads(ctx)
 
 
+def previous_lead_only(ctx: Context) -> list[str]:
+    """Only the lead(s) of the company's most recent earlier round that names one."""
+    for o in reversed(ctx.company_past):
+        if o.get("leads"):
+            return list(o["leads"])
+    return []
+
+
 def random_rank(ctx: Context) -> list[str]:
     seen = sorted(set().union(*(investors(o) for o in ctx.past))) if ctx.past else []
     rnd = random.Random(ctx.test["id"])
@@ -185,6 +196,6 @@ def random_rank(ctx: Context) -> list[str]:
 
 if __name__ == "__main__":
     print(f"test rounds: {len(TEST)}; snapshot rounds {len(ROUNDS)}; funds queried {len(FUND_KEYS)}", flush=True)
-    for fn in (random_rank, popular_leads, stage_leads, last_lead_again):
+    for fn in (random_rank, popular_leads, stage_leads, last_lead_again, previous_lead_only):
         evaluate(fn, fn.__name__)
     sys.exit(0)

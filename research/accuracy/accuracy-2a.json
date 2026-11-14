@@ -1,0 +1,690 @@
+{
+  "meta": {
+    "lane": "accuracy-a",
+    "checked": "2026-11-14",
+    "snapshot_version": "20261114102039",
+    "method": "Pool: snapshot rounds with >=1 lead, year>=2022, key (company|YYYY-MM|stage) not in research/accuracy/accuracy.json. pool=2554. random.seed(1401); first 25 of random.sample(pool,50). Verdict grades the lead only; date_check grades the date separately (ok / minor = within 1 month / wrong).",
+    "summary": {
+      "correct": 19,
+      "partly": 3,
+      "wrong": 3,
+      "unverifiable": 0,
+      "date_wrong": 4
+    }
+  },
+  "rounds": [
+    {
+      "group": "random_25_seed1401",
+      "sample_fund": null,
+      "company": "DataHow",
+      "date": "2026-09",
+      "date_cala_raw": "2 Sep 2026",
+      "stage": "series a",
+      "amount": "Undisclosed",
+      "cala_leads": [
+        "Momenta"
+      ],
+      "cala_participants": [
+        "HINA Bioventures",
+        "Rockwell Automation",
+        "ZKB",
+        "Zürcher Kantonalbank"
+      ],
+      "key": "DataHow|2026-09|series a",
+      "snapshot_round_id": 3895,
+      "verdict": "correct",
+      "error_source": null,
+      "date_check": "ok",
+      "press_leads": [
+        "Momenta"
+      ],
+      "source_url": "https://nordic9.com/news/datahow-in-a-series-a-extension-led-by-moment/",
+      "note": "Series A extension (bridge) led by Momenta, joined by HINA Bioventures, Rockwell Automation and ZKB, 31 Aug / 2 Sep 2026, amount undisclosed."
+    },
+    {
+      "group": "random_25_seed1401",
+      "sample_fund": null,
+      "company": "Cast AI",
+      "date": "2023-03",
+      "date_cala_raw": "Mar 1, 2023",
+      "stage": "series b",
+      "amount": "$20.1 M",
+      "cala_leads": [
+        "Creandum"
+      ],
+      "cala_participants": [
+        "Cota Capital",
+        "Florida Funders",
+        "Samsung NEXT",
+        "Vintage Investment Partners"
+      ],
+      "key": "Cast AI|2023-03|series b",
+      "snapshot_round_id": 415,
+      "verdict": "correct",
+      "error_source": null,
+      "date_check": "ok",
+      "press_leads": [
+        "Creandum"
+      ],
+      "source_url": "https://cast.ai/press-release/cast-ai-receives-20m-in-new-funding-led-by-early-stage-vc-creandum/",
+      "note": "Company release 16 Mar 2023: $20M round led by Creandum ($15M), existing investors added $5M. Release gives no series label; Cala calls it Series B."
+    },
+    {
+      "group": "random_25_seed1401",
+      "sample_fund": null,
+      "company": "Scarlet",
+      "date": "2026-10",
+      "date_cala_raw": "Oct 12, 2026 / Oct 2026 / Oct 2026",
+      "stage": "series b",
+      "amount": "$50M",
+      "cala_leads": [
+        "Headline"
+      ],
+      "cala_participants": [
+        "Atomico",
+        "Creandum",
+        "Entrepreneurs First",
+        "Kindred Capital",
+        "Notion Capital"
+      ],
+      "key": "Scarlet|2026-10|series b",
+      "snapshot_round_id": 1554,
+      "verdict": "correct",
+      "error_source": null,
+      "date_check": "ok",
+      "press_leads": [
+        "Headline"
+      ],
+      "source_url": "https://ventureburn.com/scarlet-raises-50m-ai-medical-device-certification/",
+      "note": "Headline led the $50M Series B (Oct 2026); Notion Capital new, Atomico, Creandum, Kindred, Entrepreneurs First existing. Of 3 Cala rows, one says no named lead and one null; merge kept Headline, which is right."
+    },
+    {
+      "group": "random_25_seed1401",
+      "sample_fund": null,
+      "company": "Green Eagle Solutions",
+      "date": "2023-12",
+      "date_cala_raw": "Dec 2023",
+      "stage": "series a",
+      "amount": "€6M",
+      "cala_leads": [
+        "Kibo Ventures"
+      ],
+      "cala_participants": [],
+      "key": "Green Eagle Solutions|2023-12|series a",
+      "snapshot_round_id": 4296,
+      "verdict": "wrong",
+      "error_source": "cala",
+      "date_check": "ok",
+      "press_leads": [
+        "Energy Transition Tech Fund of A&G"
+      ],
+      "source_url": "https://tech.eu/2023/12/19/green-eagle-solutions-secures-eur6m-for-ai-powered-renewable-energy-automation/",
+      "note": "Round led by A&G's Energy Transition Tech Fund; Kibo Ventures and SET Ventures were existing investors following on. Cala row (Kibo investor-first query) says kibo_ventures_led: Yes and lists no participants, so A&G is missing entirely."
+    },
+    {
+      "group": "random_25_seed1401",
+      "sample_fund": null,
+      "company": "Uzum",
+      "date": "2024-03",
+      "date_cala_raw": "Mar 2024",
+      "stage": "series a",
+      "amount": "$114M (equity + debt combined)",
+      "cala_leads": [
+        "FinSight Ventures",
+        "Xanara Investment Management"
+      ],
+      "cala_participants": [
+        "Tencent"
+      ],
+      "key": "Uzum|2024-03|series a",
+      "snapshot_round_id": 3757,
+      "verdict": "partly",
+      "error_source": "cala+pipeline",
+      "date_check": "ok",
+      "press_leads": [
+        "FinSight Ventures"
+      ],
+      "source_url": "https://techcrunch.com/2024/03/25/uzbekistan-unicorn-uzum-series-a-funding",
+      "note": "TechCrunch: led by FinSight Ventures, with Xanara and senior management participating ($52M equity + $62M debt). Cala lists Xanara as co-lead (the raw row repeats the same two names as both lead and participants). Snapshot also lists Tencent as a participant, but Tencent did not invest in this round; it came from the investor-first query premise ('rounds Tencent invested in during 2024') and merge.py line 350-351 appends the queried fund to participants."
+    },
+    {
+      "group": "random_25_seed1401",
+      "sample_fund": null,
+      "company": "Juo",
+      "date": "2025-11",
+      "date_cala_raw": "25 Nov 2025",
+      "stage": "seed",
+      "amount": "€4M (~$5M)",
+      "cala_leads": [
+        "Market One Capital",
+        "Peak"
+      ],
+      "cala_participants": [
+        "BADideas.fund",
+        "FJ Labs",
+        "Lakestar",
+        "plus individual investors",
+        "SMOK Ventures"
+      ],
+      "key": "Juo|2025-11|seed",
+      "snapshot_round_id": 4822,
+      "verdict": "correct",
+      "error_source": null,
+      "date_check": "ok",
+      "press_leads": [
+        "Market One Capital",
+        "Peak"
+      ],
+      "source_url": "https://peak.capital/juo-raises-e4-million-to-become-the-backbone-for-physical-product-subscriptions/",
+      "note": "EUR 4M seed co-led by Market One Capital and Peak, with SMOK Ventures, BADideas, FJ Labs and Lakestar, 25 Nov 2025."
+    },
+    {
+      "group": "random_25_seed1401",
+      "sample_fund": null,
+      "company": "DREM",
+      "date": "2023-01",
+      "date_cala_raw": "Jan 30, 2023",
+      "stage": "seed",
+      "amount": "~$2.7M (SEK 27M)",
+      "cala_leads": [
+        "byFounders"
+      ],
+      "cala_participants": [
+        "Redstone",
+        "Wiski Capital"
+      ],
+      "key": "DREM|2023-01|seed",
+      "snapshot_round_id": 1625,
+      "verdict": "correct",
+      "error_source": null,
+      "date_check": "ok",
+      "press_leads": [
+        "byFounders"
+      ],
+      "source_url": "https://www.byfounders.vc/insights/why-we-invested-in-drem",
+      "note": "byFounders post (Feb 2023) says it led the round alongside Tane Fund by Redstone and Wiski Capital. byFounders calls it a pre-seed; Cala says seed. SEK 27M amount appears only in a Nordic9 listing (unverified)."
+    },
+    {
+      "group": "random_25_seed1401",
+      "sample_fund": null,
+      "company": "Attio",
+      "date": "2024-08",
+      "date_cala_raw": "Aug 2024",
+      "stage": null,
+      "amount": "$33M",
+      "cala_leads": [
+        "01 Advisors",
+        "Balderton Capital",
+        "Point Nine",
+        "Redpoint Ventures"
+      ],
+      "cala_participants": [],
+      "key": "Attio|2024-08|None",
+      "snapshot_round_id": 2451,
+      "verdict": "correct",
+      "error_source": null,
+      "date_check": "ok",
+      "press_leads": [
+        "Redpoint Ventures",
+        "Balderton Capital",
+        "Point Nine",
+        "(01 Advisors, ambiguous)"
+      ],
+      "source_url": "https://attio.com/blog/attio-raises-33-million-in-funding",
+      "note": "Company blog: investment led by existing partners Redpoint, Balderton and Point Nine 'along with our new partner 01 Advisors'. Whether 01 Advisors co-led is ambiguous; graded correct on the three clear leads. Stage is null in the snapshot (Cala: 'Undisclosed stage'), so this round never counts in any stage band."
+    },
+    {
+      "group": "random_25_seed1401",
+      "sample_fund": null,
+      "company": "Nozomi Networks",
+      "date": "2024-03",
+      "date_cala_raw": "Mar 2024",
+      "stage": "series e",
+      "amount": "$100M",
+      "cala_leads": [
+        "Forward VC",
+        "Honeywell Ventures"
+      ],
+      "cala_participants": [
+        "Activate Capital",
+        "CDP Venture Capital",
+        "Energize Capital",
+        "GGV Capital",
+        "Johnson Controls",
+        "Keysight",
+        "Lux Capital",
+        "Mitsubishi Electric",
+        "Porsche Ventures",
+        "Samsung",
+        "Schneider Electric"
+      ],
+      "key": "Nozomi Networks|2024-03|series e",
+      "snapshot_round_id": 4243,
+      "verdict": "wrong",
+      "error_source": "cala",
+      "date_check": "ok",
+      "press_leads": [
+        "none named in release; secondary press says Mitsubishi Electric and Schneider Electric"
+      ],
+      "source_url": "https://www.helpnetsecurity.com/2024/03/13/nozomi-networks-funding-100-million/",
+      "note": "Release (13 Mar 2024) names no lead: the $100M Series E 'includes investments from Mitsubishi Electric and Schneider Electric'. Honeywell Ventures and Forward Investments appear only as prior investors. IoT Evolution World describes the round as led by Mitsubishi Electric and Schneider Electric. Cala's leads (Honeywell Ventures, Forward) are not supported by any source found."
+    },
+    {
+      "group": "random_25_seed1401",
+      "sample_fund": null,
+      "company": "PLATMA",
+      "date": "2024-06",
+      "date_cala_raw": "2024 / ~Aug-Sep 2024",
+      "stage": "pre-seed",
+      "amount": "$2.0M",
+      "cala_leads": [
+        "Almaz Capital"
+      ],
+      "cala_participants": [
+        "Aloqa Ventures",
+        "angel backers",
+        "EA Group",
+        "Startup Wise Guys"
+      ],
+      "key": "PLATMA|2024-06|pre-seed",
+      "snapshot_round_id": 3991,
+      "verdict": "partly",
+      "error_source": "cala+pipeline",
+      "date_check": "wrong",
+      "press_leads": [
+        "Almaz Capital",
+        "EA Group"
+      ],
+      "source_url": "https://tech.eu/2024/09/10/platma-raises-2m-inpre-seed-funding-for-ai-powered-no-code-platform/",
+      "note": "Tech.eu 10 Sep 2024: $2M pre-seed led by Almaz Capital and EA Group ($500K each). Cala lists EA Group as a participant only. Date: Cala rows say '2024' and '~Aug-Sep 2024'; the year-only row was parsed first and parse_date defaults to month 6, so the snapshot says Jun 2024."
+    },
+    {
+      "group": "random_25_seed1401",
+      "sample_fund": null,
+      "company": "Quantune",
+      "date": "2024-10",
+      "date_cala_raw": "Oct-Nov 2024",
+      "stage": "seed",
+      "amount": "€8.5M (equity) + ~€5M in grants",
+      "cala_leads": [
+        "Point72 Ventures",
+        "Vsquared Ventures"
+      ],
+      "cala_participants": [
+        "DnA Ventures",
+        "EIC Fund",
+        "Investitionsbank Berlin",
+        "VIGO Ventures"
+      ],
+      "key": "Quantune|2024-10|seed",
+      "snapshot_round_id": 3142,
+      "verdict": "correct",
+      "error_source": null,
+      "date_check": "minor",
+      "press_leads": [
+        "Point72 Ventures",
+        "Vsquared Ventures"
+      ],
+      "source_url": "https://siliconcanals.com/germanys-quantune-bags-13-5m/",
+      "note": "EUR 8.5M equity led by Point72 Ventures and Vsquared Ventures, announced 12 Nov 2024 (Cala raw 'Oct-Nov 2024' parsed as Oct). TechCrunch names both investors but no lead."
+    },
+    {
+      "group": "random_25_seed1401",
+      "sample_fund": null,
+      "company": "Photoroom",
+      "date": "2024-02",
+      "date_cala_raw": "Feb 27, 2024",
+      "stage": "series b",
+      "amount": "$43M",
+      "cala_leads": [
+        "Aglaé Ventures",
+        "Balderton Capital"
+      ],
+      "cala_participants": [
+        "YCombinator"
+      ],
+      "key": "Photoroom|2024-02|series b",
+      "snapshot_round_id": 2448,
+      "verdict": "correct",
+      "error_source": null,
+      "date_check": "ok",
+      "press_leads": [
+        "Balderton Capital",
+        "Aglae Ventures"
+      ],
+      "source_url": "https://prnewswire.com/news-releases/photoroom-secures-43m-in-series-b-funding-launches-next-generation-ai-photo-editing-features-for-businesses-302071832.html",
+      "note": "Company release: led by Balderton Capital and new investor Aglae, YCombinator participated, 27 Feb 2024. Note tech.eu describes Balderton alone as lead and Aglae as joining; the release is the primary source."
+    },
+    {
+      "group": "random_25_seed1401",
+      "sample_fund": null,
+      "company": "Marketing Evolution",
+      "date": "2025-12",
+      "date_cala_raw": "Dec 9, 2025",
+      "stage": "growth",
+      "amount": "Undisclosed",
+      "cala_leads": [
+        "Insight Partners"
+      ],
+      "cala_participants": [],
+      "key": "Marketing Evolution|2025-12|growth",
+      "snapshot_round_id": 4538,
+      "verdict": "correct",
+      "error_source": null,
+      "date_check": "ok",
+      "press_leads": [
+        "Insight Partners"
+      ],
+      "source_url": "https://www.insightpartners.com/ideas/marketing-evolution-announces-new-investment-led-by-insight-partners-to-power-ai-ready-marketing-data-for-the-agentic-era/",
+      "note": "New funding led by existing backer Insight Partners, 9 Dec 2025, amount undisclosed."
+    },
+    {
+      "group": "random_25_seed1401",
+      "sample_fund": null,
+      "company": "ZAAN",
+      "date": "2026-06",
+      "date_cala_raw": "June 2026 (announced; Preqin notes May 2026)",
+      "stage": "seed",
+      "amount": "USD 5 million",
+      "cala_leads": [
+        "Tencent Investment"
+      ],
+      "cala_participants": [],
+      "key": "ZAAN|2026-06|seed",
+      "snapshot_round_id": 932,
+      "verdict": "correct",
+      "error_source": null,
+      "date_check": "ok",
+      "press_leads": [
+        "Tencent Investment (sole named investor)"
+      ],
+      "source_url": "https://ggba.swiss/en/geneva-legaltech-start-up-zaan-raises-usd-5-million-from-tencent/",
+      "note": "GGBA, 17 Jun 2026: ZAAN raised USD 5M from Tencent Investment. The source does not use the word 'led'; Tencent is the only investor named, so treating it as lead is reasonable but not stated."
+    },
+    {
+      "group": "random_25_seed1401",
+      "sample_fund": null,
+      "company": "Enmacc",
+      "date": "2023-02",
+      "date_cala_raw": "Feb 8, 2023",
+      "stage": "series b",
+      "amount": "Undisclosed (double-digit million across both closes)",
+      "cala_leads": [
+        "Alantra"
+      ],
+      "cala_participants": [
+        "10x Group",
+        "Bayern Kapital",
+        "Chevron Technology Ventures",
+        "Illuminate Financial",
+        "Piton Capital"
+      ],
+      "key": "Enmacc|2023-02|series b",
+      "snapshot_round_id": 2980,
+      "verdict": "correct",
+      "error_source": null,
+      "date_check": "ok",
+      "press_leads": [
+        "Alantra Klima Energy Transition Fund"
+      ],
+      "source_url": "https://enmacc.com/enmacc-completes-second-close-of-series-b-funding-round/",
+      "note": "Second close of the Series B on 8 Feb 2023; Alantra's Klima fund led the round (first close Sep 2022). Bayern Kapital new; 10x Group, Chevron TV, Piton, Illuminate existing."
+    },
+    {
+      "group": "random_25_seed1401",
+      "sample_fund": null,
+      "company": "Hapsworks",
+      "date": "2022-03",
+      "date_cala_raw": "Mar 2022",
+      "stage": "series a",
+      "amount": "$6.5M",
+      "cala_leads": [
+        "Vendep Capital"
+      ],
+      "cala_participants": [
+        "Industrifonden",
+        "Inventure"
+      ],
+      "key": "Hapsworks|2022-03|series a",
+      "snapshot_round_id": 2053,
+      "verdict": "correct",
+      "error_source": null,
+      "date_check": "wrong",
+      "press_leads": [
+        "Vendep Capital"
+      ],
+      "source_url": "https://www.vendep.com/vendep-announces-new-portfolio-company-hopsworks-reports-record-growth-and-raises-6-5m/",
+      "note": "Company is Hopsworks (Cala misspells it 'Hapsworks'). $6.5M led by Vendep Capital with Inventure and Industrifonden, announced 29 Jun 2023, not Mar 2022 (15 months off). No source calls it Series A."
+    },
+    {
+      "group": "random_25_seed1401",
+      "sample_fund": null,
+      "company": "Imprint",
+      "date": "2025-12",
+      "date_cala_raw": "Dec 17, 2025",
+      "stage": null,
+      "amount": "$150M",
+      "cala_leads": [
+        "Khosla Ventures"
+      ],
+      "cala_participants": [
+        "Kleiner Perkins",
+        "Thrive Capital"
+      ],
+      "key": "Imprint|2025-12|None",
+      "snapshot_round_id": 3727,
+      "verdict": "correct",
+      "error_source": null,
+      "date_check": "ok",
+      "press_leads": [
+        "Khosla Ventures"
+      ],
+      "source_url": "https://pulse2.com/imprint-150-million-series-d/",
+      "note": "$150M Series D led by Khosla Ventures, with Thrive, Ribbit, Kleiner Perkins and others, 17 Dec 2025. Snapshot stage is null (Cala: 'Funding Round') although press calls it Series D, so it is missing from stage counts."
+    },
+    {
+      "group": "random_25_seed1401",
+      "sample_fund": null,
+      "company": "OneTrust",
+      "date": "2023-07",
+      "date_cala_raw": "Jul 24, 2023",
+      "stage": "series d",
+      "amount": "$150M",
+      "cala_leads": [
+        "Generation Investment Management",
+        "Sands Capital"
+      ],
+      "cala_participants": [
+        "Insight Partners"
+      ],
+      "key": "OneTrust|2023-07|series d",
+      "snapshot_round_id": 4518,
+      "verdict": "partly",
+      "error_source": "cala",
+      "date_check": "ok",
+      "press_leads": [
+        "Generation Investment Management"
+      ],
+      "source_url": "https://www.onetrust.com/news/onetrust-secures-150m-investment-led-by-generation-investment-management/",
+      "note": "Release 24 Jul 2023: led by new investor Generation Investment Management, with participation from existing investor Sands Capital. Cala counts Sands Capital as co-lead. Insight Partners appears as participant only because it was the investor-first query fund (raw: 'Insight Partners is an existing investor')."
+    },
+    {
+      "group": "random_25_seed1401",
+      "sample_fund": null,
+      "company": "Esco Lifesciences Group",
+      "date": "2026-06",
+      "date_cala_raw": "2026",
+      "stage": "series a",
+      "amount": "US$200M",
+      "cala_leads": [
+        "Novo Holdings",
+        "Vivo Capital"
+      ],
+      "cala_participants": [
+        "China Investment Corp",
+        "GIC"
+      ],
+      "key": "Esco Lifesciences Group|2026-06|series a",
+      "snapshot_round_id": 3799,
+      "verdict": "correct",
+      "error_source": "cala",
+      "date_check": "wrong",
+      "press_leads": [
+        "Vivo Capital",
+        "Novo Holdings"
+      ],
+      "source_url": "https://group.escolifesciences.com/news/esco-lifesciences-closes-a-record-setting-us$200m-series-a-round-led-by-vivo-capital-and-novo-holdings",
+      "note": "Leads right, date badly wrong: the US$200M Series A led by Vivo Capital and Novo Holdings was announced in May 2021. Cala's row says '2026' (year only), parse_date sets month 6. No 2026 round found. The round should not be in the 2022+ pool and makes Novo/Vivo look like recent Series A leads."
+    },
+    {
+      "group": "random_25_seed1401",
+      "sample_fund": null,
+      "company": "Blueberry",
+      "date": "2024-06",
+      "date_cala_raw": "Jun 4, 2024",
+      "stage": "series a",
+      "amount": null,
+      "cala_leads": [
+        "White Star Capital"
+      ],
+      "cala_participants": [
+        "SNZ Capital"
+      ],
+      "key": "Blueberry|2024-06|series a",
+      "snapshot_round_id": 4057,
+      "verdict": "correct",
+      "error_source": null,
+      "date_check": "ok",
+      "press_leads": [
+        "White Star Capital"
+      ],
+      "source_url": "https://www.crypto-reporter.com/press-releases/blueberry-protocol-raises-2-5m-series-a-led-by-white-star-capital-to-offer-enhanced-decentralized-leverage-and-curated-defi-strategies-66232/",
+      "note": "Blueberry Protocol (DeFi prime brokerage) $2.5M Series A led by White Star Capital, with Varys, SNZ Capital and others, Jun 2024. Cala calls WSC a co-lead and gives country United States; the company is described elsewhere as Panama-based (unverified). Amount missing in Cala."
+    },
+    {
+      "group": "random_25_seed1401",
+      "sample_fund": null,
+      "company": "Distance Technologies",
+      "date": "2024-09",
+      "date_cala_raw": "Sep 2024",
+      "stage": "seed",
+      "amount": "€10M (~$11M)",
+      "cala_leads": [
+        "GV"
+      ],
+      "cala_participants": [
+        "FOV Ventures",
+        "Maki.vc"
+      ],
+      "key": "Distance Technologies|2024-09|seed",
+      "snapshot_round_id": 1458,
+      "verdict": "correct",
+      "error_source": null,
+      "date_check": "ok",
+      "press_leads": [
+        "GV"
+      ],
+      "source_url": "https://siliconcanals.com/distance-technologies-secures-e10m/",
+      "note": "EUR 10M seed led by GV with FOV Ventures and Maki.vc, announced 24 Sep 2024."
+    },
+    {
+      "group": "random_25_seed1401",
+      "sample_fund": null,
+      "company": "Sharp Performance",
+      "date": "2026-10",
+      "date_cala_raw": "Oct 15, 2026",
+      "stage": "series a",
+      "amount": "$18M",
+      "cala_leads": [
+        "Andreessen Horowitz"
+      ],
+      "cala_participants": [
+        "FJ Labs"
+      ],
+      "key": "Sharp Performance|2026-10|series a",
+      "snapshot_round_id": 2937,
+      "verdict": "wrong",
+      "error_source": "cala",
+      "date_check": "ok",
+      "press_leads": [
+        "Hidden Variable"
+      ],
+      "source_url": "https://pulse2.com/sharp-raises-18-million-series-a-led-by-hidden-variable-for-first-responder-coaching-platform/",
+      "note": "$18M Series A (15 Oct 2026) was led by Hidden Variable; Andreessen Horowitz participated. a16z led the earlier $12M seed (Latham & Watkins notice), which is the likely source of the mix-up."
+    },
+    {
+      "group": "random_25_seed1401",
+      "sample_fund": null,
+      "company": "NymCard",
+      "date": "2026-03",
+      "date_cala_raw": "Mar 2026",
+      "stage": null,
+      "amount": "$33M",
+      "cala_leads": [
+        "QED Investors"
+      ],
+      "cala_participants": [],
+      "key": "NymCard|2026-03|None",
+      "snapshot_round_id": 3233,
+      "verdict": "correct",
+      "error_source": "cala",
+      "date_check": "wrong",
+      "press_leads": [
+        "QED Investors"
+      ],
+      "source_url": "https://fintech.global/2025/03/19/nymcard-secures-33m-in-series-b-to-expand-embedded-finance-in-mena/",
+      "note": "$33M Series B led by QED Investors, announced 19 Mar 2025, not Mar 2026 (12 months off). Snapshot stage is null although press calls it Series B."
+    },
+    {
+      "group": "random_25_seed1401",
+      "sample_fund": null,
+      "company": "Grid Online",
+      "date": "2025-02",
+      "date_cala_raw": "12 Feb 2025",
+      "stage": "seed",
+      "amount": "Undisclosed",
+      "cala_leads": [
+        "Reflex Capital"
+      ],
+      "cala_participants": [
+        "Grid.vc"
+      ],
+      "key": "Grid Online|2025-02|seed",
+      "snapshot_round_id": 3942,
+      "verdict": "correct",
+      "error_source": null,
+      "date_check": "ok",
+      "press_leads": [
+        "Reflex Capital"
+      ],
+      "source_url": "https://en.ain.ua/2025/02/12/czech-logistics-startup-gridonline-secures-eur15m-investment-from-reflex-capital",
+      "note": "EUR 1.5M led by Reflex Capital (EUR 1M) with J&T Ventures and Grid Invest, 12 Feb 2025. Cala's participant 'Grid.vc' looks like a garbled 'Grid Invest'; J&T Ventures missing."
+    },
+    {
+      "group": "random_25_seed1401",
+      "sample_fund": null,
+      "company": "Sycai Medical",
+      "date": "2022-03",
+      "date_cala_raw": "13 March 2022",
+      "stage": "seed",
+      "amount": "€780,000",
+      "cala_leads": [
+        "Ship2B Ventures"
+      ],
+      "cala_participants": [
+        "Athos Capital",
+        "BStartup"
+      ],
+      "key": "Sycai Medical|2022-03|seed",
+      "snapshot_round_id": 715,
+      "verdict": "correct",
+      "error_source": null,
+      "date_check": "ok",
+      "press_leads": [
+        "Ship2B Ventures"
+      ],
+      "source_url": "https://capital-riesgo.es/es/articles/sycai-medical-cierra-una-ronda-de-780-000-liderada-por-ship2b-ventures-para-llevar-al-mercado-un-software-de-detecci-n-precoz-del-c-ncer-de-p-ncreas/",
+      "note": "EUR 780K led by Ship2B Ventures (BSocial Impact Fund) with BStartup and Athos Capital, 14 Mar 2022."
+    }
+  ]
+}

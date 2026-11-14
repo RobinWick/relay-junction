@@ -1,6 +1,6 @@
 # Cala data-quality notes from Team Wicflow
 
-A thank-you from Lead Check (Junction 2026). Lead Check counts, for each fund a founder will meet at Slush, how often it actually led a round. To count leads we asked Cala's `/v1/knowledge/query` two ways and compared the answers. These are the issues we had to clean up, with checkable examples. Some field drift comes from our own free-form prompts; we list it because a fixed schema would help every Cala user.
+A thank-you from Recount (Junction 2026). Recount counts, for each fund a founder plans to pitch, how often it actually led rounds like theirs. To count leads we asked Cala's `/v1/knowledge/query` two ways and compared the answers. These are the issues we had to clean up, with checkable examples. Some field drift comes from our own free-form prompts; we list it because a fixed schema would help every Cala user.
 
 **Data checked (2026-11-14 01:50):** 1816 rows from 421 company-first answers ("List every funding round of X ..."), 1200 rows from 43 investor-first answers ("every round fund X invested in and whether X led it"). The investor-first crawl was still running, so counts are a snapshot. Full raw rows for every example are in `cala-data-quality.json`.
 
@@ -19,6 +19,7 @@ A thank-you from Lead Check (Junction 2026). Lead Check counts, for each fund a 
 | Truncated or non-date dates | 7 truncated, 11 non-date | Proxima Fusion Series A: `"11 June 5"`; Vivla: year with a zero-width space; Etsy (via Accel): date `"Early-stage"` | ISO date plus precision |
 | Entity type inconsistent | 17 names | EIT InnoEnergy: Organization and EducationalInstitution | One type per ID |
 | Country drift | 224 null, 87 annotated | `UK (London)` next to `United Kingdom (London)`; `South Africa / Estonia` | ISO code plus `hq_city` |
+| Disagrees with press (added after a later press check) | 5 rows | Oura Series A, Nov 2016: Lifeline Ventures listed as investor, but TechCrunch, tech.eu and Lifeline's own page do not put it in that round; Atlas Bio: country UK, company is in Basel | Source per investor role; see `research/accuracy/lifeline-check.md` |
 
 **Most important for us:** the lead flag and the round label. When the investor-first flag says a fund did not lead and the company-first answer names it as lead, a founder gets the wrong answer to "will this fund lead my round?". We now show both paths on every record ("investor-first / company-first / both agree") instead of picking one.
 
@@ -26,4 +27,4 @@ A thank-you from Lead Check (Junction 2026). Lead Check counts, for each fund a 
 
 **Method:** plain Python over the raw JSON answers, no LLM judging. Dates parsed to year and month; labels mapped to pre-seed, seed, Series A to F, growth; a cross-path match is the same company name with dates within 2 months. Spelling counts come from pattern matches on the comma-split investor fields, so they are lower bounds.
 
-Files: `cala-data-quality.json` (findings[] with type, description, count, examples[]), this README. Contact: Team Wicflow, Junction 2026, Cala challenge.
+Files: `cala-data-quality.json` (19 findings: findings[] with type, description, count, examples[]), this README. The table above lists the main ones; the JSON has all 19. Contact: Team Wicflow, Junction 2026, Cala challenge.

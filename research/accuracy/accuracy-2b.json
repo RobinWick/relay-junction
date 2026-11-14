@@ -1,0 +1,667 @@
+{
+  "lane": "accuracy-b",
+  "snapshot_version": "20261114102039",
+  "checked_on": "2026-11-14",
+  "method": "Pool = rounds with >=1 lead, year>=2022, key (company|YYYY-MM|str(stage)) not in research/accuracy/accuracy.json: 2554 rounds. random.seed(1401); s=random.sample(pool,50); this lane = s[25:50]. Pool is in snapshot list order. 3 of the 41 lane-A keys no longer match the snapshot (TuringDream 2025-06 seed, Qred AB 2022-12, Marble 2026-11 seed), so those rows were not excluded by key. Verdict scale identical to lane A. how_checked: 'fetched' = page read directly; 'search_snippet' = lead confirmed by web-search result text across several outlets, page not opened. No Cala calls, no POSTs; only GET /api/fund/{key} on the test app.",
+  "counts": {
+    "partly": 6,
+    "correct": 14,
+    "unverifiable": 2,
+    "wrong": 3
+  },
+  "headline": "Lead correct in 14 of 25 (14 of 23 verifiable, 61%); 6 partly, 3 wrong, 2 unverifiable. Lane A random 30 was 22 of 26 verifiable (85%). Combined random 55: 36 correct of 49 verifiable (73%).",
+  "rows": [
+    {
+      "group": "random_25b",
+      "sample_fund": null,
+      "snapshot_id": 4491,
+      "company": "Viscaria",
+      "date": "2026-06",
+      "date_cala_raw": "June 16, 2026",
+      "stage": "n/a",
+      "amount": "~SEK 1.7 billion (~$181 million) in cash proceeds (~SEK 2.4 billion total incl. loan conversions)",
+      "cala_leads": [
+        "infravia"
+      ],
+      "key": "Viscaria|2026-06|None",
+      "query_path": "investor_first",
+      "self_query_led_flag": [
+        {
+          "swedbank_robur_led": "No"
+        }
+      ],
+      "verdict": "partly",
+      "error_source": "cala",
+      "source_url": "https://www.placera.se/pressmeddelanden/viscaria-viscaria-completes-a-directed-share-issue-of-approximately-144-million-shares-raising-cash-proceeds-of-approximately-sek-1-7-billion-20260617",
+      "how_checked": "search_snippet",
+      "note": "Listed-company PIPE (directed share issue, 17 Jun 2026). InfraVia was the largest new investor (~SEK 420M, ~6.6%) and anchor, but no source calls it a lead. Cala's own row says 'largest new investor'; the parser keeps it as lead. Not a VC led round."
+    },
+    {
+      "group": "random_25b",
+      "sample_fund": null,
+      "snapshot_id": 837,
+      "company": "Vaja",
+      "date": "2026-06",
+      "date_cala_raw": "June 15, 2026 / June 15, 2026",
+      "stage": "seed",
+      "amount": "€3.1 million (~$3.6M)",
+      "cala_leads": [
+        "the footprint firm"
+      ],
+      "key": "Vaja|2026-06|seed",
+      "query_path": "both",
+      "self_query_led_flag": [
+        {
+          "footprint_firm_led": "Yes"
+        }
+      ],
+      "verdict": "correct",
+      "error_source": null,
+      "source_url": "https://nordic9.com/news/vaja-raised-31-million-in-seed-funding-led-by/",
+      "how_checked": "search_snippet",
+      "note": "EUR 3.1M seed 15 Jun 2026 led by The Footprint Firm with node.vc."
+    },
+    {
+      "group": "random_25b",
+      "sample_fund": null,
+      "snapshot_id": 3770,
+      "company": "T-Therapeutics",
+      "date": "2026-11",
+      "date_cala_raw": "Nov 5, 2026 / Nov 2026",
+      "stage": "series b",
+      "amount": null,
+      "cala_leads": [
+        "advent life sciences british business bank"
+      ],
+      "key": "T-Therapeutics|2026-11|series b",
+      "query_path": "investor_first",
+      "self_query_led_flag": [
+        {
+          "tencent_led": "Unknown"
+        },
+        {
+          "sofinnova_led": "No"
+        }
+      ],
+      "verdict": "partly",
+      "error_source": "pipeline",
+      "source_url": "https://www.british-business-bank.co.uk/news-and-events/news/british-business-bank-invests-ps15m-biotech-spinout-t-therapeutics",
+      "how_checked": "search_snippet",
+      "note": "$133M Series B (Nov 2026) co-led by Advent Life Sciences and British Business Bank: Cala is right. Parser kept 'Advent Life Sciences & British Business Bank' as ONE investor key, so neither fund gets the lead. Amount is None in snapshot although $133M is public; a second Cala row (Tencent, 'Undisclosed') was merged in."
+    },
+    {
+      "group": "random_25b",
+      "sample_fund": null,
+      "snapshot_id": 3657,
+      "company": "Armadin",
+      "date": "2026-10",
+      "date_cala_raw": "Oct 1, 2026",
+      "stage": "series b",
+      "amount": "$256M",
+      "cala_leads": [
+        "andreessen horowitz"
+      ],
+      "key": "Armadin|2026-10|series b",
+      "query_path": "investor_first",
+      "self_query_led_flag": [
+        {
+          "redpoint_led": false
+        }
+      ],
+      "verdict": "partly",
+      "error_source": "cala",
+      "source_url": "https://www.unite.ai/armadin-raises-255-5m-series-b-at-over-2-5b-valuation-to-scale-its-agentic-security-platform",
+      "how_checked": "fetched",
+      "note": "Source: 'Series B funding co-led by Andreessen Horowitz and Accel' (1 Oct 2026). Cala names only a16z, missing Accel."
+    },
+    {
+      "group": "random_25b",
+      "sample_fund": null,
+      "snapshot_id": 4579,
+      "company": "Lette AI",
+      "date": "2026-10",
+      "date_cala_raw": "27 Oct 2026",
+      "stage": "seed",
+      "amount": "$6M (~€5.8M)",
+      "cala_leads": [
+        "peak"
+      ],
+      "key": "Lette AI|2026-10|seed",
+      "query_path": "investor_first",
+      "self_query_led_flag": [
+        {
+          "pitchdrive_led": "No"
+        }
+      ],
+      "verdict": "correct",
+      "error_source": null,
+      "source_url": "https://tech.eu/2026/10/27/lette-raises-65m-to-scale-ai-automation-for-uk-rental-operators/",
+      "how_checked": "search_snippet",
+      "note": "Seed led by Peak. Amount drift: $6.5M per press, Cala $6M."
+    },
+    {
+      "group": "random_25b",
+      "sample_fund": null,
+      "snapshot_id": 3118,
+      "company": "Whatfix",
+      "date": "2025-08",
+      "date_cala_raw": "Aug 14, 2025",
+      "stage": "series e",
+      "amount": "$125M",
+      "cala_leads": [
+        "warburg pincus"
+      ],
+      "key": "Whatfix|2025-08|series e",
+      "query_path": "investor_first",
+      "self_query_led_flag": [
+        {
+          "svf2_led": false
+        }
+      ],
+      "verdict": "correct",
+      "error_source": "cala",
+      "source_url": "https://whatfix.com/newsroom/press-releases/whatfix-raises-125-million-series-e/",
+      "how_checked": "search_snippet",
+      "note": "Lead right (Warburg Pincus) but DATE WRONG: round announced 25 Sep 2024, Cala says Aug 14, 2025. Row came from a query scoped 'invested in during 2025'. No 2024-09 row exists in snapshot, so this round sits in the wrong year."
+    },
+    {
+      "group": "random_25b",
+      "sample_fund": null,
+      "snapshot_id": 4014,
+      "company": "Buntar Aerospace",
+      "date": "2026-03",
+      "date_cala_raw": "19 Mar 2026",
+      "stage": "seed",
+      "amount": "$10.4M",
+      "cala_leads": [
+        "axon enterprise",
+        "munkene"
+      ],
+      "key": "Buntar Aerospace|2026-03|seed",
+      "query_path": "investor_first",
+      "self_query_led_flag": [
+        {
+          "swg_led": "No"
+        }
+      ],
+      "verdict": "partly",
+      "error_source": "cala",
+      "source_url": "https://inventure.com.ua/en/news/ukraine/ukrainian-defencetech-company-buntar-aerospace-raises-dollar10.4-million-from-axon-enterprise",
+      "how_checked": "fetched",
+      "note": "Axon led (19 Mar 2026); Munkene AS 'also joined the deal' as participant. Cala calls Munkene a co-lead. Stage: Nordic9 calls it Series A, Cala 'Seed (III)'."
+    },
+    {
+      "group": "random_25b",
+      "sample_fund": null,
+      "snapshot_id": 4500,
+      "company": "Alcatraz AI",
+      "date": "2026-04",
+      "date_cala_raw": "April 1-2, 2026",
+      "stage": "series b",
+      "amount": "$50 million",
+      "cala_leads": [
+        "blackpeak",
+        "cogito",
+        "taiwania"
+      ],
+      "key": "Alcatraz AI|2026-04|series b",
+      "query_path": "investor_first",
+      "self_query_led_flag": [
+        {
+          "almaz_capital_led": "No"
+        }
+      ],
+      "verdict": "correct",
+      "error_source": null,
+      "source_url": "https://www.alcatraz.ai/press-release/alcatraz-raises-50-million-series-b",
+      "how_checked": "search_snippet",
+      "note": "$50M Series B (2 Apr 2026) led by BlackPeak, Cogito and Taiwania; Almaz, EBRD, Ray Stata participated."
+    },
+    {
+      "group": "random_25b",
+      "sample_fund": null,
+      "snapshot_id": 950,
+      "company": "Trypillian",
+      "date": "2025-05",
+      "date_cala_raw": "27 May 2025",
+      "stage": "seed",
+      "amount": "$5 million",
+      "cala_leads": [
+        "brooks newmark"
+      ],
+      "key": "Trypillian|2025-05|seed",
+      "query_path": "company_first",
+      "self_query_led_flag": [],
+      "verdict": "correct",
+      "error_source": null,
+      "source_url": "https://inventure.com.ua/en/news/ukraine/defense-startup-trypillian-co-founded-by-ukrainians-raises-dollar5m-from-former-uk-minister-brooks-newmark",
+      "how_checked": "search_snippet",
+      "note": "$5M (May 2025) from former UK minister Brooks Newmark as sole investor (angel). Correct, but an angel, not a fund."
+    },
+    {
+      "group": "random_25b",
+      "sample_fund": null,
+      "snapshot_id": 3565,
+      "company": "Vestwell",
+      "date": "2026-02",
+      "date_cala_raw": "Feb 2026",
+      "stage": "series e",
+      "amount": "$385M",
+      "cala_leads": [
+        "blue owl",
+        "sixth street"
+      ],
+      "key": "Vestwell|2026-02|series e",
+      "query_path": "investor_first",
+      "self_query_led_flag": [
+        {
+          "fintech_collective_led": false
+        }
+      ],
+      "verdict": "correct",
+      "error_source": null,
+      "source_url": "https://www.vestwell.com/news/vestwell-raises-385-million-to-power-the-future-of-saving",
+      "how_checked": "search_snippet",
+      "note": "$385M Series E (Feb 2026) led by Blue Owl and Sixth Street Growth."
+    },
+    {
+      "group": "random_25b",
+      "sample_fund": null,
+      "snapshot_id": 780,
+      "company": "Elvy",
+      "date": "2026-05",
+      "date_cala_raw": "14 May 2026",
+      "stage": "series a",
+      "amount": "€5.9 million (~$7 million)",
+      "cala_leads": [
+        "daft",
+        "essential"
+      ],
+      "key": "Elvy|2026-05|series a",
+      "query_path": "company_first",
+      "self_query_led_flag": [],
+      "verdict": "correct",
+      "error_source": null,
+      "source_url": "https://techfundingnews.com/swedish-solar-subscription-startup-elvy-lands-e5-9m-as-klarna-veteran-joins-as-chair/",
+      "how_checked": "search_snippet",
+      "note": "EUR 5.9M (14 May 2026) led by Essential Capital and Daft Capital. Series A label unclear in press."
+    },
+    {
+      "group": "random_25b",
+      "sample_fund": null,
+      "snapshot_id": 3759,
+      "company": "Unitree Robotics",
+      "date": "2025-06",
+      "date_cala_raw": "Jun 2025",
+      "stage": "series c",
+      "amount": "~$97M",
+      "cala_leads": [
+        "alibaba",
+        "ant group",
+        "china mobile",
+        "geely",
+        "jinqiu",
+        "tencent"
+      ],
+      "key": "Unitree Robotics|2025-06|series c",
+      "query_path": "investor_first",
+      "self_query_led_flag": [
+        {
+          "tencent_led": "Co-lead (consortium)"
+        }
+      ],
+      "verdict": "correct",
+      "error_source": null,
+      "source_url": "https://www.therobotreport.com/unitree-becomes-a-legged-robot-unicorn-with-series-c-funding/",
+      "how_checked": "search_snippet",
+      "note": "Series C closed Jun 2025, jointly led by China Mobile, Tencent, Jinqiu, Alibaba, Ant Group, Geely. Robot Report also names HongShan among leads (unverified). Amount ~$97M unconfirmed; Preqin says ~CNY 700M."
+    },
+    {
+      "group": "random_25b",
+      "sample_fund": null,
+      "snapshot_id": 4304,
+      "company": "MITO AI",
+      "date": "2026-01",
+      "date_cala_raw": "~29 January 2026 / Jan 29, 2026 / 2026",
+      "stage": "pre-seed",
+      "amount": "$4.5M",
+      "cala_leads": [
+        "lightspeed"
+      ],
+      "key": "MITO AI|2026-01|pre-seed",
+      "query_path": "investor_first",
+      "self_query_led_flag": [
+        {
+          "kibo_ventures_led": "No"
+        },
+        {
+          "kfund_led": "Not confirmed"
+        },
+        {
+          "k_fund_led": "No"
+        }
+      ],
+      "verdict": "correct",
+      "error_source": null,
+      "source_url": "https://www.businesswire.com/news/home/20260129635715/en/",
+      "how_checked": "search_snippet",
+      "note": "$4.5M pre-seed 29 Jan 2026 led by Lightspeed. Parser artifacts in participants: 'k' and 'kfund' (same fund K Fund, two keys) and 'sequoia a16z scouts'."
+    },
+    {
+      "group": "random_25b",
+      "sample_fund": null,
+      "snapshot_id": 1041,
+      "company": "Gilion",
+      "date": "2024-04",
+      "date_cala_raw": "10 April 2024 / Apr 2024 / April 2024 / 10 April 2024",
+      "stage": "seed",
+      "amount": "€10 million",
+      "cala_leads": [
+        "annika falkengren"
+      ],
+      "key": "Gilion|2024-04|seed",
+      "query_path": "both",
+      "self_query_led_flag": [
+        {
+          "jacob_de_geer_led": "No"
+        },
+        {
+          "hjalmar_led": false
+        },
+        {
+          "timo_led": false
+        }
+      ],
+      "verdict": "unverifiable",
+      "error_source": "cala",
+      "source_url": "https://tech.eu/2024/04/10/gilion-raises/",
+      "how_checked": "fetched",
+      "note": "EUR 10M equity round (10 Apr 2024). tech.eu names no lead; Annika Falkengren is listed as an EXISTING backer, the CEO and others as new. Cala's lead 'Annika Falkengren' is unsupported, likely wrong. Snapshot also has 4 overlapping Gilion 2021/2022 rows (ids 1039, 1040, 2890, 5099, 5129) with junk lead 'creandum leading the larger seed'."
+    },
+    {
+      "group": "random_25b",
+      "sample_fund": null,
+      "snapshot_id": 481,
+      "company": "New Dawn Bio",
+      "date": "2025-07",
+      "date_cala_raw": "~July 2025",
+      "stage": "n/a",
+      "amount": null,
+      "cala_leads": [
+        "the biomimicry institute"
+      ],
+      "key": "New Dawn Bio|2025-07|None",
+      "query_path": "company_first",
+      "self_query_led_flag": [],
+      "verdict": "partly",
+      "error_source": "pipeline",
+      "source_url": "https://biomimicry.org/the-biomimicry-institute-announced-the-2025-ray-of-hope-accelerator-cohort/",
+      "how_checked": "search_snippet",
+      "note": "Cala type 'Support program / accelerator': New Dawn Bio joined the Biomimicry Institute's 2025 Ray of Hope accelerator cohort (Jul 2025). Not a led funding round; amount None. Same issue as Stilta/YC in lane A, still not filtered."
+    },
+    {
+      "group": "random_25b",
+      "sample_fund": null,
+      "snapshot_id": 4644,
+      "company": "AutogenAI",
+      "date": "2023-07",
+      "date_cala_raw": "Jul 2023",
+      "stage": "series a",
+      "amount": "$22.3M",
+      "cala_leads": [
+        "blossom"
+      ],
+      "key": "AutogenAI|2023-07|series a",
+      "query_path": "investor_first",
+      "self_query_led_flag": [
+        {
+          "blossom_led": true
+        }
+      ],
+      "verdict": "correct",
+      "error_source": null,
+      "source_url": "https://tech.eu/2023/07/26/autogenai-22-3-million-blosson-capital/",
+      "how_checked": "search_snippet",
+      "note": "$22.3M Series A Jul 2023 led by Blossom Capital."
+    },
+    {
+      "group": "random_25b",
+      "sample_fund": null,
+      "snapshot_id": 763,
+      "company": "Camphouse",
+      "date": "2026-06",
+      "date_cala_raw": "June 11, 2026 / Jun 9-17, 2026",
+      "stage": "series a",
+      "amount": "€5 million (~$5.76M)",
+      "cala_leads": [
+        "no new lead disclosed"
+      ],
+      "key": "Camphouse|2026-06|series a",
+      "query_path": "both",
+      "self_query_led_flag": [
+        {
+          "j12_ventures_led": "No"
+        }
+      ],
+      "verdict": "wrong",
+      "error_source": "pipeline",
+      "source_url": "https://mondovisione.com/media-and-resources/news/camphouse-secures-series-a-funding-bringing-total-capital-to-17-million-to-fue-2026611/",
+      "how_checked": "search_snippet",
+      "note": "Cala row is honest: 'No new lead disclosed (existing investors)'. NOT_A_NAME regex in app/merge.py does not match 'no new lead', so 'no new lead disclosed' became a lead key and the round counts as led. Same round also stored twice (ids 763 and 4973)."
+    },
+    {
+      "group": "random_25b",
+      "sample_fund": null,
+      "snapshot_id": 1697,
+      "company": "The Exploration Company",
+      "date": "2024-11",
+      "date_cala_raw": "Nov 2024 / Nov 18, 2024 / Nov 2024 / Nov 2024",
+      "stage": "series b",
+      "amount": "~€150M (~$160M)",
+      "cala_leads": [
+        "balderton",
+        "plural",
+        "plural platform"
+      ],
+      "key": "The Exploration Company|2024-11|series b",
+      "query_path": "investor_first",
+      "self_query_led_flag": [
+        {
+          "eqt_ventures_led": false
+        },
+        {
+          "plural_led": "Yes (co-led)"
+        },
+        {
+          "index_ventures_led": "No"
+        },
+        {
+          "bayern_kapital_led": "No"
+        }
+      ],
+      "verdict": "correct",
+      "error_source": "pipeline",
+      "source_url": "https://www.munich-startup.de/en/131153/e150-million-successful-series-b-for-the-exploration-company/",
+      "how_checked": "search_snippet",
+      "note": "Series B (18 Nov 2024) co-led by Balderton and Plural: correct. But leads list holds 'plural' AND 'plural platform' for the same fund, so the round shows 3 co-leads."
+    },
+    {
+      "group": "random_25b",
+      "sample_fund": null,
+      "snapshot_id": 1701,
+      "company": "Sennos",
+      "date": "2025-04",
+      "date_cala_raw": "Apr 2025",
+      "stage": "series a",
+      "amount": "$15M",
+      "cala_leads": [
+        "eqt"
+      ],
+      "key": "Sennos|2025-04|series a",
+      "query_path": "investor_first",
+      "self_query_led_flag": [
+        {
+          "eqt_ventures_led": "Yes"
+        }
+      ],
+      "verdict": "wrong",
+      "error_source": "cala",
+      "source_url": "https://pulse2.com/sennos-15-million-raised-to-transform-the-fermentation-industry",
+      "how_checked": "fetched",
+      "note": "Source (29 Apr 2025): 'The funding round was led by TomEnterprise, founded by Thomas von Koch (former CEO of EQT) and Jan Stahlberg.' EQT Ventures is not mentioned. Cala row came from the EQT Ventures query and answered eqt_ventures_led='Yes'. The live app lists Sennos under EQT Ventures rounds_led."
+    },
+    {
+      "group": "random_25b",
+      "sample_fund": null,
+      "snapshot_id": 4675,
+      "company": "LegalPlace",
+      "date": "2026-05",
+      "date_cala_raw": "May 2026",
+      "stage": "series c",
+      "amount": "$82M",
+      "cala_leads": [
+        "eurazeo"
+      ],
+      "key": "LegalPlace|2026-05|series c",
+      "query_path": "investor_first",
+      "self_query_led_flag": [
+        {
+          "eurazeo_led": "Yes"
+        }
+      ],
+      "verdict": "partly",
+      "error_source": "cala",
+      "source_url": "https://siecledigital.fr/2026/05/06/legalplace-officialise-le-rachat-de-son-concurrent-legalstart-apres-une-levee-de-70-millions-deuros/",
+      "how_checked": "fetched",
+      "note": "EUR 70M raise (5 May 2026) 'menee par XAnge, Eurazeo et Move Capital Fund I'. Cala names only Eurazeo (row from the Eurazeo query, eurazeo_led='Yes'). Series C label not confirmed."
+    },
+    {
+      "group": "random_25b",
+      "sample_fund": null,
+      "snapshot_id": 2814,
+      "company": "Formance",
+      "date": "2025-01",
+      "date_cala_raw": "29 Jan 2025",
+      "stage": "series a",
+      "amount": "$21M",
+      "cala_leads": [
+        "paypal",
+        "portage"
+      ],
+      "key": "Formance|2025-01|series a",
+      "query_path": "investor_first",
+      "self_query_led_flag": [
+        {
+          "hoxton_led": "No"
+        }
+      ],
+      "verdict": "correct",
+      "error_source": null,
+      "source_url": "https://portageinvest.com/blog/formance-secures-21-million-in-series-a-funding-co-led-by-paypal-ventures-and-portage-ventures-to-expand-its-open-source-financial-infrastructure/",
+      "how_checked": "search_snippet",
+      "note": "$21M Series A (29 Jan 2025) co-led by PayPal Ventures and Portage."
+    },
+    {
+      "group": "random_25b",
+      "sample_fund": null,
+      "snapshot_id": 3867,
+      "company": "FinMaq",
+      "date": "2026-10",
+      "date_cala_raw": "27 Oct 2026",
+      "stage": "series a",
+      "amount": "$6.5M",
+      "cala_leads": [
+        "accion"
+      ],
+      "key": "FinMaq|2026-10|series a",
+      "query_path": "investor_first",
+      "self_query_led_flag": [
+        {
+          "mundi_ventures_led": false
+        }
+      ],
+      "verdict": "correct",
+      "error_source": null,
+      "source_url": "https://www.fintechfutures.com/venture-capital-funding/icymi-fintech-funding-round-up-predicate-finmaq-crisscross-and-more",
+      "how_checked": "search_snippet",
+      "note": "$6.5M Series A (late Oct 2026) led by Accion; Mundi, ALIVE, 30N participated."
+    },
+    {
+      "group": "random_25b",
+      "sample_fund": null,
+      "snapshot_id": 4968,
+      "company": "Mediatool",
+      "date": "2023-10",
+      "date_cala_raw": "20 Oct 2023",
+      "stage": "series a",
+      "amount": "~$7.4M (€7M / SEK 90M)",
+      "cala_leads": [
+        "eequity",
+        "fairpoint"
+      ],
+      "key": "Mediatool|2023-10|series a",
+      "query_path": "investor_first",
+      "self_query_led_flag": [
+        {
+          "fairpoint_capital_led": "Yes (co-lead)"
+        }
+      ],
+      "verdict": "unverifiable",
+      "error_source": "pipeline",
+      "source_url": "https://tech.eu/2023/10/20/mediatool-us-expansion-7-million-raise",
+      "how_checked": "fetched",
+      "note": "tech.eu: 'Two new investors, Fairpoint Capital and eEquity, joined' - no lead named (Cala says co-leads). DUPLICATE: Mediatool was renamed Camphouse; the same Oct 2023 round is also id 762 'Camphouse' with the same two leads, so eEquity and Fairpoint each get this lead counted twice. Lane A rated id 762 unverifiable too."
+    },
+    {
+      "group": "random_25b",
+      "sample_fund": null,
+      "snapshot_id": 3728,
+      "company": "Cycle",
+      "date": "2023-02",
+      "date_cala_raw": "Feb 2023",
+      "stage": "seed",
+      "amount": "~$3.9M",
+      "cala_leads": [
+        "hummingbird"
+      ],
+      "key": "Cycle|2023-02|seed",
+      "query_path": "investor_first",
+      "self_query_led_flag": [
+        {
+          "hb_led": "Yes"
+        }
+      ],
+      "verdict": "wrong",
+      "error_source": "cala",
+      "source_url": "https://tech.eu/2023/02/27/backed-by-an-all-star-cast-product-management-platform-cycle-dons-the-green-jersey-in-6-million-round",
+      "how_checked": "fetched",
+      "note": "Source: 'Cycle's $6 million seed round was led by Boldstart'; Hummingbird Ventures is a participant. Cala says Hummingbird led, ~$3.9M, France (Cycle is Brussels-based). Row came from the Hummingbird query (hb_led='Yes'). Live app lists Cycle under Hummingbird rounds_led."
+    },
+    {
+      "group": "random_25b",
+      "sample_fund": null,
+      "snapshot_id": 1544,
+      "company": "Packfleet",
+      "date": "2024-03",
+      "date_cala_raw": "Mar 11, 2024",
+      "stage": "series a",
+      "amount": "~$10M",
+      "cala_leads": [
+        "general catalyst",
+        "voyager"
+      ],
+      "key": "Packfleet|2024-03|series a",
+      "query_path": "investor_first",
+      "self_query_led_flag": [
+        {
+          "creandum_led": "No"
+        }
+      ],
+      "verdict": "correct",
+      "error_source": null,
+      "source_url": "https://retailtechinnovationhub.com/home/2024/3/12/packfleet-bags-10-million-in-series-a-funding-co-led-by-general-catalyst-and-voyager-ventures",
+      "how_checked": "search_snippet",
+      "note": "~$10M Series A (Mar 2024) co-led by General Catalyst and Voyager; Creandum, Entree, Founder Collective participated."
+    }
+  ]
+}

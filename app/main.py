@@ -1,4 +1,8 @@
-"""Lead Check web app: FastAPI serving the API and the static page from one origin, behind a passcode gate."""
+"""Recount web app: FastAPI serving the API and the static page from one origin.
+
+An optional passcode gate exists (RELAY_GATE=on with RELAY_DEMO_PASSCODE). It is off by default, so the demo is
+open; every visitor still gets one signed session cookie so the live Cala lookup caps work per visitor.
+"""
 from __future__ import annotations
 
 import json
@@ -8,6 +12,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
 from typing import Optional
 
@@ -19,14 +24,16 @@ import time
 import auth
 import gemini
 import live
-from engine import (STAGE_LABEL, STAGES, Snapshot, competitor_coverage, conflicts, discover, fund_profile, lead_comes_back,
-                    record, tie, timing)
+from engine import (REGIONS, STAGE_LABEL, STAGES, Snapshot, competitor_coverage, conflicts, discover, fund_portfolio,
+                    fund_profile, lead_comes_back, record, tie, timing)
+from dispute import dispute
 from merge import Builder, canon
-from parse import parse_list
+from parse import FIRST_NAMES, FUNDISH, line_keys, parse_list
 
 HERE = Path(__file__).parent
 STATIC = HERE / "static"
-app = FastAPI(title="Lead Check", docs_url=None, redoc_url=None, openapi_url=None)
+app = FastAPI(title="Recount", docs_url=None, redoc_url=None, openapi_url=None)
+app.add_middleware(GZipMiddleware, minimum_size=2000)  # check responses carry each fund's portfolio
 SNAP: Optional[Snapshot] = None
 SNAP_DICT: Optional[dict] = None
 _merge_lock = threading.Lock()
@@ -90,17 +97,48 @@ OPEN_PATHS = {"/llms.txt", "/login", "/api/login", "/static/styles.css", "/stati
 
 
 MAX_BODY = 64 * 1024
-_check_hits: dict[str, list] = {}
+_hits: dict[str, list] = {}
+_hits_lock = threading.Lock()
+# Per IP limits are loose: a venue's Wi-Fi puts many visitors behind one address. Fresh cookies are free, so the
+# cookie limit alone does not hold; the IP limit and the daily caps do.
+CHECKS_PER_MIN = {"session": 40, "ip": 150}
+DISCOVER_PER_MIN = {"session": 30, "ip": 120}
+GEMINI_DAY_CAP = int(os.environ.get("GEMINI_DAY_CAP", "1500"))  # Gemini calls per day, all visitors
+GEMINI_IP_DAY_CAP = int(os.environ.get("GEMINI_IP_DAY_CAP", "200"))
+PAID_IP_DAY_CAP = int(os.environ.get("LIVE_IP_DAY_CAP", "30"))  # live Cala calls per IP per day (live.DAY_CAP still holds)
 
 
-def _too_many_checks(session: str, per_min: int = 40) -> bool:
+def _over(bucket: str, key: str, limit: int, window_s: float, cost: int = 1) -> bool:
+    """Sliding-window counter in memory. Counts the attempt only when it is allowed."""
     now = time.time()
-    hits = [t for t in _check_hits.get(session, []) if now - t < 60]
-    hits.append(now)
-    _check_hits[session] = hits
-    if len(_check_hits) > 5000:
-        _check_hits.clear()
-    return len(hits) > per_min
+    with _hits_lock:
+        k = f"{bucket}:{key}"
+        hits = [t for t in _hits.get(k, []) if now - t < window_s]
+        over = len(hits) + cost > limit
+        if not over:
+            hits.extend([now] * cost)
+        _hits[k] = hits
+        if len(_hits) > 20000:  # bound memory if someone sprays cookies: drop per-minute session counters only,
+            for stale in [x for x in _hits if x.split(":", 1)[0].endswith("-s")]:  # never the daily caps
+                del _hits[stale]
+        return over
+
+
+def _too_many(request: Request, bucket: str, per_min: dict) -> bool:
+    ip = auth.client_ip(request)
+    sess = _session(request)
+    if sess == "anon":  # no cookie: one shared 'anon' bucket would let one script lock out every cookieless visitor
+        sess = "anon-" + ip
+    return _over(bucket + "-ip", ip, per_min["ip"], 60) or _over(bucket + "-s", sess, per_min["session"], 60)
+
+
+def _gemini_allowed(request: Request) -> bool:
+    return (not _over("gemini-ip", auth.client_ip(request), GEMINI_IP_DAY_CAP, 86400)
+            and not _over("gemini-all", "all", GEMINI_DAY_CAP, 86400))
+
+
+def _paid_allowed(request: Request, calls: int) -> bool:
+    return not _over("paid-ip", auth.client_ip(request), PAID_IP_DAY_CAP, 86400, cost=calls)
 
 
 @app.middleware("http")
@@ -183,13 +221,41 @@ def meta():
             "validation": VALIDATION}
 
 
+_PROOF: dict = {}
+
+
+@app.get("/api/proof")
+def proof():
+    """The first-run recount strip: two funds from the sample list, counted live from the snapshot, never hardcoded.
+
+    Voima Ventures leads nearly every round it is in; FJ Labs mostly follows. Each round is one dot, so only the
+    fields a dot and its hover card need are sent.
+    """
+    s = snap()
+    if _PROOF.get("version") == s.version:
+        return _PROOF["body"]
+    funds = []
+    for name in ("Voima Ventures", "FJ Labs"):
+        key = s.match_fund(name)
+        if not key:
+            continue
+        p = fund_profile(s, key, "seed", 3.0)
+        keep = ("id", "company", "date", "t", "stage", "amount_eur_m", "leads")
+        funds.append({k: p[k] for k in ("key", "name", "verdict", "verdict_label", "led", "known", "unknown", "disputed")}
+                     | {"rounds_led": [{k: x[k] for k in keep} for x in p["rounds_led"]],
+                        "rounds_joined": [{k: x[k] for k in keep} for x in p["rounds_joined"]]})
+    body = {"stage": STAGE_LABEL["seed"], "target_eur_m": 3, "funds": funds}
+    _PROOF.update(version=s.version, body=body)
+    return body
+
+
 @app.get("/api/suggest")
 def suggest(q: str = ""):
     return snap().suggest(q[:60])
 
 
 class Check(BaseModel):
-    funds_text: str = Field(default="", max_length=8000)
+    funds_text: str = Field(default="", max_length=32000)  # parse_list reads 8,000 and reports the rest as skipped
     stage: str = "seed"
     target_eur_m: Optional[float] = Field(default=None, ge=0, le=5000)
     investors: list[str] = Field(default_factory=list, max_length=12)
@@ -198,32 +264,73 @@ class Check(BaseModel):
     competitors: list[str] = Field(default_factory=list, max_length=3)
 
 
+# lines with a saved Gemini answer (the sample's messy line) stay on the Gemini path, so the sample shows that step
+SAVED_LINES = frozenset(line for lines in gemini.SAVED for line in lines)
+
+
+def _resolve(s: Snapshot, name: str) -> Optional[str]:
+    """The fund key a name stands for, with the parser's variants (URL host, 'Fund IV', 'GP Oy', typos)."""
+    keys = line_keys(s, name)
+    return keys[0] if len(keys) == 1 else s.match_fund(name)
+
+
+THIN_TOTAL = 8  # a fund with this many rounds in our data is never sent to a paid lookup
+
+
+def _flat(text: str) -> str:
+    return re.sub(r"[^a-z0-9]", "", text.lower())
+
+
+def _is_person(name: str) -> bool:
+    """'Johan Brenner', 'Mikko Kuusi': a first name and a surname, no fund word."""
+    words = re.sub(r"[^\w\s]", " ", name.lower()).split()
+    return (2 <= len(words) <= 4 and words[0] in FIRST_NAMES and not any(w in FUNDISH for w in words)
+            and all(w.isalpha() for w in words))
+
+
+def _lookup_ok(name: str, pasted: str) -> bool:
+    """A paid Cala lookup is offered only for a fund-shaped name that the founder literally pasted."""
+    if not live.clean_name(name) or re.search(r"[<>]|https?:|www\.|\.(com|vc|fi|se|io|co|eu|net)\b", name, re.I):
+        return False
+    if _is_person(name) or len(_flat(name)) < 3:
+        return False
+    clean = [ln for ln in pasted.splitlines() if not re.search(r"[<>]", ln)]  # never a name lifted out of markup
+    return any(_flat(name) in _flat(ln) or name.lower() in ln.lower() for ln in clean)
+
+
 @app.post("/api/check")
 def check(body: Check, request: Request):
-    if _too_many_checks(_session(request)):
+    if _too_many(request, "check", CHECKS_PER_MIN):
         raise HTTPException(429, "Too many checks in a minute. Wait a moment.")
     s = snap()
     stage = body.stage if body.stage in STAGES else "seed"
-    parsed = parse_list(s, body.funds_text)
+    parsed = parse_list(s, body.funds_text, defer=SAVED_LINES)
     read_by_gemini = None
     lookup_candidates: list[str] = []
     if parsed["unmatched"]:
-        g = gemini.extract_funds(parsed["unmatched"])
+        saved = tuple(parsed["unmatched"]) in gemini.SAVED
+        g = (gemini.extract_funds(parsed["unmatched"]) if saved or _gemini_allowed(request)
+             else {"error": "The Gemini budget for today is used up"})
         if "funds" in g:
             seen = {m["key"] for m in parsed["matched"]}
-            found = []
+            shown, in_data = [], []  # names to show, and the ones among them that are in our data
             for name in g["funds"]:
                 if not live.clean_name(name):
                     continue
-                key = s.match_fund(name)
-                if key and key not in seen:
-                    seen.add(key)
-                    parsed["matched"].append({"key": key, "pasted": name, "via": "gemini"})
-                    found.append(name)
-                elif not key and canon(name) and name not in lookup_candidates:
-                    lookup_candidates.append(name)
-            read_by_gemini = {"lines": len(parsed["unmatched"]), "funds": g["funds"], "matched": found,
-                              "model": g["model"], "ms": g["ms"]}
+                key = _resolve(s, name)
+                if key:
+                    if key not in seen:
+                        seen.add(key)
+                        parsed["matched"].append({"key": key, "pasted": name, "via": "gemini"})
+                    shown.append(name)
+                    in_data.append(name)  # also when the parser already matched it: never "not in our data"
+                elif _lookup_ok(name, body.funds_text):
+                    shown.append(name)
+                    if name not in lookup_candidates:
+                        lookup_candidates.append(name)
+            read_by_gemini = {"lines": len(parsed["unmatched"]), "funds": shown, "matched": in_data,
+                              "not_in_data": [n for n in shown if n not in in_data],
+                              "model": g["model"], "ms": g["ms"], "saved": g.get("saved", False)}
             parsed["unmatched"] = []
         else:
             read_by_gemini = {"error": g["error"]}
@@ -234,17 +341,21 @@ def check(body: Check, request: Request):
         prof = fund_profile(s, m["key"], stage, body.target_eur_m)
         rows.append({"pasted": m["pasted"], "via": m.get("via", "parser"), **prof,
                      "conflicts": conflicts(s, m["key"], comps) if comps else [],
-                     "tie": tie(s, m["key"], my_inv, body.company)})
+                     "tie": tie(s, m["key"], my_inv, body.company),
+                     "portfolio": fund_portfolio(s, m["key"])})
     counts = {}
     for r in rows:
         counts[r["verdict"]] = counts.get(r["verdict"], 0) + 1
         # thin data on a fund we never asked Cala about directly: offer a live investor-first query
-        if not r["queried"] and r["known"] < 3 and r["verdict"] != "public" and r["name"] not in lookup_candidates:
+        if (not r["queried"] and r["known"] < 3 and r["total_rounds"] < THIN_TOTAL and r["verdict"] != "public"
+                and r["name"] not in lookup_candidates and not _is_person(r["name"])
+                and (_lookup_ok(r["name"], body.funds_text) or _flat(r["key"]) in _flat(body.funds_text))):
             lookup_candidates.append(r["name"])
     lookup_candidates = lookup_candidates[:12]
     lead_key = s.match_fund(body.lead) if body.lead else None
     return {
         "stage": STAGE_LABEL.get(stage, stage), "rows": rows, "unmatched": parsed["unmatched"], "counts": counts,
+        "skipped_lines": parsed["skipped_lines"],
         "conflict_count": sum(1 for r in rows if any(c["level"] == "led" for c in r["conflicts"])),
         "competitors": competitor_coverage(s, comps) if comps else {},
         "my_investors": [s.name(k) for k in my_inv],
@@ -264,16 +375,22 @@ class Discover(BaseModel):
 
 
 @app.post("/api/discover")
-def discover_funds(body: Discover):
+def discover_funds(body: Discover, request: Request):
+    if _too_many(request, "discover", DISCOVER_PER_MIN):
+        raise HTTPException(429, "Too many searches in a minute. Wait a moment.")
+    if body.region and body.region not in REGIONS:
+        raise HTTPException(422, "Unknown region.")
     s = snap()
     stage = body.stage if body.stage in STAGES else "seed"
     out = discover(s, stage, body.target_eur_m, body.region)
     my_inv = [k for k in (s.match_fund(x) for x in body.investors if x.strip()) if k]
     comps = [c.strip()[:80] for c in body.competitors if c.strip()][:3]
+    out["funds"] = [f for f in out["funds"] if f["key"] not in my_inv]  # never suggest pitching your own investor
     for f in out["funds"]:
         f["conflicts"] = conflicts(s, f["key"], comps) if comps else []
         f["tie"] = tie(s, f["key"], my_inv, None)
         f["pasted"] = f["name"]
+        f["portfolio"] = fund_portfolio(s, f["key"])
     return out
 
 
@@ -291,8 +408,11 @@ def lookup_start(body: Lookup, request: Request):
     names, seen = [], set()
     for raw in body.names:
         n = live.clean_name(raw)
-        k = canon(n) if n else None
-        if not n or k in seen or k in s.fund_keys:
+        if not n or re.search(r"[<>]|https?:|www\.", n) or _is_person(n):
+            continue
+        k = _resolve(s, n) or canon(n)
+        # already asked investor-first, or plenty of rounds already, also under another spelling ('a16z')
+        if k in seen or k in s.fund_keys or len(s.by_investor.get(k, [])) >= THIN_TOTAL:
             continue
         seen.add(k)
         names.append(n)
@@ -300,7 +420,7 @@ def lookup_start(body: Lookup, request: Request):
         raise HTTPException(400, "These funds are already in our Cala data, or the names are not valid fund names.")
     sess = _session(request)
     b = live.budget(sess)
-    if b["day_left"] < 1 or b["session_left"] < 1:
+    if b["day_left"] < 1 or b["session_left"] < 1 or not _paid_allowed(request, len(names)):
         raise HTTPException(429, "Live Cala lookups for this demo are used up for now.")
     return {**live.start(names, sess, merge_live), "budget": live.budget(sess)}
 
@@ -331,6 +451,8 @@ def get_source(rid: int, request: Request):
     r = s.rounds[rid]
     if r.get("source"):
         return r["source"]
+    if not _paid_allowed(request, 1):
+        raise HTTPException(429, "Live Cala lookups for this demo are used up for now.")
     try:
         res = live.search_round(r, _session(request))
     except RuntimeError:
@@ -339,6 +461,7 @@ def get_source(rid: int, request: Request):
         raise HTTPException(502, f"Cala did not answer ({type(err).__name__}). Try again.")
     src = {**summarize_search(res), "question": live.source_question(r)}
     r["source"] = src
+    r["disputed"] = dispute(r, s.names, set(s.names))  # shown now; lead counts follow on the next rebuild
     if not os.environ.get("RELAY_SNAPSHOT_PATH"):
         try:
             from psycopg.types.json import Jsonb
@@ -350,7 +473,7 @@ def get_source(rid: int, request: Request):
                 conn.commit()
         except Exception as err:
             print(f"persist source failed: {type(err).__name__}")
-    return src
+    return {**src, "disputed": r["disputed"]}
 
 
 @app.post("/api/graph/{rid}")
@@ -364,6 +487,8 @@ def get_graph(rid: int, request: Request):
     r = s.rounds[rid]
     if r.get("graph"):
         return r["graph"]
+    if not _paid_allowed(request, live.GRAPH_CALLS):
+        raise HTTPException(429, "Live Cala lookups for this demo are used up for now.")
     try:
         check = live.graph_round(r, s.entities.get("c:" + r["ckey"]), _session(request))
     except RuntimeError:

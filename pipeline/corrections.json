@@ -1,0 +1,12 @@
+[
+ {
+  "match": {"ckey": "verda", "year": 2026, "month": 4},
+  "not_led": "Equity led by Lifeline Ventures plus debt from Nordic lenders, USD 117m in total. Cala's 'Series A (follow-on)' label does not fit, so it is not counted as a led equity round.",
+  "evidence": "research/accuracy/lifeline-check.md case 10; TNW, Apr 2026"
+ },
+ {
+  "match": {"ckey": "anthropic", "year": 2026, "month": 6, "type": "Series G"},
+  "set": {"month": 2},
+  "evidence": "Anthropic newsroom, 12 Feb 2026: USD 30bn Series G led by GIC and Coatue. The June date made the source query return the Series H. research/disputes-check.md"
+ }
+]

@@ -1,18 +1,23 @@
-"""Lead Check engine: deterministic counting over the merged Cala snapshot. No model is used here.
+"""Recount engine: deterministic counting over the merged Cala snapshot. No model is used here.
 
 Verdict rules (shown verbatim on the Method page):
   Public body or programme : fund is on the hand list.
   Too few rounds           : fewer than 3 rounds with a known lead at your stage or the one next to it (last 48 months).
-  Leads at your stage      : led 2+ rounds at your stage and led / known >= 30%.
+  Leads at your stage      : led 2+ rounds at your stage and led / known >= 50%. The size verdict (rounds like yours,
+                             larger, smaller) needs 5+ led rounds with a known amount; with fewer it says "size unclear".
   Mostly follows           : 5+ known rounds and led / known < 15%.
   No lead since {date}     : it has led before, but not in the last 24 months.
   Mixed                    : everything else.
+Rounds whose own Cala source text names a different lead (dispute.py) are left out of every count and listed apart.
+Accelerator or support programme cheques, share issues by listed companies (PIPE, directed or rights issue) and
+hand-checked non-equity rounds (merge.not_led_reason, pipeline/corrections.json) are not led rounds: counted nowhere.
 """
 from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass, field
 from difflib import get_close_matches
+from pathlib import Path
 
 from merge import canon, company_key
 
@@ -30,6 +35,8 @@ HUBS = {
 CROSSOVERS = {"blackrock", "j p morgan", "jp morgan", "salesforce", "tiger global", "insight", "softbank vision fund",
               "temasek", "gic", "tencent", "fidelity", "t rowe price", "coatue", "dst global"}
 WINDOW_YEARS = 4.0
+LEAD_SHARE = 0.50  # top group: led at least half of the rounds where the lead is named
+MIN_SIZED = 5  # led rounds with a known amount needed before we judge size
 
 
 def norm(s: str) -> str:
@@ -119,7 +126,8 @@ def round_brief(snap: Snapshot, r: dict) -> dict:
             "stage": STAGE_LABEL.get(r["stage"] or "", "Stage not stated"),
             "amount_eur_m": r["amount_eur_m"], "amount_raw": r.get("amount_raw"),
             "n_investors": len(r["leads"]) + len(r["participants"]),
-            "leads": [snap.name(k) for k in r["leads"]], "path": r.get("query_path"), "sourced": bool(r.get("source"))}
+            "leads": [snap.name(k) for k in r["leads"]], "path": r.get("query_path"), "sourced": bool(r.get("source")),
+            "disputed": r.get("disputed"), "not_led": r.get("not_led")}
 
 
 def fund_profile(snap: Snapshot, key: str, stage: str, target_m: float | None) -> dict:
@@ -127,7 +135,7 @@ def fund_profile(snap: Snapshot, key: str, stage: str, target_m: float | None) -
     ids = snap.by_investor.get(key, [])
     since = snap.now_t - WINDOW_YEARS
     band = stage_band(stage)
-    led, joined_known, unknown, led_at_stage = [], [], [], []
+    led, joined_known, unknown, led_at_stage, disputed, not_led = [], [], [], [], [], []
     all_led = []
     first_t: dict[str, float] = {}
     for rid in ids:  # when did this fund first appear in each company?
@@ -137,9 +145,18 @@ def fund_profile(snap: Snapshot, key: str, stage: str, target_m: float | None) -
     for rid in ids:
         r = snap.rounds[rid]
         is_lead = key in r["leads"]
+        in_window = not (r["t"] < since or (band and r["stage"] not in band))
+        if r.get("disputed"):  # its own source names another lead: counted nowhere, shown apart
+            if in_window:
+                disputed.append(r)
+            continue
+        if r.get("not_led"):  # accelerator cheque, listed-company share issue, or a hand-checked non-equity round
+            if in_window:
+                not_led.append(r)
+            continue
         if is_lead:
             all_led.append(r)
-        if r["t"] < since or (band and r["stage"] not in band):
+        if not in_window:
             continue
         if r["t"] > first_t[r["ckey"]] + 0.17 and not is_lead:
             follow_ons.append(r)  # joining its own company's next round says nothing about leading new deals
@@ -164,16 +181,19 @@ def fund_profile(snap: Snapshot, key: str, stage: str, target_m: float | None) -
         lo = sizes[len(sizes) // 4]
         hi = sizes[(3 * len(sizes)) // 4] if len(sizes) > 1 else sizes[0]
         fit = None
-        if target_m:
+        unclear = len(sizes) < MIN_SIZED
+        if target_m and not unclear:
             fit = "fits" if lo * 0.8 <= target_m <= hi * 1.25 else ("larger" if target_m > hi * 1.25 else "smaller")
-        size = {"lo": lo, "hi": hi, "n": len(sizes), "fit": fit, "basis": size_basis}
+        size = {"lo": lo, "hi": hi, "n": len(sizes), "fit": fit, "basis": size_basis, "unclear": unclear}
 
     if snap.is_hub(key):
         verdict = ("public", "Public body or programme")
     elif known < 3:
         verdict = ("few", "Too few rounds")
-    elif len(led_at_stage) >= 2 and ratio >= 0.30:
-        if size and size["fit"] == "fits":
+    elif len(led_at_stage) >= 2 and ratio >= LEAD_SHARE:
+        if target_m and (not size or size["unclear"]):
+            verdict = ("leads", "Leads at your stage, size unclear")
+        elif size and size["fit"] == "fits":
             verdict = ("leads", "Leads rounds like yours")
         elif size and size["fit"] == "larger":
             verdict = ("leads_size", "Leads, but smaller rounds")
@@ -191,13 +211,50 @@ def fund_profile(snap: Snapshot, key: str, stage: str, target_m: float | None) -
     return {
         "key": key, "name": snap.name(key), "verdict": verdict[0], "verdict_label": verdict[1],
         "led": len(led), "known": known, "unknown": len(unknown), "led_at_stage": len(led_at_stage),
-        "follow_ons": len(follow_ons),
+        "follow_ons": len(follow_ons), "disputed": len(disputed), "not_led": len(not_led),
         "size": size, "last_lead": round_brief(snap, last_lead) if last_lead and not snap.is_hub(key) else None,
         "queried": key in snap.fund_keys, "total_rounds": len(ids),
         "rounds_led": [round_brief(snap, r) for r in sorted(led, key=lambda r: -r["t"])],
         "rounds_joined": [round_brief(snap, r) for r in sorted(joined_known, key=lambda r: -r["t"]) if key not in r["leads"]],
         "rounds_unknown": [round_brief(snap, r) for r in sorted(unknown, key=lambda r: -r["t"])],
+        "rounds_disputed": [round_brief(snap, r) for r in sorted(disputed, key=lambda r: -r["t"])],
+        "rounds_not_led": [round_brief(snap, r) for r in sorted(not_led, key=lambda r: -r["t"])],
     }
+
+
+PORTFOLIO_CAP = 300
+_COMMON_FILE = Path(__file__).parent / "common_names.txt"  # built by pipeline/common_names.py
+COMMON_NAMES = frozenset(_COMMON_FILE.read_text().split()) if _COMMON_FILE.exists() else frozenset()
+
+
+def weak_name(ckey: str, common: frozenset = COMMON_NAMES) -> bool:
+    """A short or ordinary-word company name (Junction, Bolt, Well) says little about who works where."""
+    return len(ckey) <= 5 or ckey in common
+
+
+def portfolio(rounds: list[dict], key: str, cap: int = PORTFOLIO_CAP, common: frozenset = COMMON_NAMES) -> list[dict]:
+    """Companies a fund backed, for matching a founder's own network in the browser.
+
+    One entry per company (merge.company_key): the most recent round the fund led there, else the most recent
+    round it joined. Newest first, capped. `weak` marks names a stranger's employer could share by accident.
+    Pure: takes the fund's rounds, so tests need no snapshot.
+    """
+    best: dict[str, dict] = {}
+    for r in rounds:
+        led = key in r["leads"]
+        if not led and key not in r["participants"]:
+            continue
+        ckey = r.get("ckey") or company_key(r["company"])
+        cur = best.get(ckey)
+        if cur is None or (led, r["t"]) > (cur["led"], cur["t"]):
+            best[ckey] = {"company": r["company"], "ckey": ckey, "stage": STAGE_LABEL.get(r.get("stage") or "", "Stage not stated"),
+                          "date": month_label(r), "t": r["t"], "led": led, "rid": r["id"],
+                          "weak": weak_name(ckey, common)}
+    return sorted(best.values(), key=lambda p: -p["t"])[:cap]
+
+
+def fund_portfolio(snap: Snapshot, key: str) -> list[dict]:
+    return portfolio([snap.rounds[i] for i in snap.by_investor.get(key, [])], key)
 
 
 def conflicts(snap: Snapshot, key: str, competitors: list[str]) -> list[dict]:
@@ -255,7 +312,7 @@ def lead_comes_back(snap: Snapshot, lead_key: str) -> dict | None:
         r = snap.rounds[rid]
         if lead_key not in r["leads"]:
             continue
-        rs = [snap.rounds[i] for i in snap.by_company[r["ckey"]]]
+        rs = [snap.rounds[i] for i in snap.by_company[r["ckey"]] if not snap.rounds[i].get("not_led")]
         if not any(s["path"] == "company_first" for x in rs for s in x["sources"]):
             continue
         later = sorted((x for x in rs if x["t"] > r["t"] + 0.17
@@ -318,7 +375,7 @@ def discover(snap: Snapshot, stage: str, target_m: float | None, region: str | N
     lo, hi = (target_m / 2, target_m * 2) if target_m else (None, None)
     matches = []
     for r in snap.rounds:
-        if r["stage"] != stage or r["t"] < since or not r["leads"] or not _country_ok(r.get("country"), region):
+        if r["stage"] != stage or r["t"] < since or not r["leads"] or r.get("disputed") or not _country_ok(r.get("country"), region):
             continue
         if lo is not None and (not r.get("amount_eur_m") or not lo <= r["amount_eur_m"] <= hi):
             continue
@@ -347,6 +404,7 @@ def record(snap: Snapshot, rid: int) -> dict | None:
     return {**round_brief(snap, r), "type": r.get("type"), "country": r.get("country"),
             "participants": [snap.name(k) for k in r["participants"]],
             "sources": [{"path": s["path"], "query": s["query"], "row": s["row"]} for s in r["sources"]],
-            "source": r.get("source"), "graph": r.get("graph"),
+            "source": r.get("source"), "graph": r.get("graph"), "disputed": r.get("disputed"),
+            "named_leads": [snap.name(k) for k in r.get("named_leads", [])],
             "entity_ids": {"company": snap.entities.get("c:" + r["ckey"]),
                            "leads": [{"name": snap.name(k), "id": snap.entities.get("i:" + k)} for k in r["leads"]]}}

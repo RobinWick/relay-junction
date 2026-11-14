@@ -121,8 +121,13 @@ def main() -> None:
         {"test": "In a round with a named lead, the investor with the stronger earlier lead record is the real lead",
          "result": f"{pct(wr['hit'])} vs {pct(wr['random'])} for a random pick from the same cap table "
                    f"(95% CI {pct(wr['ci_low'])} to {pct(wr['ci_high'])})", "n": wr["n"]},
-        {"test": "Predicting the next round's new lead from earlier rounds (top 5)",
-         "result": "1.4%, the same as chance. So Lead Check reports what funds did, not odds.", "n": 140},
+        # from research/prediction/RESULTS.md (harness.py, 558 company-first rounds 2021 to 2026, 8 methods)
+        {"test": "Predicting who leads a company's next round from earlier rounds only, current investors allowed (top 5)",
+         "result": "26 to 27% for the best methods, almost all of it from current investors; "
+                   "the previous round's lead alone leads again in 17%", "n": 558},
+        {"test": "Predicting a new outside fund as the next lead (top 5)",
+         "result": "4 to 5%, against 0.15% for a random pick. Too weak to rank funds by, "
+                   "so Recount reports what funds did, not odds.", "n": 462},
         {"test": "Seed rounds where Cala names the lead",
          "result": pct(cov.get("seed", {}).get("with_lead", 0) / max(1, cov.get("seed", {}).get("total", 1))),
          "n": cov.get("seed", {}).get("total", 0)},
@@ -140,12 +145,21 @@ def main() -> None:
         rnd = [a for a in accuracy if a["group"] == "random_30"]
         smp = [a for a in accuracy if a["group"] == "sample_list"]
         cnt = lambda xs, v: sum(1 for a in xs if a["verdict"] == v)
-        sourced = len(rnd) - cnt(rnd, "unverifiable")
-        rows.insert(1, {"test": "Cala's named lead matches a public source (random rounds, checked by hand on 14 Nov)",
-                        "result": f"{cnt(rnd, 'correct')} of {sourced} rounds where a source names the lead; "
-                                  f"{cnt(rnd, 'partly')} partly right, {cnt(rnd, 'wrong')} wrong (one was our parsing, now fixed); "
-                                  f"{cnt(rnd, 'unverifiable')} had no public source naming a lead",
-                        "n": len(rnd)})
+        pct = lambda a, b: round(100 * a / b) if b else 0
+        # pool the first draw with the two later draws (random.seed(1401)), copied next to accuracy.md
+        later = Path(__file__).resolve().parents[1] / "research" / "accuracy"
+        pooled = list(rnd)
+        for name, key in (("accuracy-2a.json", "rounds"), ("accuracy-2b.json", "rows")):
+            if (later / name).exists():
+                pooled += json.loads((later / name).read_text())[key]
+        sourced = len(pooled) - cnt(pooled, "unverifiable")
+        right_fund = cnt(pooled, "correct") + cnt(pooled, "partly")
+        rows.insert(1, {"test": "Cala's named lead matches a public source (random 2022+ rounds in three draws, checked by hand on 14 Nov)",
+                        "result": f"lead exactly right in {cnt(pooled, 'correct')} of {sourced} rounds where a source names "
+                                  f"the lead ({pct(cnt(pooled, 'correct'), sourced)}%); right lead fund named in {right_fund} "
+                                  f"of {sourced} ({pct(right_fund, sourced)}%); {cnt(pooled, 'wrong')} wrong; "
+                                  f"{cnt(pooled, 'unverifiable')} had no public source naming a lead",
+                        "n": len(pooled)})
         rows.insert(2, {"test": "Most recent led round of each sample Nordic fund, checked by hand",
                         "result": f"{cnt(smp, 'correct')} of {len(smp)} correct; {cnt(smp, 'partly')} right fund but a co-lead missing",
                         "n": len(smp)})
@@ -162,7 +176,8 @@ def main() -> None:
                         "n": g["sample"]})
     out = {"version": snap["version"], "rows": rows, "graph_check": graph, "within_round": wr, "coverage": cov, "lead_comes_back": lcb,
            "accuracy": accuracy,
-           "note": "The prediction test ran on the first 289 companies before the investor-first crawl. The other counted rows are recomputed on every data rebuild; hand checks are dated."}
+           "note": "The two prediction rows come from research/prediction/harness.py (see RESULTS.md) and are not rerun on every "
+                   "rebuild. The other counted rows are recomputed on every data rebuild; hand checks are dated."}
     OUT.write_text(json.dumps(out, indent=1))
     print(json.dumps({"within_round": wr, "lead_comes_back": lcb, "seed": cov.get("seed"), "a": cov.get("series a")}, indent=1))
 
