@@ -583,21 +583,41 @@ class ScoreRun:
     ranked: list[str]              # ckeys, best first
 
 
+@dataclass
+class Prepared:
+    """Weight-independent part of a score run: components with percentiles filled. Built once, ranked many times."""
+    ctx: Context
+    comps: dict[str, dict[str, dict]]
+    cohort: dict[str, tuple]
+    dups: set[str]
+
+
+def prepare(inp: ScoreInputs, as_of_t: float = NOW_T, ctx: Optional[Context] = None) -> Prepared:
+    ctx = ctx or build_context(inp, as_of_t)
+    dups = possible_duplicates(ctx.by_company)
+    comps = {ck: company_components(ctx, ck) for ck in sorted(ctx.by_company)}
+    cohort = {ck: (ck in ctx.full_history, ctx.by_company[ck][-1]["stage"])
+              for ck in comps if ctx.by_company[ck][-1].get("stage")}
+    _fill_percentiles(ctx, comps, cohort)
+    return Prepared(ctx, comps, cohort, dups)
+
+
 def score_all(inp: ScoreInputs, as_of_t: float = NOW_T, weights: Optional[dict[str, float]] = None,
               ctx: Optional[Context] = None, companies: Optional[Iterable[str]] = None) -> ScoreRun:
     """Score every company with an equity round before as_of. Deterministic: same inputs, same output.
 
     weights: an effective weight set (use clamp_weights); defaults to load_weights() renormalised.
     companies: optional subset to return (percentiles are still formed over everyone)."""
-    ctx = ctx or build_context(inp, as_of_t)
+    return rank(prepare(inp, as_of_t, ctx), weights, companies)
+
+
+def rank(prep: Prepared, weights: Optional[dict[str, float]] = None,
+         companies: Optional[Iterable[str]] = None) -> ScoreRun:
+    """Combine prepared components with one weight set, rank, band. Cheap enough to run per request."""
+    ctx, comps, cohort, dups = prep.ctx, prep.comps, prep.cohort, prep.dups
     w = weights if weights is not None else clamp_weights(base=load_weights())
     if abs(sum(w.values()) - 1) > 1e-6:
         raise ValueError("weights must sum to 1; pass them through clamp_weights")
-    dups = possible_duplicates(ctx.by_company)
-    comps = {ck: company_components(ctx, ck) for ck in sorted(ctx.by_company)}
-    cohort = {ck: (ck in ctx.full_history, ctx.by_company[ck][-1]["stage"])
-              for ck in comps if ctx.by_company[ck][-1].get("stage")}
-    _fill_percentiles(ctx, comps, cohort)
 
     rows = {}
     for ck, cc in comps.items():
@@ -637,7 +657,14 @@ def score_all(inp: ScoreInputs, as_of_t: float = NOW_T, weights: Optional[dict[s
         i = j
     for ck, r in rows.items():
         if not r["ranked"]:
-            r.update(rank=None, percentile=None, band="not_enough_data")
+            r.update(rank=None, percentile=None, band="not_enough_data", rank_in_cohort=None, cohort_size=None)
+    by_cohort: dict[tuple, list[str]] = defaultdict(list)
+    for ck in ranked:  # already best first
+        by_cohort[cohort[ck]].append(ck)
+    for members in by_cohort.values():
+        for i, ck in enumerate(members):
+            rows[ck]["rank_in_cohort"] = i + 1
+            rows[ck]["cohort_size"] = len(members)
     if companies is not None:
         keep = set(companies)
         rows = {k: v for k, v in rows.items() if k in keep}

@@ -29,6 +29,7 @@ import live
 import receipt_exits
 import receipt_intro
 import receipt_pace
+import signal_api
 from engine import (REGIONS, STAGE_LABEL, STAGES, Snapshot, competitor_coverage, conflicts, discover, fund_portfolio,
                     fund_profile, lead_comes_back, record, tie, timing)
 from dispute import dispute
@@ -223,6 +224,8 @@ def explore_page():
 app.mount("/static", StaticFiles(directory=STATIC), name="static")
 app.include_router(explore_api.router)
 app.include_router(explore_views.router)
+app.include_router(signal_api.router)
+app.include_router(signal_api.pages)
 
 
 @app.get("/api/meta")
