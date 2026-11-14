@@ -12,7 +12,7 @@ Built at Junction 2026 (Espoo, 13 to 15 November 2026) for Cala's "Make Unicorns
 
 ## Check us in 60 seconds
 
-1. **Open the demo and click "Try a sample"** (or open it with `#demo`). The sample is a seed founder raising EUR 3m, with Lifeline Ventures as lead investor, Lovable as a competitor and 14 pasted lines.
+1. **Open the demo and click "Try a sample"** (or open it with `#demo`). The sample is a seed founder raising EUR 3m, with Lifeline Ventures as an investor, Lovable as a competitor and 14 pasted lines.
 2. **Read the summary line:** "8 of 14 mostly lead Seed rounds, 5 of them at a size like your EUR 3m. 2 lead, but a different size. 2 backed Lovable. You have a way in to 2." The funds sit in three groups: "Pitch first", "Leads, but a different size" and "Mostly follows or sometimes leads". (The last pasted line is messy and goes to Gemini for the fund name. If Gemini is unavailable, that line shows as not recognised and the summary reads 7 of 13, 4 at your size, way in to 1.)
 3. **Click "Try with a sample network".** A made-up file of 9 connections, every match marked "Sample", is matched in your browser: "way in to 2" becomes "way in to 8".
 4. **Open Voima Ventures.** It "Led 13 of 13" rounds with a named lead near your stage, and the pane says 7 more had no named lead. Under "How to get in": your investor Lifeline Ventures and Voima Ventures were both in Reduciner's round of May 2026, with 4 investors in total.

@@ -26,7 +26,7 @@ All numbers come from snapshot `20261114102039` (built 14 November 2026) and `ap
 | Lead record carries signal | In 1,599 past rounds with a named lead, the investor with the stronger earlier lead record was the real lead 50% of the time, vs 36% for a random pick from the same cap table (95% CI 47 to 52%) | `pipeline/validate.py`, output `app/validation.json`, shown on the Method page |
 | The lead comes back | Across 1,489 cases, the lead of a round came back in the company's next round 60% of the time and led it again 17% of the time | `pipeline/validate.py` (`lead_comes_back` in `app/validation.json`); per fund in the app via `app/engine.py` (`lead_comes_back`) |
 | Entity graph agreement | On 60 random rounds the graph had the round 7 times; where it marks `is_lead`, it agrees with our lead 6 of 6 | `pipeline/fetch_graph.py`, `pipeline/validate.py` (`graph_check`) |
-| Sample lead card checked against press | The sample's "Will your lead come back?" card (Lifeline Ventures, 10 rounds in 8 companies) holds on "led 3"; two of its 10 cases are not supported by press, so we do not quote the card as a fact | `research/accuracy/lifeline-check.md` |
+| Sample lead card checked against press | The sample's "Will your lead come back?" card (Lifeline Ventures, 10 rounds in 8 companies) holds on "led 3"; two of its 10 cases are not supported by press, so we do not quote the card as a fact, and the sample no longer marks Lifeline as its lead, so the card does not show there | `research/accuracy/lifeline-check.md` |
 
 ## Way in
 
