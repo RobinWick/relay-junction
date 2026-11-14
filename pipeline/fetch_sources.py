@@ -3,7 +3,7 @@
 Picks the rounds behind the sample list (last leads, led rounds, conflicts, ties, the lead-comes-back examples),
 asks Cala one question per round, and writes data/sources.jsonl. build_snapshot.py attaches the answer,
 the cited passages and their document URLs to the matching round, so the record view shows real sources.
-Usage: python3 fetch_sources.py [budget]
+Usage: python3 fetch_sources.py [budget] [--all-funds]
 """
 from __future__ import annotations
 
@@ -60,11 +60,25 @@ def pick(snap: Snapshot, limit: int) -> list[dict]:
     return out[:limit]
 
 
-def main(budget: int) -> None:
+def pick_all_funds(snap: Snapshot) -> list[dict]:
+    """The last lead of every fund we queried, so any pasted list shows sourced last leads, not only the sample."""
+    out, seen = [], set()
+    for k in sorted(snap.fund_keys):
+        if k not in snap.by_investor:
+            continue
+        ll = fund_profile(snap, k, "seed", 3.0).get("last_lead")
+        if ll and ll["id"] not in seen:
+            seen.add(ll["id"])
+            out.append(snap.rounds[ll["id"]])
+    return out
+
+
+def main(budget: int, all_funds: bool = False) -> None:
     snap = Snapshot.from_dict(json.loads((DATA / "snapshot.json").read_text()))
     out = DATA / "sources.jsonl"
     done = {json.loads(line)["key"] for line in out.open()} if out.exists() else set()
-    todo = [r for r in pick(snap, budget * 2) if round_key(r) not in done][:budget]
+    pool = pick_all_funds(snap) if all_funds else pick(snap, budget * 2)
+    todo = [r for r in pool if round_key(r) not in done][:budget]
     print(f"sources: {len(done)} done, {len(todo)} to ask", flush=True)
     with ThreadPoolExecutor(8) as pool, out.open("a") as fh:
         futs = {pool.submit(cala.post, "/knowledge/search", {"input": question(r)}): r for r in todo}
@@ -83,4 +97,4 @@ def main(budget: int) -> None:
 
 
 if __name__ == "__main__":
-    main(int(sys.argv[1]) if len(sys.argv) > 1 else 60)
+    main(int(sys.argv[1]) if len(sys.argv) > 1 else 60, "--all-funds" in sys.argv)

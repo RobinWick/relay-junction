@@ -335,6 +335,39 @@ def get_source(rid: int, request: Request):
     return src
 
 
+@app.post("/api/graph/{rid}")
+def get_graph(rid: int, request: Request):
+    """Cross-check one round against Cala's entity graph (FundingRound entities with is_lead), cached per round."""
+    from graph import agreement
+    from merge import round_key
+    s = snap()
+    if not 0 <= rid < len(s.rounds):
+        raise HTTPException(404, "No such round.")
+    r = s.rounds[rid]
+    if r.get("graph"):
+        return r["graph"]
+    try:
+        check = live.graph_round(r, s.entities.get("c:" + r["ckey"]), _session(request))
+    except RuntimeError:
+        raise HTTPException(429, "Live Cala lookups for this demo are used up for now.")
+    except Exception as err:
+        raise HTTPException(502, f"Cala did not answer ({type(err).__name__}). Try again.")
+    g = {**check, "agreement": agreement([s.name(k) for k in r["leads"]], check, r["t"])}
+    r["graph"] = g
+    if not os.environ.get("RELAY_SNAPSHOT_PATH"):
+        try:
+            from psycopg.types.json import Jsonb
+            with _db() as conn:
+                conn.execute("create table if not exists round_graph (key text primary key, data jsonb not null, "
+                             "created_at timestamptz default now())")
+                conn.execute("insert into round_graph(key, data) values (%s, %s) on conflict (key) do update set data = excluded.data",
+                             (round_key(r), Jsonb(g)))
+                conn.commit()
+        except Exception as err:
+            print(f"persist graph failed: {type(err).__name__}")
+    return g
+
+
 @app.get("/api/fund/{key}")
 def get_fund(key: str, stage: str = "seed", target: Optional[float] = None):
     s = snap()

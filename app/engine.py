@@ -347,6 +347,6 @@ def record(snap: Snapshot, rid: int) -> dict | None:
     return {**round_brief(snap, r), "type": r.get("type"), "country": r.get("country"),
             "participants": [snap.name(k) for k in r["participants"]],
             "sources": [{"path": s["path"], "query": s["query"], "row": s["row"]} for s in r["sources"]],
-            "source": r.get("source"),
+            "source": r.get("source"), "graph": r.get("graph"),
             "entity_ids": {"company": snap.entities.get("c:" + r["ckey"]),
                            "leads": [{"name": snap.name(k), "id": snap.entities.get("i:" + k)} for k in r["leads"]]}}

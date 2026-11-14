@@ -22,7 +22,7 @@ OPEN_Q = ("List every funding round that {f} invested in, with company name, com
           "round type, amount, lead investor, all participating investors, and whether {f} led the round")
 YEAR_Q = ("Funding rounds {f} invested in during {y}, with company, company country, date, round type, amount, "
           "lead investor, participating investors and whether {f} led")
-DAY_CAP = int(os.environ.get("LIVE_DAY_CAP", "120"))
+DAY_CAP = int(os.environ.get("LIVE_DAY_CAP", "100"))
 SESSION_CAP = int(os.environ.get("LIVE_SESSION_CAP", "15"))
 MIN_INTERVAL_S = 6.2
 SAFE_NAME = re.compile(r"^[\w .,&'+\-]{2,60}$")
@@ -187,3 +187,30 @@ def search_round(r: dict, session: str) -> dict:
                          headers={"X-API-KEY": os.environ["CALA_API_KEY"], "Content-Type": "application/json"})
     resp.raise_for_status()
     return resp.json()
+
+
+ENTITIES = "https://api.cala.ai/v1/entities"
+GRAPH_CALLS = 4  # company (maybe twice after a name search), search, round
+
+
+def graph_round(r: dict, company_id: str | None, session: str) -> dict:
+    """Cross-check one round in Cala's entity graph. Charges the worst case up front; raises RuntimeError on budget."""
+    from graph import check_round
+    if not _spend_session(session, GRAPH_CALLS) or not _charge(GRAPH_CALLS):
+        raise RuntimeError("budget")
+    headers = {"X-API-KEY": os.environ["CALA_API_KEY"], "Content-Type": "application/json"}
+
+    def post(path: str, body: dict) -> dict:
+        _slot()
+        resp = requests.post(f"https://api.cala.ai/v1{path}", json=body, headers=headers, timeout=60)
+        resp.raise_for_status()
+        return resp.json()
+
+    def search(name: str) -> list:
+        _slot()
+        resp = requests.get(ENTITIES, params={"name": name[:100], "entity_types": "Company", "limit": 5},
+                            headers=headers, timeout=60)
+        resp.raise_for_status()
+        return resp.json().get("entities", [])
+
+    return check_round(post, search, company_id, r["company"], r["stage"], r["t"])

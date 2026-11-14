@@ -30,15 +30,16 @@ def live_records() -> list[dict]:
         return [row[0] for row in conn.execute("select data from live_funds order by id")]
 
 
-def db_sources() -> dict:
+def db_table(table: str) -> dict:
+    """key -> data rows of a live-answer table in Aiven (round_sources, round_graph); empty when absent."""
     url = os.environ.get("RELAY_DATABASE_URL")
     if not url:
         return {}
     import psycopg
     with psycopg.connect(url, connect_timeout=20) as conn:
-        if not conn.execute("select to_regclass('round_sources')").fetchone()[0]:
+        if not conn.execute("select to_regclass(%s)", (table,)).fetchone()[0]:
             return {}
-        return {k: v for k, v in conn.execute("select key, data from round_sources")}
+        return {k: v for k, v in conn.execute(f"select key, data from {table}")}
 
 
 def attach_sources(snap: dict) -> int:
@@ -48,12 +49,31 @@ def attach_sources(snap: dict) -> int:
         for line in path.open():
             rec = json.loads(line)
             found[rec["key"]] = {**summarize_search(rec["response"]), "question": rec["question"]}
-    found.update(db_sources())
+    found.update(db_table("round_sources"))
     n = 0
     for r in snap["rounds"]:
         src = found.get(round_key(r))
         if src and (src.get("docs") or src.get("answer")):
             r["source"] = src
+            n += 1
+    return n
+
+
+def attach_graph(snap: dict) -> int:
+    """Cala entity-graph checks (fetch_graph.py) on the rounds they were run for."""
+    path = DATA / "graph.jsonl"
+    found = {}
+    for line in (path.open() if path.exists() else []):
+        rec = json.loads(line)
+        found[rec["key"]] = {**rec["graph"], "agreement": rec["agreement"]}
+    found.update(db_table("round_graph"))
+    from graph import agreement
+    names = snap["investor_names"]
+    n = 0
+    for r in snap["rounds"]:
+        g = found.get(round_key(r))
+        if g:  # recomputed, so rule changes apply to stored answers without new calls
+            r["graph"] = {**g, "agreement": agreement([names.get(k, k) for k in r["leads"]], g, r["t"])}
             n += 1
     return n
 
@@ -70,6 +90,7 @@ def build() -> dict:
         fund_keys.add(canon(rec["name"]))
     snap = b.snapshot(fund_keys)
     snap["stats"]["sourced_rounds"] = attach_sources(snap)
+    snap["stats"]["graph_checked"] = attach_graph(snap)
     return snap
 
 

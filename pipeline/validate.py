@@ -93,6 +93,23 @@ def lead_comes_back(rounds: list[dict]) -> dict:
     return {"cases": cases, "came_back": came, "led_again": led_again}
 
 
+def graph_check() -> dict:
+    """Agreement between our merged lead and Cala's entity graph, on the random sample from fetch_graph.py."""
+    path = DATA / "graph.jsonl"
+    recs = [json.loads(line) for line in path.open()] if path.exists() else []
+    snap = json.loads((DATA / "snapshot.json").read_text())
+    current = {f"{r['ckey']}|{r['year']}|{r['month']}|{r['stage'] or ''}": r["graph"]["agreement"]
+               for r in snap["rounds"] if r.get("graph")}
+    for r in recs:  # use the agreement as recomputed in the snapshot
+        r["agreement"] = current.get(r["key"], r["agreement"])
+    sample = [r for r in recs if r["group"] == "sample"]
+    found = [r for r in sample if r["agreement"] != "not_in_graph"]
+    with_lead = [r for r in found if r["agreement"] in ("agrees", "differs")]
+    return {"sample": len(sample), "found": len(found), "found_with_lead": len(with_lead),
+            "agrees": sum(r["agreement"] == "agrees" for r in with_lead),
+            "differs": [{"company": r["company"], "key": r["key"]} for r in with_lead if r["agreement"] == "differs"][:20]}
+
+
 def main() -> None:
     snap = json.loads((DATA / "snapshot.json").read_text())
     rounds = snap["rounds"]
@@ -135,7 +152,15 @@ def main() -> None:
         accuracy = [{"company": a["company"], "date": a["date"], "stage": a.get("stage"), "cala_leads": a.get("cala_leads"),
                      "verdict": a["verdict"], "source_url": a.get("source_url"), "note": a.get("note", "")[:240],
                      "group": a["group"]} for a in accuracy]
-    out = {"version": snap["version"], "rows": rows, "within_round": wr, "coverage": cov, "lead_comes_back": lcb,
+    graph = graph_check()
+    if graph["sample"]:
+        g = graph
+        rows.insert(1, {"test": "Cala's entity graph (FundingRound entities with is_lead) checked against our merged lead, "
+                                "random rounds with a named lead",
+                        "result": f"round found in the graph for {g['found']} of {g['sample']}; where the graph marks a "
+                                  f"lead, it agrees with ours in {g['agrees']} of {g['found_with_lead']}",
+                        "n": g["sample"]})
+    out = {"version": snap["version"], "rows": rows, "graph_check": graph, "within_round": wr, "coverage": cov, "lead_comes_back": lcb,
            "accuracy": accuracy,
            "note": "The prediction test ran on the first 289 companies before the investor-first crawl. The other counted rows are recomputed on every data rebuild; hand checks are dated."}
     OUT.write_text(json.dumps(out, indent=1))

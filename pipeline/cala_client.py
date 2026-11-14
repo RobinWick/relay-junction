@@ -81,3 +81,31 @@ def post(path: str, body: dict, retries: int = 4) -> dict:
 def query(text: str) -> dict:
     """Structured rows + entities for a Cala QL expression or natural-language question."""
     return post("/knowledge/query", {"input": text})
+
+
+def search(name: str, entity_type: str = "Company", limit: int = 5) -> list[dict]:
+    """GET /v1/entities fuzzy name search, cached like post()."""
+    params = {"name": name[:100], "entity_types": entity_type, "limit": limit}
+    cached = _cache_path("/entities?search", params)
+    if cached.exists():
+        return json.loads(cached.read_text())["response"]
+    global live_calls
+    for attempt in range(4):
+        _reserve_slot()
+        with _lock:
+            live_calls += 1
+        try:
+            resp = requests.get(f"{API}/entities", params=params, headers={"X-API-KEY": _key()}, timeout=60)
+        except (requests.Timeout, requests.ConnectionError):
+            time.sleep(10 * (attempt + 1))
+            continue
+        if resp.status_code == 429 or resp.status_code >= 500:
+            time.sleep(15 * (attempt + 1))
+            continue
+        if resp.status_code != 200:
+            raise RuntimeError(f"Cala entity search -> {resp.status_code}: {resp.text[:300]}")
+        data = resp.json().get("entities", [])
+        CACHE.mkdir(parents=True, exist_ok=True)
+        cached.write_text(json.dumps({"path": "/entities", "body": params, "response": data}, ensure_ascii=False))
+        return data
+    raise RuntimeError("Cala entity search failed after retries")

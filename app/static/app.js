@@ -425,9 +425,17 @@ async function openRecord(e) {
       </dl>
       <h3>Source documents</h3>
       <div id="src-box">${sourceHtml(r.source)}</div>
+      <h3>Cala entity graph</h3>
+      <div id="graph-box">${graphHtml(r.graph)}</div>
       <h3>Provenance</h3>
       ${r.sources.map((s) => `<div class="prov"><span class="pill pill-q">POST /v1/knowledge/query</span> <span class="pill">${esc(s.path.replace("_", "-"))}</span><div class="q">"${esc(s.query)}"</div><details class="raw"><summary>Raw Cala row</summary><pre>${esc(JSON.stringify(s.row, null, 2))}</pre></details></div>`).join("")}
       <p class="faint">Lead Check only counts and merges these Cala rows. Source documents come from Cala's /v1/knowledge/search.</p>`;
+    const askG = $("#ask-graph");
+    if (askG) askG.onclick = async () => {
+      askG.disabled = true; askG.textContent = "Asking Cala /v1/entities";
+      try { const g = await api(`/api/graph/${encodeURIComponent(rid)}`, {method: "POST", body: "{}"}); $("#graph-box").innerHTML = graphHtml(g, true); }
+      catch (err) { askG.disabled = false; askG.textContent = err.message; }
+    };
     const ask = $("#ask-src");
     if (ask) ask.onclick = async () => {
       ask.disabled = true; ask.textContent = "Asking Cala /v1/knowledge/search";
@@ -444,6 +452,33 @@ function entityHtml(r) {
   const one = (name, id) => `<span class="ent">${esc(name)} <code title="${esc(id || "")}">${id ? esc(id.slice(0, 8)) : "no id"}</code></span>`;
   const parts = [one(r.company, e.company), ...(e.leads || []).map((l) => one(l.name, l.id))];
   return parts.join(" ");
+}
+
+const GRAPH_VERDICT = {
+  agrees: ["g-ok", "The graph marks the same lead"],
+  differs: ["g-diff", "The graph marks a different lead"],
+  graph_no_lead: ["g-none", "The graph has this round but marks no lead"],
+};
+
+function graphHtml(g, fresh) {
+  if (!g) return `<p class="muted">Not checked against Cala's entity graph yet.</p><button class="btn" type="button" id="ask-graph">Check in Cala's entity graph</button> <span class="faint">2 to 4 entity calls, a few seconds</span>`;
+  const pill = `<span class="pill pill-q">POST /v1/entities/{id}</span>${fresh ? ` <span class="pill">just now</span>` : ""}`;
+  if (g.status === "no_rounds_in_graph") return `<div class="graph">${pill}<p class="muted">Cala's entity graph has no funding round entities for this company yet. The round above comes from Cala's query layer.</p></div>`;
+  if (g.status === "round_not_in_graph") return `<div class="graph">${pill}<p class="muted">The graph has ${esc((g.graph_rounds || []).join(", ") || "other rounds")} for this company, but not this stage.</p></div>`;
+  const x = g.round || {};
+  if (g.agreement === "not_in_graph") return `<div class="graph">${pill}<p class="muted">The graph's ${esc(x.label || "")} round is dated ${esc(x.announced || x.event_date || "")}, more than a year from this one, so it is a different round.</p></div>`;
+  const [cls, text] = GRAPH_VERDICT[g.agreement] || ["g-none", ""];
+  const amount = x.amount ? `${esc(x.currency || "")} ${fmtM(x.amount / 1e6)}m` : "amount not stated";
+  const srcs = (x.sources || []).filter((d) => /^https:\/\//.test(d.url));
+  return `<div class="graph">${pill}
+    <p class="g-verdict ${cls}">${esc(text)}</p>
+    <dl class="kv">
+      <dt>Round entity</dt><dd>${esc(x.label || "")} <code title="${esc(x.round_id || "")}">${esc((x.round_id || "").slice(0, 8))}</code></dd>
+      <dt>Announced</dt><dd>${esc(x.announced || x.event_date || "not stated")} · ${amount}</dd>
+      <dt>is_lead</dt><dd>${x.leads?.length ? x.leads.map((l) => esc(l.name)).join(", ") : `<span class="none">none marked</span>`} <span class="faint">of ${x.n_investors || 0} participants</span></dd>
+    </dl>
+    ${srcs.length ? `<ol class="src-docs">${srcs.map((d) => `<li><a href="${esc(d.url)}" target="_blank" rel="noopener noreferrer">${esc(d.name)}</a> <span class="pill">${esc(d.rank || "")}</span>${d.date ? `<span class="faint"> · ${esc(d.date)}</span>` : ""}</li>`).join("")}</ol>` : ""}
+  </div>`;
 }
 
 function sourceHtml(src, fresh) {
@@ -465,7 +500,7 @@ function renderMethod() {
     <div>
       <section class="panel ai-box"><h2>Where AI is used, and where it is not</h2>
         <p>Verdicts, counts, ties and conflicts are plain counting over Cala round records. The same input always gives the same table, and every number opens the rounds behind it. No language model ranks or judges a fund.</p>
-        <p>Cala answers our questions about funds and companies. Lead Check stores those answers in Postgres, merges rounds seen from both sides, and counts.</p>
+        <p>Cala answers our questions about funds and companies. Lead Check stores those answers in Postgres, merges rounds seen from both sides, and counts. Where Cala's entity graph has the round, the record sheet shows which investor the graph marks as lead, with its ranked sources, so you can see both layers side by side.</p>
       </section>
       <section class="panel"><h2>Verdict rules</h2>
         <p class="muted">Counted over the last four years, at your stage and the stages next to it. A round counts as "known" when Cala names its lead.</p>
@@ -503,7 +538,12 @@ function renderMethod() {
           <dt>Investors</dt><dd class="num">${esc(m.investors ?? "")}</dd>
           <dt>Retrieved</dt><dd class="num">${esc(m.retrieved ?? "")}</dd>
         </dl>
-        <p class="muted">Endpoints: <span class="pill pill-q">/v1/knowledge/query</span> investor-first and company-first.</p>
+        <p class="muted">Endpoints:</p>
+        <ul class="muted endpoints">
+          <li><span class="pill pill-q">/v1/knowledge/query</span> round data, asked investor-first and company-first</li>
+          <li><span class="pill pill-q">/v1/knowledge/search</span> source documents for a round</li>
+          <li><span class="pill pill-q">/v1/entities</span> entity IDs, and the cross-check against Cala's FundingRound graph (is_lead)</li>
+        </ul>
       </section>
       <section class="panel"><h2>Stack</h2>
         <p class="muted">Cala for the data. Aiven Postgres stores the snapshot, the normalised rounds and every live Cala answer. Modal serves this app and runs the live Cala lookups. Gemini only reads pasted lines our parser cannot match.</p>

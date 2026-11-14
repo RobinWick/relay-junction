@@ -1,10 +1,15 @@
 {
- "version": "20261114004654",
+ "version": "20261114013628",
  "rows": [
   {
    "test": "In a round with a named lead, the investor with the stronger earlier lead record is the real lead",
    "result": "50% vs 36% for a random pick from the same cap table (95% CI 47% to 52%)",
    "n": 1598
+  },
+  {
+   "test": "Cala's entity graph (FundingRound entities with is_lead) checked against our merged lead, random rounds with a named lead",
+   "result": "round found in the graph for 7 of 60; where the graph marks a lead, it agrees with ours in 6 of 6",
+   "n": 60
   },
   {
    "test": "Cala's named lead matches a public source (random rounds, checked by hand on 14 Nov)",
@@ -37,6 +42,13 @@
    "n": 1488
   }
  ],
+ "graph_check": {
+  "sample": 60,
+  "found": 7,
+  "found_with_lead": 6,
+  "agrees": 6,
+  "differs": []
+ },
  "within_round": {
   "n": 1598,
   "hit": 0.4952023362536505,

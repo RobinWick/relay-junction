@@ -296,3 +296,8 @@ footer.foot{max-width:1180px;margin:0 auto;padding:0 24px 40px;color:var(--faint
   .print-head{display:block !important}
 }
 .print-head{display:none;margin-bottom:8px}
+
+.g-verdict{font-weight:600;margin:8px 0}
+.g-ok{color:var(--lead)}.g-diff{color:var(--thin)}.g-none{color:var(--muted)}
+.graph code{font-size:11px;color:var(--muted)}
+.endpoints{margin:4px 0 0;padding-left:18px;font-size:13px}.endpoints li{margin:4px 0}
