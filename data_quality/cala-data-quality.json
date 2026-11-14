@@ -1,6 +1,6 @@
 {
  "title": "Cala data-quality notes from Team Wicflow (Junction 2026)",
- "generated": "2026-11-14 01:50 (findings); counts as of snapshot build 14 Nov ~03:00",
+ "generated": "2026-11-14 (query-layer findings 01:50; entity-graph findings 03:40 EET)",
  "context": "Lead Check counts, per fund, how often it led a round. We asked Cala /v1/knowledge/query two ways: company-first (round history of each company) and investor-first (every round fund X invested in and whether X led it). Below is what we had to clean up to count leads reliably, offered as a thank-you. Some drift comes from our own free-form prompts; we flag it because a fixed schema would help every user.",
  "inputs": {
   "histories.jsonl": {
@@ -818,6 +818,40 @@
      "rows": 4
     }
    ]
+  },
+  {
+   "type": "entity_graph_round_coverage",
+   "severity": "high",
+   "description": "We cross-checked 60 random rounds that /v1/knowledge/query returned with a named lead (2019 onward, mostly European) against the FundingRound entities in the graph, following your field guide (company -> outgoing PARTICIPATES_IN_FUNDING_ROUND role ISSUER -> FundingRound -> incoming PARTICIPATES_IN_FUNDING_ROUND with is_lead). The graph had a matching round (same stage label, within a year) for 7 of 60. For 51 of 60 the company entity had no FundingRound edges at all. Recent Nordic seed rounds behind our demo were mostly absent (25 of 30 not found).",
+   "examples": [
+    "Sono (seed, Jun 2026): company entity has no rounds",
+    "Aventix (pre-seed, Sep 2026): no rounds",
+    "Metaktik: graph has only a Pre-Seed round, not the 2026 seed"
+   ]
+  },
+  {
+   "type": "entity_graph_lead_agreement",
+   "severity": "positive",
+   "description": "Where the graph has the round and marks is_lead, it agreed with the lead from the query layer in 6 of 6 sample rounds (VOI Series A: Balderton; Anyfin Series C: Northzone; Parafin Series B: GIC; and others). Ranked sources (FILING / PRIMARY / PRESS) made each check easy to verify."
+  },
+  {
+   "type": "entity_graph_merged_rounds",
+   "severity": "medium",
+   "description": "Some FundingRound entities seem to merge several rounds. Lovable's SERIES_B entity (announced 2025-12-18, USD 425m) marks 6 investors as is_lead: Menlo Ventures, CapitalG, Accel, Creandum, byFounders and Hummingbird. Accel led the Series A, Creandum the 2025 seed and byFounders/Hummingbird the 2024 pre-seed. Lovable has only SERIES_B and SERIES_C as round entities. TesterArmy's SEED entity also marks 5 leads of 32 participants.",
+   "examples": [
+    "Lovable SERIES_B 2e9302fb-fc6c-574e-99d7-745034c3397f",
+    "TesterArmy SEED 6f3fa8f6"
+   ]
+  },
+  {
+   "type": "entity_graph_split_entities",
+   "severity": "medium",
+   "description": "One fund appears as several entities, and the funding-round edges sit on only one of them. 'Creandum' resolves to 6 entities (Creandum Kommanditbolag, Creandum Fund, Creandum, Creandum Advisor LLP, Creandum Advisor AB, Creandum III L.P.). The entity id that /v1/knowledge/query returns for Creandum (7d4ebd18, 'Creandum Fund') has no PARTICIPATES_IN_FUNDING_ROUND edges; Creandum Kommanditbolag has 5. Likewise the Lovable id returned by the query layer (a1a12886) has no round edges, while the Company entity found by name search (d6725096) does. A link from query-layer entity ids to the canonical graph entity would let users go from a query answer straight to the graph."
+  },
+  {
+   "type": "entity_graph_label_noise",
+   "severity": "low",
+   "description": "One is_lead participant on a SEED round (Solarock, 2022) is the entity 'Renewable Energy industry', an industry rather than an investor."
   }
  ],
  "note_on_counts": "The example counts in each finding were measured on the snapshot available when the finding was written (about 43 funds asked investor-first). The patterns hold on the larger final snapshot; the live app shows current totals."

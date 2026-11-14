@@ -22,7 +22,7 @@ A seed or Series A founder going to Slush books a dozen 25-minute meetings out o
 - **Find funds that lead rounds like mine.** No list yet? Lead Check finds the funds that led rounds at your stage, within 2x of your target and in your region over the last 30 months, with those rounds linked.
 - **Live Cala lookups.** A fund that is not in the snapshot, or that we only saw from the company side, can be looked up live. Lead Check asks Cala about the fund, merges the answer and shows the new verdict. The ledger shows each query as it runs.
 - **Will your lead come back?** For your current lead: in its other companies, how often it came back in, and led, the next round.
-- **Record view.** Every count opens the rounds behind it. Each round shows the Cala query that returned it, the query path (investor-first, company-first, or both agreeing), the raw Cala row, the Cala entity IDs of the company and its leads, and, where fetched, the documents Cala's `/v1/knowledge/search` cites for that round (cached for the sample rounds, or asked live from the sheet).
+- **Record view.** Every count opens the rounds behind it. Each round shows the Cala query that returned it, the query path (investor-first, company-first, or both agreeing), the raw Cala row, the Cala entity IDs of the company and its leads, and, where fetched, the documents Cala's `/v1/knowledge/search` cites for that round (cached for every queried fund's last lead, or asked live from the sheet), and a cross-check against Cala's entity graph: the matching FundingRound entity, the investors it marks `is_lead` and its ranked sources (`/v1/entities`, as Cala's challenge field guide recommends).
 - **Print my Slush sheet** (one A4 page) and **Copy as CSV**.
 
 ## How Cala is used
