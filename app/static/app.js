@@ -11,7 +11,7 @@ const APP = () => window.APP_NAME || "";
 const reduceMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 const state = {stage: "seed", investors: [], lead: null, competitors: [], meta: null, mode: "list",
-  view: null, req: null, ranked: [], network: null, openIdx: null};
+  view: null, req: null, ranked: [], network: null, openIdx: null, loadSeq: 0, recSeq: 0};
 
 const SAMPLE = [
   "Wed 10:30  Maki.vc  (Table 12)",
@@ -48,12 +48,14 @@ Demo Contact,I,,,Northwind Example Oy,Engineer,30 Aug 2022
 Demo Contact,J,,,Demo Bakery,Owner,12 Dec 2021`;
 
 async function api(path, opts = {}) {
-  const res = await fetch(path, {headers: {"Content-Type": "application/json"}, ...opts});
+  let res;
+  try { res = await fetch(path, {headers: {"Content-Type": "application/json"}, ...opts}); }
+  catch { throw new Error("No connection. Check your network and try again"); }
   if (res.status === 401) { location.href = "/login"; throw new Error("auth"); }
   const body = await res.json().catch(() => ({}));
   if (!res.ok) {
     const d = body.detail;
-    const err = new Error(Array.isArray(d) ? d.map((e) => e.msg).join("; ") : d || body.error || `Request failed (${res.status})`);
+    const err = new Error(Array.isArray(d) ? d.map((e) => e.msg).join("; ") : d || body.error || (res.status >= 500 ? "The server had a problem" : `Request failed (${res.status})`));
     err.status = res.status;
     throw err;
   }
@@ -89,21 +91,29 @@ document.addEventListener("click", (e) => {
   if (a.getAttribute("href") === "/") { setMode("list"); setScreen("paste"); }
   go(a.getAttribute("href"));
 });
-window.addEventListener("popstate", route);
+/* Back with the evidence pane open closes the pane (openPane adds a history entry for it), never the page under it. */
+window.addEventListener("popstate", () => { if ($("#pane-root .pane")) closePane(true); route(); });
 
 /* ---------------- form ---------------- */
+/* The stage picker never comes up empty: these show if /api/meta fails, and match the server's stage keys. */
+const STAGE_FALLBACK = [["pre-seed", "Pre-seed"], ["seed", "Seed"], ["series a", "Series A"], ["series b", "Series B"], ["series c", "Series C"], ["series d", "Series D"]]
+  .map(([key, label]) => ({key, label}));
+function paintStages(stages) {
+  $("#stage-seg").innerHTML = stages.slice(0, 6).map((s) => `<button type="button" data-stage="${esc(s.key)}" aria-pressed="${s.key === state.stage}">${esc(s.label)}</button>`).join("");
+}
 async function init() {
+  const seg = $("#stage-seg");
+  paintStages(STAGE_FALLBACK);
+  seg.addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-stage]"); if (!b) return;
+    setStage(b.dataset.stage);
+  });
   try {
     state.meta = await api("/api/meta");
     const m = state.meta;
     $("#data-chip").innerHTML = `${m.rounds.toLocaleString("en")} funding rounds from Cala, ${m.companies.toLocaleString("en")} companies, retrieved ${esc(m.retrieved)}. <a href="/method">How we count</a>`;
     $("#side-stats").innerHTML = `${m.rounds.toLocaleString("en")} rounds, ${m.funds_queried} funds<br>Retrieved ${esc(m.retrieved)}`;
-    const seg = $("#stage-seg");
-    seg.innerHTML = m.stages.slice(0, 6).map((s) => `<button type="button" data-stage="${esc(s.key)}" aria-pressed="${s.key === state.stage}">${esc(s.label)}</button>`).join("");
-    seg.addEventListener("click", (e) => {
-      const b = e.target.closest("button[data-stage]"); if (!b) return;
-      setStage(b.dataset.stage);
-    });
+    if (m.stages?.length) paintStages(m.stages);
   } catch (err) {
     if (err.message !== "auth") $("#data-chip").textContent = "Could not load the data. Reload the page.";
   }
@@ -158,7 +168,7 @@ function setupChips(kind) {
   const show = (rows) => {
     items = rows;
     if (!rows.length) return hide();
-    sug.innerHTML = rows.map((r, i) => `<button type="button" tabindex="-1" role="option" id="opt-${i}" data-i="${i}" aria-selected="${i === active}"><span>${esc(r.name)}</span><span>${plural(r.rounds, "round", "rounds")}</span></button>`).join("");
+    sug.innerHTML = rows.map((r, i) => `<button type="button" tabindex="-1" role="option" id="opt-${i}" data-i="${i}" aria-selected="${i === active}" aria-label="${esc(r.name)}, ${plural(r.rounds, "round", "rounds")}"><span>${esc(r.name)}</span><span>${plural(r.rounds, "round", "rounds")}</span></button>`).join("");
     sug.classList.remove("hidden"); input.setAttribute("aria-expanded", "true");
     if (active >= 0) input.setAttribute("aria-activedescendant", `opt-${active}`); else input.removeAttribute("aria-activedescendant");
   };
@@ -193,16 +203,25 @@ function setupChips(kind) {
   }
 }
 
+/* Same limits as parse_list on the server: the first 40 funds and the first 8,000 characters are checked. */
+const LINE_LIMIT = 40, TEXT_LIMIT = 8000;
+const pastedLines = (text) => String(text || "").split(/\n|;/).filter((l) => l.trim().length > 1).length;
 function lineCount() {
-  const n = $("#funds").value.split(/\n|;/).filter((l) => l.trim().length > 1).length;
-  $("#line-count").textContent = n ? `${plural(n, "line", "lines")}. Times, tables and notes are ignored.` : "Any format works. Times, tables and notes are ignored.";
+  const v = $("#funds").value, n = pastedLines(v);
+  const over = v.length > TEXT_LIMIT ? `Only the first ${TEXT_LIMIT.toLocaleString("en")} characters are checked: split the list.`
+    : n > LINE_LIMIT ? `Only the first ${LINE_LIMIT} funds are checked: split the list.` : "";
+  const el = $("#line-count");
+  el.classList.toggle("over", !!over);
+  el.textContent = over ? `${plural(n, "line", "lines")}. ${over}` : n ? `${plural(n, "line", "lines")}. Times, tables and notes are ignored.` : "Any format works. Times, tables and notes are ignored.";
 }
 const TARGET_MAX = 5000;
-const targetValue = () => { const t = parseFloat(($("#target").value || "").replace(",", ".")); return isFinite(t) && t > 0 ? t : null; };
-/* Shows an inline hint and returns false when the target raise is out of range. */
+/* "3", "2,5", "EUR 3m" and "€3M" all read as millions. Anything else is not a number. */
+const targetRaw = () => ($("#target").value || "").replace(/eur|€|m\b|\s/gi, "").replace(",", ".");
+const targetValue = () => { const t = Number(targetRaw()); return targetRaw() && isFinite(t) && t > 0 ? t : null; };
+/* Shows an inline hint and returns false when the target raise is out of range or not a number. */
 function targetOk() {
-  const t = targetValue(), bad = t != null && t > TARGET_MAX;
-  $("#target-err").textContent = bad ? `Enter EUR ${TARGET_MAX} million or less.` : "";
+  const t = targetValue(), junk = t == null && targetRaw() !== "", bad = junk || (t != null && t > TARGET_MAX);
+  $("#target-err").textContent = junk ? "Enter a number like 3 or 2.5." : bad ? `Enter EUR ${TARGET_MAX} million or less.` : "";
   $("#target").setAttribute("aria-invalid", String(bad));
   if (bad) $("#target").focus();
   return !bad;
@@ -233,13 +252,15 @@ function isFounderLevel(position) {
 }
 
 function parseCsv(text) {
+  const head = text.split(/\r?\n/).find((l) => /first name/i.test(l)) || "";
+  const sep = (head.match(/;/g) || []).length > (head.match(/,/g) || []).length ? ";" : ",";  // Excel in a Nordic locale saves with ;
   const rows = []; let row = [], f = "", q = false;
   for (let i = 0; i < text.length; i++) {
     const c = text[i];
     if (q) {
       if (c === '"') { if (text[i + 1] === '"') { f += '"'; i++; } else q = false; } else f += c;
     } else if (c === '"' && f === "") q = true;
-    else if (c === ",") { row.push(f); f = ""; }
+    else if (c === sep) { row.push(f); f = ""; }
     else if (c === "\n" || c === "\r") { if (c === "\r" && text[i + 1] === "\n") i++; row.push(f); rows.push(row); row = []; f = ""; }
     else f += c;
   }
@@ -353,12 +374,16 @@ const groupOf = (r) => (r.verdict === "leads" ? "pitch" : r.verdict === "leads_s
 
 /* Way-in strengths: founder at a company it led 5, anyone there 4, anyone at a company it joined 3,
    your investor in a small round with it 2, a same-name match on a short or ordinary-word company 1. */
+/* A contact who works at one of the founder's competitors is never a way in. */
+const competitorKeys = () => new Set((state.req?.competitors || []).map(companyKey).filter(Boolean));
 function networkMatches(r) {
   const net = state.network;
   if (!net) return [];
-  const out = [];
+  const out = [], rivals = competitorKeys();
   for (const p of r.portfolio || []) {
+    if (rivals.has(p.ckey)) continue;
     for (const person of net.byKey.get(p.ckey) || []) {
+      if (rivals.has(person.ckey)) continue;
       out.push({person, round: p, weak: !!p.weak, strength: p.weak ? 1 : p.led ? (person.founder ? 5 : 4) : 3});
     }
   }
@@ -446,6 +471,7 @@ async function runFind() {
 }
 
 async function load(fetcher, toView, req) {
+  const seq = ++state.loadSeq;  // a slower, older answer never replaces a newer one
   closePane();
   setScreen("results");
   const out = $("#results");
@@ -454,7 +480,9 @@ async function load(fetcher, toView, req) {
   window.scrollTo(0, 0);
   $("#go").disabled = true;
   try {
-    const view = toView(await fetcher());
+    const data = await fetcher();
+    if (seq !== state.loadSeq) return;
+    const view = toView(data);
     counted.clear();
     state.view = view;
     state.req = req;
@@ -463,11 +491,14 @@ async function load(fetcher, toView, req) {
     renderResults();
     $("#results h1")?.focus();
   } catch (err) {
+    if (seq !== state.loadSeq) return;
     const retry = !err.status || err.status >= 500 || err.status === 429;
     if (err.message !== "auth") out.innerHTML = `<div class="alert" role="alert"><h3>Could not check the list</h3>${esc(err.message)}.${retry ? " Try again in a moment." : " Change it and check again."}</div><div class="after"><button class="btn line" type="button" data-edit>Back to the list</button></div>`;
   } finally {
-    $("#go").disabled = false;
-    out.setAttribute("aria-busy", "false");
+    if (seq === state.loadSeq) {
+      $("#go").disabled = false;
+      out.setAttribute("aria-busy", "false");
+    }
   }
 }
 
@@ -751,7 +782,8 @@ function summaryLine(d, ranked, req) {
   const fits = ranked.filter((r) => r.group === "pitch" && r.size?.fit === "fits").length;
   const parts = [`<b class="acc">${by("pitch")} of ${n}</b> mostly lead ${esc(d.stage)} rounds${req.target_eur_m ? `, ${fits} of them at a size like your EUR ${fmtM(req.target_eur_m)}m` : ""}`];
   if (by("size")) parts.push(`<b>${by("size")}</b> ${by("size") === 1 ? "leads" : "lead"}, but a different size`);
-  if (conf) parts.push(`<b class="wrn">${conf}</b> backed ${esc(req.competitors.join(" or "))}`);
+  const hit = [...new Set(ranked.flatMap((r) => (r.conflicts || []).map((c) => c.competitor)))];
+  if (conf) parts.push(`<b class="wrn">${conf}</b> backed ${esc(hit.join(" or "))}`);
   if (askedForPaths()) parts.push(`you have a way in to <b>${ways}</b>`);
   return parts.join(". ").replace(/\. you/, ". You") + ".";
 }
@@ -765,8 +797,11 @@ function roundLine(req) {
 }
 
 /* Without a target raise the size column is not judged, so "Pitch first" only means "leads at your stage". Say so. */
-function notesUnderSummary(req) {
+function notesUnderSummary(req, d) {
   const out = [];
+  /* The server says how many lines it left out; an older server does not, so count the paste here. */
+  const skipped = d.skipped_lines ?? (req.funds_text != null ? Math.max(0, pastedLines(req.funds_text) - LINE_LIMIT) : 0);
+  if (skipped > 0) out.push(`<p class="size-off" role="note">${plural(skipped, "line was", "lines were")} not checked. We check up to ${LINE_LIMIT} funds and ${TEXT_LIMIT.toLocaleString("en")} characters at a time: split the list and check the rest. <button type="button" class="linkbtn" data-edit>Edit the list</button></p>`);
   if (req.sample) out.push(`<p class="sample-line">Sample round: Seed, EUR 3m, Lifeline Ventures as your investor, Lovable as a competitor. <button type="button" class="linkbtn" data-edit>Check your own list</button></p>`);
   else if (!req.target_eur_m) out.push(`<p class="size-off">Size not checked. <button type="button" class="linkbtn" data-edit-target>Add your target raise</button></p>`);
   return out.join("");
@@ -822,7 +857,7 @@ function renderResults() {
       </div>
       <p class="round-line">${roundLine(req)}</p>
       <p class="summary">${summaryLine(d, ranked, req)}</p>
-      ${notesUnderSummary(req)}
+      ${notesUnderSummary(req, d)}
     </div>
     ${ranked.length ? netbarHtml() : ""}
     ${ranked.length ? `<div class="listview${isMap ? " hidden" : ""}" id="listview">${readLine(req, showWay)}<div class="cols" aria-hidden="true"><span>Fund</span><span>Lead record, oldest first</span><span>Round size${req.target_eur_m ? ` vs your ${fmtM(req.target_eur_m)}m` : " it leads"}</span><span class="c-last">Last lead</span>${showWay ? "<span>Way in</span>" : ""}</div>${list}</div>
@@ -901,7 +936,7 @@ function afterHtml(d) {
 function geminiNote(g) {
   if (!g) return "";
   if (g.error) return "";
-  const notFound = g.funds.filter((f) => !g.matched.includes(f));
+  const notFound = g.not_in_data || g.funds.filter((f) => !g.matched.includes(f));
   return `<p class="plain">${plural(g.lines, "line", "lines")} our parser could not read went to ${esc(g.model)}, which only picks out fund names${g.saved ? " (its saved answer for this sample line)" : ""}. ${g.matched.length ? `Found: ${g.matched.map((f) => `<b>${esc(f)}</b>`).join(", ")}.` : "No fund names matched our data."}${notFound.length ? ` Not in our data: ${notFound.map(esc).join(", ")}.` : ""} Every verdict is still counted.</p>`;
 }
 
@@ -941,12 +976,13 @@ async function startLookup(names) {
 }
 
 function copyCsv(rows) {
-  const q = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+  /* A cell starting with = + - @ (or a tab or return) is a formula to a spreadsheet: prefix it with ' */
+  const q = (v) => { let t = String(v ?? ""); if (/^[=+\-@\t\r]/.test(t)) t = `'${t}`; return `"${t.replace(/"/g, '""')}"`; };
   const head = ["Group", "Fund", "Verdict", "Led", "Known rounds", "Lead not named", "Size it leads (EUR m)", "Size vs your raise", "Last lead", "Way in", "Conflict"];
   const lines = [head.map(q).join(",")];
   const fake = sampleNet();
   rows.forEach((r) => lines.push([GROUP_NAME[r.group], r.name, verdictText(r), r.led, r.known, r.unknown,
-    r.size ? `${fmtM(r.size.lo)}-${fmtM(r.size.hi)}` : "", r.size?.fit || "", r.last_lead ? `${r.last_lead.company} ${r.last_lead.date}` : "",
+    r.size ? (r.size.hi !== r.size.lo ? `${fmtM(r.size.lo)} to ${fmtM(r.size.hi)}` : fmtM(r.size.lo)) : "", r.size?.fit || "", r.last_lead ? `${r.last_lead.company} ${r.last_lead.date}` : "",
     fake && wayFromNet(r) ? `SAMPLE, made-up contact: ${r.way.text}` : r.way.text,
     (r.conflicts || []).map((c) => `${c.level} ${c.competitor}`).join("; ")].map(q).join(",")));
   const btn = $("#csv");
@@ -960,6 +996,7 @@ let paneCleanup = null;
 
 function openPane(returnFocus) {
   if ($("#pane-root .pane")) return;
+  if (!history.state?.pane) history.pushState({...(history.state || {}), pane: true}, "");
   const root = $("#pane-root");
   root.innerHTML = `<div class="pane-back" data-close></div><aside class="pane" role="dialog" aria-modal="true" aria-labelledby="pane-h"><div class="ph" id="ph"></div><div class="pb" id="pb"></div></aside>`;
   const bg = [$(".app")];
@@ -1007,10 +1044,15 @@ function onPaneClick(e) {
   }
 }
 
-function closePane() {
+/* fromPop: the browser already left the pane's history entry. Otherwise step back out of it, so Back after a
+   close does not just reopen nothing. */
+function closePane(fromPop) {
+  const open = !!$("#pane-root .pane");
   $("#pane-root").innerHTML = "";
   const c = paneCleanup; paneCleanup = null; c?.();
   state.openIdx = null;
+  state.recSeq++;
+  if (open && !fromPop && history.state?.pane) history.back();
 }
 
 function openFund(i, from) {
@@ -1042,7 +1084,7 @@ function waysHtml(r) {
   }
   if (r.tie) {
     const x = r.tie.round;
-    parts[r.way.strength === 2 ? "unshift" : "push"](`<div class="introcard"><div class="l1">${ICON.link}Ask ${esc(r.tie.investor)}</div><p>Your investor <b>${esc(r.tie.investor)}</b> and ${esc(r.name)} were both in <a href="#" data-rid="${x.id}">${esc(x.company)}</a>'s ${esc(String(x.stage).toLowerCase())} round, ${esc(x.date)}, with ${x.n_investors} investors in total. Ask which partner was on that deal.</p></div>`);
+    parts[r.way.strength === 2 ? "unshift" : "push"](`<div class="introcard"><div class="l1">${ICON.link}Ask ${esc(r.tie.investor)}</div><p>Your investor <b>${esc(r.tie.investor)}</b> and ${esc(r.name)} were both in <a href="#" data-rid="${x.id}">${esc(possessive(x.company))}</a> round, ${esc(x.date)}, with ${x.n_investors} investors in total. Ask which partner was on that deal.</p></div>`);
   }
   if (!parts.length) {
     parts.push(`<div class="okline">${askedForPaths() ? "No one in your network or among your investors connects to this fund yet." : "Add your investors or LinkedIn connections to find a way in."}</div>`);
@@ -1054,6 +1096,7 @@ function showFund(i) {
   const r = state.ranked[i];
   if (!r) return;
   state.openIdx = i;
+  state.recSeq++;  // a round still loading must not replace this fund
   const req = state.req;
   $("#ph").innerHTML = `<span class="muted">${i + 1} of ${state.ranked.length}</span>${closeBtn}`;
   const s1 = r.known
@@ -1096,8 +1139,10 @@ async function openRound(rid) {
   $("#ph").innerHTML = `${fund ? `<button class="back" type="button" data-backfund>${ICON.back}Back to ${esc(fund.name)}</button>` : ""}${closeBtn}`;
   $("#pb").innerHTML = `<h2 id="pane-h">Loading the round</h2><div class="skel"></div>`;
   ($(".pane .back") || $(".pane .x")).focus();
+  const seq = ++state.recSeq;
   try {
     const r = await api(`/api/record/${encodeURIComponent(rid)}`);
+    if (seq !== state.recSeq || !$("#pb")) return;
     $("#pb").innerHTML = `
       <div class="ptitle"><h2 id="pane-h">${esc(r.company)}, ${esc(r.stage)}</h2></div>
       <dl class="kv">
@@ -1128,6 +1173,7 @@ async function openRound(rid) {
       catch (err) { ask.disabled = false; ask.textContent = err.message; }
     };
   } catch (err) {
+    if (seq !== state.recSeq || !$("#pb")) return;
     if (err.message !== "auth") $("#pb").innerHTML = `<h2 id="pane-h">Could not load this round</h2><p role="alert">${esc(err.message)}</p>`;
   }
 }
@@ -1578,7 +1624,8 @@ document.addEventListener("keydown", (e) => { if (e.key === "Escape" && FLOW?.se
 
 /* Every sentence comes from one record: the round your investor shared with the fund, or the fund's round at the
    company your contact works at. */
-const tieLine = (tie, fund) => `${esc(shortFund(tie.investor))} and ${esc(shortFund(fund))} were both in ${esc(roundOf(tie.round.company, tie.round.stage))}, ${esc(tie.round.date)}.`;
+/* A shared round names no stage: Cala's stage label for small co-rounds is often wrong (Reduciner is not a seed). */
+const tieLine = (tie, fund) => `${esc(shortFund(tie.investor))} and ${esc(shortFund(fund))} were both in ${esc(possessive(tie.round.company))} round, ${esc(tie.round.date)}.`;
 const contactLine = (people, round, fund) => `${esc(whoList(people))} ${people.length === 1 ? "works" : "work"} at ${esc(round.company)}${sampleNet() ? " (made-up sample)" : ""}. ${esc(shortFund(fund))} ${round.led ? "led" : "joined, but did not lead,"} its ${esc(stageWord(round.stage) ? `${stageWord(round.stage)} round` : "round")}, ${esc(round.date)}.`;
 const fundRoundLine = (l) => `${esc(shortFund(l.r.name))} ${l.round.led ? "led" : "joined, but did not lead,"} ${esc(roundOf(l.round.company, l.round.stage))}, ${esc(l.round.date)}.`;
 function conflictLine(r) {
