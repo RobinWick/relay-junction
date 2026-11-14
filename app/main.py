@@ -22,6 +22,7 @@ import gemini
 import live
 from engine import (STAGE_LABEL, STAGES, Snapshot, competitor_coverage, conflicts, discover, fund_portfolio, fund_profile,
                     lead_comes_back, record, tie, timing)
+from dispute import dispute
 from merge import Builder, canon
 from parse import parse_list
 
@@ -344,6 +345,7 @@ def get_source(rid: int, request: Request):
         raise HTTPException(502, f"Cala did not answer ({type(err).__name__}). Try again.")
     src = {**summarize_search(res), "question": live.source_question(r)}
     r["source"] = src
+    r["disputed"] = dispute(r, s.names, set(s.names))  # shown now; lead counts follow on the next rebuild
     if not os.environ.get("RELAY_SNAPSHOT_PATH"):
         try:
             from psycopg.types.json import Jsonb
@@ -355,7 +357,7 @@ def get_source(rid: int, request: Request):
                 conn.commit()
         except Exception as err:
             print(f"persist source failed: {type(err).__name__}")
-    return src
+    return {**src, "disputed": r["disputed"]}
 
 
 @app.post("/api/graph/{rid}")

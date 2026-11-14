@@ -44,6 +44,8 @@ def parse_date(raw: str | None) -> tuple[int, int] | None:
 
 
 CURRENCY = re.compile(r"(€|eur|\$|usd|£|gbp|sek|nok|dkk|chf)")
+UNDISCLOSED = re.compile(r"undisclosed|not (?:publicly )?disclosed", re.I)
+VALUATION = re.compile(r"valuation|valued|\bval\.|pre-money|post-money", re.I)
 
 
 def parse_amount_eur(raw: str | None) -> float | None:
@@ -51,10 +53,16 @@ def parse_amount_eur(raw: str | None) -> float | None:
 
     Uses the first amount in the text and the currency written next to that amount.
     A bare number of 1,000 or more is read as whole currency units, not millions.
+    Returns None when the text says the amount is undisclosed, and never reads a valuation as the round size:
+    only text before a valuation phrase counts ('Undisclosed (valuation >$500M)' -> None,
+    'SEK 400 million (Valuation: SEK 5.0 billion)' -> SEK 400m).
     """
-    if not raw:
+    if not raw or UNDISCLOSED.search(str(raw)):
         return None
     s = str(raw).lower()
+    val = VALUATION.search(s)
+    if val:
+        s = s[:val.start()]
     s = re.sub(r"(?<=\d),(?=\d{3}\b)", "", s)
     num = re.search(r"(\d+(?:\.\d+)?)\s*(billion|bn|b\b|million|mn|mio|m\b|k\b|thousand)?", s)
     if not num:

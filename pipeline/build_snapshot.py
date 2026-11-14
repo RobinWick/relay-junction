@@ -13,6 +13,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "app"))
+from dispute import dispute  # noqa: E402
 from merge import Builder, canon, round_key, summarize_search  # noqa: E402
 
 DATA = Path(os.environ.get("RELAY_DATA_DIR", Path(__file__).resolve().parents[2] / "cala" / "data"))
@@ -59,6 +60,20 @@ def attach_sources(snap: dict) -> int:
     return n
 
 
+def flag_disputes(snap: dict) -> int:
+    """Mark rounds whose own cached source text names a different lead; the engine leaves them out of lead counts."""
+    names = snap["investor_names"]
+    known = set(names)
+    n = 0
+    for r in snap["rounds"]:
+        r.pop("disputed", None)
+        d = dispute(r, names, known)
+        if d:
+            r["disputed"] = d
+            n += 1
+    return n
+
+
 def attach_graph(snap: dict) -> int:
     """Cala entity-graph checks (fetch_graph.py) on the rounds they were run for."""
     path = DATA / "graph.jsonl"
@@ -90,6 +105,7 @@ def build() -> dict:
         fund_keys.add(canon(rec["name"]))
     snap = b.snapshot(fund_keys)
     snap["stats"]["sourced_rounds"] = attach_sources(snap)
+    snap["stats"]["disputed_rounds"] = flag_disputes(snap)
     snap["stats"]["graph_checked"] = attach_graph(snap)
     return snap
 
