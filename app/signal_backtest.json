@@ -1313,7 +1313,7 @@
  },
  "verdict": {
   "verdict": "weak",
-  "line": "Signal is a transparent summary of Cala's funding record. Held-out backtest: AUC 0.539 on raising again within 24 months, inside the noise band (0.463 to 0.542). Use it to sort and read, not to predict.",
+  "line": "The 13 part thesis mix scored AUC 0.539 on raising again within 24 months, inside the noise band (0.463 to 0.542). That is why the ranking uses size for stage alone.",
   "gap_vs_size_alone": {
    "next_round_24m": -0.012,
    "graduate_b_plus_36m": 0.003

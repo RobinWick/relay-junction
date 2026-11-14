@@ -127,6 +127,8 @@ def test_default_ranking_is_size_for_stage_only():
         assert row["components"]["size_for_stage"] is not None
         assert row["score"] == round(100 * row["components"]["size_for_stage"])
         assert row["why_short"] and len(row["why_short"]) <= 32 and "pct of" in row["why_short"]
+        # the Stage column falls back to the stage the Why is about, so they never contradict
+        assert row["sized_stage"] and row["sized_stage"].lower() in row["why_short"].lower()
     # weights sent in default mode are validated but never change the ranking
     same = _get("/companies", limit="200", weights={"named_angels": 0.15}).json()
     assert [x["id"] for x in same["rows"]] == [x["id"] for x in d["rows"]]

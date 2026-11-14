@@ -42,7 +42,7 @@
   "Size for stage"
  ],
  "headline": "We tested 35 signals on years the model never saw. 1 held up.",
- "subline": "The one that held is size for stage, the baseline the score already leans on, and only just. Every new signal and the learned model failed after correcting for many tests, stage and rounds on file. The score is unchanged.",
+ "subline": "The one that held is size for stage, and only just. It is now the ranking. Every new signal and the learned model failed after correcting for many tests, stage and rounds on file.",
  "reference": {
   "next_round_24m": {
    "composite": 0.539,
@@ -84,7 +84,7 @@
   {
    "key": "size_for_stage",
    "name": "Size for stage",
-   "family": "Current score",
+   "family": "Thesis mix part",
    "origin": "existing",
    "definition": "Percentile of the last sized round among rounds of the same stage in nearby years.",
    "outcomes": {
@@ -129,7 +129,7 @@
   {
    "key": "syndicate_breadth",
    "name": "Syndicate breadth",
-   "family": "Current score",
+   "family": "Thesis mix part",
    "origin": "existing",
    "definition": "Named non-public investors on the last round, percentile within stage and history depth.",
    "outcomes": {
@@ -180,7 +180,7 @@
   {
    "key": "lead_named",
    "name": "Cala names a lead",
-   "family": "Current score",
+   "family": "Thesis mix part",
    "origin": "existing",
    "definition": "1 when Cala names a lead on the last round, else 0.",
    "outcomes": {
@@ -226,12 +226,12 @@
     }
    },
    "verdict": "Noise",
-   "reason": "Series B+ 0.569 clears the bar (raw p 0.0095, company-block p 0.0278), but fails Holm over 24 tests and adds nothing once stage, size and rounds on file are in (change -0.005 to 0.022). Next round 0.483. Already in the score; weight unchanged."
+   "reason": "Series B+ 0.569 clears the bar (raw p 0.0095, company-block p 0.0278), but fails Holm over 24 tests and adds nothing once stage, size and rounds on file are in (change -0.005 to 0.022). Next round 0.483. Stays in the thesis mix, not in the ranking."
   },
   {
    "key": "acceleration",
    "name": "Acceleration",
-   "family": "Current score",
+   "family": "Thesis mix part",
    "origin": "existing",
    "definition": "log2(previous gap / last gap) between dated raises, needs 3 raises.",
    "outcomes": {
@@ -282,7 +282,7 @@
   {
    "key": "backer_graduation",
    "name": "Backer graduation rate",
-   "family": "Current score",
+   "family": "Thesis mix part",
    "origin": "existing",
    "definition": "Best backer's shrunk rate of early bets that raised again within 24 months, percentile.",
    "outcomes": {
@@ -333,7 +333,7 @@
   {
    "key": "insider_follow_on",
    "name": "Insiders came back",
-   "family": "Current score",
+   "family": "Thesis mix part",
    "origin": "existing",
    "definition": "Share of the previous raise's investors back in the last raise.",
    "outcomes": {
@@ -384,7 +384,7 @@
   {
    "key": "named_angels",
    "name": "Named operator angels",
-   "family": "Current score",
+   "family": "Thesis mix part",
    "origin": "existing",
    "definition": "Person-named backers on the record (name heuristic).",
    "outcomes": {
@@ -435,7 +435,7 @@
   {
    "key": "lead_supply",
    "name": "Next-stage lead supply at home",
-   "family": "Current score",
+   "family": "Thesis mix part",
    "origin": "existing",
    "definition": "Funds that led the next stage in the company's country in the last 36 months, percentile.",
    "outcomes": {
@@ -486,7 +486,7 @@
   {
    "key": "cross_border",
    "name": "Foreign backers",
-   "family": "Current score",
+   "family": "Thesis mix part",
    "origin": "existing",
    "definition": "Share of queried backers whose main market is another country.",
    "outcomes": {
@@ -537,7 +537,7 @@
   {
    "key": "step_up",
    "name": "Step-up on last raise",
-   "family": "Current score",
+   "family": "Thesis mix part",
    "origin": "existing",
    "definition": "Last raise vs previous raise, down rounds floored.",
    "outcomes": {
@@ -588,7 +588,7 @@
   {
    "key": "backer_exits",
    "name": "Backers with exit receipts",
-   "family": "Current score",
+   "family": "Thesis mix part",
    "origin": "existing",
    "definition": "Exit receipts of checked backers, log scaled.",
    "outcomes": {
@@ -639,7 +639,7 @@
   {
    "key": "freshness",
    "name": "On the stage clock",
-   "family": "Current score",
+   "family": "Thesis mix part",
    "origin": "existing",
    "definition": "Months since last raise vs the stage median gap.",
    "outcomes": {
@@ -690,7 +690,7 @@
   {
    "key": "sector_heat",
    "name": "Sector momentum",
-   "family": "Current score",
+   "family": "Thesis mix part",
    "origin": "existing",
    "definition": "Sector rounds in the last 24 months vs the 24 before. Only with a sector query.",
    "outcomes": {

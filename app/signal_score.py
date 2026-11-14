@@ -220,7 +220,8 @@ def short_why(part: dict) -> Optional[str]:
     if k == "insider_follow_on":
         return f"{len(raw.get('came_back') or [])} of {raw.get('of')} insiders came back"
     if k == "named_angels":
-        return f"{len(raw.get('angels') or [])} named angels"
+        n = len(raw.get('angels') or [])
+        return f"{n} named angel{'' if n == 1 else 's'}"
     if k == "lead_supply":
         return fit_words(f"{raw.get('funds')} {stage_name(raw.get('next_stage'))} leads at home")
     if k == "cross_border":
@@ -403,11 +404,11 @@ def company_components(ctx: Context, ck: str) -> dict[str, dict]:
     else:
         r = sized[-1]
         pool = sorted(a for y in (r["year"] - 1, r["year"], r["year"] + 1) for a in ctx.size_pools.get((r["stage"], y), []))
-        label = f"{r['stage']} rounds {r['year'] - 1} to {min(r['year'] + 1, int(t))}"
+        label = f"{stage_name(r['stage'])} rounds {r['year'] - 1} to {min(r['year'] + 1, int(t))}"
         kind = "stage_year"
         if len(pool) < MIN_PEERS:
             pool, kind = ctx.size_recent.get(r["stage"], []), "stage_4y"
-            label = f"{r['stage']} rounds in the 4 years before {int(t)}"
+            label = f"{stage_name(r['stage'])} rounds in the 4 years before {int(t)}"
         peer = {"kind": kind, "label": label, "n": len(pool)}
         if len(pool) < MIN_PEERS:
             out["size_for_stage"] = _comp(False, raw={"amount_eur_m": r["amount_eur_m"], "stage": r["stage"]},

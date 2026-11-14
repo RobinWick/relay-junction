@@ -221,13 +221,13 @@ def verdict(results: dict) -> dict:
         v = "weak"
     s = nx["signal"]
     lines = {
-        "pass": (f"Signal ranks full-history companies at AUC {gr['signal']['auc']} on reaching Series B+ within 36 months "
+        "pass": (f"The thesis mix ranks full-history companies at AUC {gr['signal']['auc']} on reaching Series B+ within 36 months "
                  f"and {s['auc']} on raising again within 24 months (base rate {round(100 * s['base_rate'])}%). "
                  f"Modest lift, measured on held-out years."),
-        "weak": (f"Signal is a transparent summary of Cala's funding record. Held-out backtest: AUC {s['auc']} on raising "
-                 f"again within 24 months, inside the noise band ({s['null_band90'][0]} to {s['null_band90'][1]}). "
-                 f"Use it to sort and read, not to predict."),
-        "fail": f"Signal did not beat chance in our backtest (AUC {s['auc']}). It is shown as a transparent summary only.",
+        "weak": (f"The 13 part thesis mix scored AUC {s['auc']} on raising again within 24 months, inside the noise "
+                 f"band ({s['null_band90'][0]} to {s['null_band90'][1]}). That is why the ranking uses size for stage "
+                 f"alone."),
+        "fail": f"The thesis mix did not beat chance in our backtest (AUC {s['auc']}). It is shown as a transparent summary only.",
     }
     return {"verdict": v, "line": lines[v], "gap_vs_size_alone": {"next_round_24m": r3(gap_next),
                                                                    "graduate_b_plus_36m": r3(gap_grad)}}

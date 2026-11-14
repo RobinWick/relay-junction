@@ -53,8 +53,7 @@ HONESTY = ["Lead accuracy: 74% exact, 89% right fund.", "Cala names no lead in a
            "Weights were chosen after seeing 2018 to 2023; held-out years were seen by the design debate.",
            "Revenue, headcount and valuation are not in Cala data here.",
            "Never read the score as a probability."]
-FALLBACK_LINE = ("Signal is a transparent summary of Cala's funding record. Use it to sort and read, not to "
-                 "predict.")
+FALLBACK_LINE = "Signal is a transparent summary of Cala's funding record. Use it to sort and read."
 HOW = {
     "size_for_stage": "Percentile of the last sized, staged round among rounds of the same stage in year t-1..t+1 "
                       "(4 years before today when under 15 peers).",
@@ -254,6 +253,7 @@ def _company_list_row(st: sd.Store, f: dict, r: dict, fair: bool) -> dict:
         "sector": {"tags": f["sector_tags"], "text_tags": f["sector_text_tags"], "text": f["sector_text"][:1],
                    "source": f["sector_source"]},
         "history_depth": f["history_depth"], "last_stage": f["last_stage"], "last_round": f["last_round"],
+        "sized_stage": next((p["raw"].get("stage") for p in r["components"] if p["key"] == "size_for_stage"), None),
         "total_known_eur_m": f["total_known_eur_m"], "n_rounds": f["n_rounds"],
         "score": r["score"], "score_reason": r.get("score_reason"), "band": r["band"],
         "evidence": {"value": r["evidence"]["value"], "band": r["evidence"]["band"]},

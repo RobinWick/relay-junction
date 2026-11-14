@@ -304,12 +304,7 @@
     const c = m.counts || {};
     const bits = [];
     if (m.as_of) bits.push(`Data as of <b>${esc(m.as_of)}</b>`);
-    if (S.route.view === "companies") {
-      const ranked = isNum(lm.ranked) ? lm.ranked : c.ranked;
-      const unr = isNum(lm.unranked) ? lm.unranked : isNum(c.companies) && isNum(c.ranked) ? c.companies - c.ranked : null;
-      if (isNum(ranked)) bits.push(`ranked <b>${fmtInt(ranked)}</b>`);
-      if (isNum(unr)) bits.push(`not enough data ${fmtInt(unr)}`);
-    } else if (S.route.view === "funds" && isNum(c.funds)) bits.push(`${fmtInt(c.funds_queried)} scored of ${fmtInt(c.funds)} investors`);
+    if (S.route.view === "funds" && isNum(c.funds)) bits.push(`${fmtInt(c.funds_queried)} scored of ${fmtInt(c.funds)} investors`);
     else if (S.route.view === "founders" && isNum(c.founders)) bits.push(`${fmtInt(c.founders_scoreable)} scoreable of ${fmtInt(c.founders)}`);
     return bits.map((b) => `<span>${b}</span>`).join('<span class="sep-dot" aria-hidden="true"></span>');
   }
@@ -333,7 +328,7 @@
           ${v === "companies" ? `<button class="btn btn--primary" type="button" data-act="weights">${ic("sliders")}Weights <span class="kbd">W</span></button>` : ""}
         </div>
       </div>
-      <p class="explainer">${expl}</p>
+      <p class="explainer" id="expl">${explainer(v, expl)}</p>
       <section class="chat" id="chat" aria-label="Ask in your own words"></section>
       <section class="hero" id="hero" aria-label="Overview"></section>
       <div class="work">
@@ -346,9 +341,13 @@
       </div>`;
     renderChat(); renderHero(); renderRail(); renderTable();
   }
+  function explainer(v, expl) {
+    return v === "companies" && S.thesis ? "Ranked on the thesis mix of 13 parts. No measured lift. Click a row for the full story." : expl;
+  }
   function refreshAll() {
     if (S.route.page) return;
     const hm = $("#hmeta"); if (hm) hm.innerHTML = headerMeta();
+    const ex = $("#expl"); if (ex) ex.innerHTML = explainer(S.route.view, TITLES[S.route.view][1]);
     renderChat(); renderHero(); renderRail(); renderTable();
     if (S.layer && S.layer.kind === "weights") renderWeights();
   }
@@ -430,13 +429,13 @@
     const top = scored[0];
     const kind = v === "companies" ? "SIGNAL" : v === "funds" ? "ACTIVITY" : "FOUNDER EVIDENCE";
     let due;
-    if (!S.list[v]) due = `<div class="due-card"><div class="due-card__eyebrow"><span>TOP ${kind} FOR YOUR QUERY</span></div><p class="due-card__empty">${S.listErr[v] ? "No data yet." : "Ranking"}</p></div>`;
-    else if (!top) due = `<div class="due-card"><div class="due-card__eyebrow"><span>TOP ${kind} FOR YOUR QUERY</span><span>${fmtInt(lm.matched || 0)} match</span></div><p class="due-card__empty">${v === "founders" ? "No founder in this set has enough data for a score. Their companies are scored instead." : "Nothing in this set can be ranked. Loosen a filter."}</p></div>`;
+    if (!S.list[v]) due = `<div class="due-card"><div class="due-card__eyebrow"><span>TOP ${kind}</span></div><p class="due-card__empty">${S.listErr[v] ? "No data yet." : "Ranking"}</p></div>`;
+    else if (!top) due = `<div class="due-card"><div class="due-card__eyebrow"><span>TOP ${kind}</span><span>${fmtInt(lm.matched || 0)} match</span></div><p class="due-card__empty">${v === "founders" ? "No founder in this set has enough data for a score. Their companies are scored instead." : "Nothing in this set can be ranked. Loosen a filter."}</p></div>`;
     else {
       const fe = v === "founders" ? (top.founder_evidence || {}) : null;
       const why = v === "companies" ? (top.why_short || "") : v === "funds" ? (top.score_label || "How actively this fund leads, not how well it picks.") : `Documented: ${(fe.facts || []).join(", ")}. Counts facts, not a judgment of the founder.`;
       due = `<div class="due-card">
-        <div class="due-card__eyebrow"><span>TOP ${kind} FOR YOUR QUERY</span><span>${fmtInt(lm.matched != null ? lm.matched : rows.length)} match</span></div>
+        <div class="due-card__eyebrow"><span>TOP ${kind}</span><span>${fmtInt(lm.matched != null ? lm.matched : rows.length)} match</span></div>
         <div class="due-card__big">${fe ? `<span class="due-card__num">${fe.k}</span><span class="due-card__of">of ${fe.of || 4} facts</span>` : `<span class="due-card__num">${top.score}</span><span class="due-card__of">of 100</span>`}</div>
         <a class="due-card__name" href="${entHref(v, top.id)}">${cc(top.country)}<span>${esc(top.name)}</span></a>
         <p class="due-card__why">${esc(noDash(why))}</p>
@@ -475,7 +474,7 @@
     const spokes = [0, 90, 180, 270].map((d) => { const a = (d - 90) * Math.PI / 180; return `<line class="sonar__spoke" x1="0" y1="0" x2="${(Math.cos(a) * R).toFixed(1)}" y2="${(Math.sin(a) * R).toFixed(1)}"/>`; }).join("");
     const labels = (wedges || ["", "", "", ""]).map((t, i) => { const a = ((i * 90 + 45) - 90) * Math.PI / 180; return `<text class="sonar__label" text-anchor="middle" x="${(Math.cos(a) * (R + 12)).toFixed(1)}" y="${(Math.sin(a) * (R + 12) + 3).toFixed(1)}">${t}</text>`; }).join("");
     return `<div class="panel">
-      <div class="panel__head"><h2 class="panel__title">Sonar</h2><span class="panel__meta">${pts.length} · ${wedges ? "by last stage" : "by score"}</span></div>
+      <div class="panel__head"><h2 class="panel__title">Sonar</h2><span class="panel__meta">Top ${pts.length}</span></div>
       <div class="panel__body">
         <div class="sonar"><svg viewBox="-135 -135 270 270" role="img" aria-label="Top ${pts.length} by rank, closer to centre is higher">
           <defs><linearGradient id="sweep-g" x1="0" y1="0" x2="1" y2="0"><stop offset="0" class="sweep-a"/><stop offset="1" class="sweep-b"/></linearGradient></defs>
@@ -508,7 +507,7 @@
       ? `<p class="ranked-on">${S.thesis ? `Ranked on <b>Thesis mix</b> <span class="chip chip--amber">No measured lift</span>` : "Ranked on <b>Size for stage</b>"}</p>`
       : "";
     return `<div class="panel panel--cov">
-      <div class="panel__head"><h2 class="panel__title">${v === "companies" ? "Ranking" : "Coverage"}</h2><span class="panel__meta">data / all</span></div>
+      <div class="panel__head"><h2 class="panel__title">${v === "companies" ? "Ranking" : "Coverage"}</h2></div>
       <div class="panel__body">${head}<ul class="cov-list">${body || `<li class="muted">No filter set.</li>`}</ul></div></div>`;
   }
 
@@ -759,7 +758,7 @@
         const t = (s.tags || []).concat(s.text_tags || []);
         return `<div class="sheet__td">${t.length ? `<span class="chip ${s.source === "text_match" ? "chip--outline" : "chip--grey"}" title="${esc(t.join(", ") + (s.source === "text_match" ? " (text match, not a Cala tag)" : ""))}">${esc(t[0])}</span>` : '<span class="sheet__faint">—</span>'}</div>`;
       }
-      case "stage": return `<div class="sheet__td">${r.last_stage ? esc(stageLabel(r.last_stage)) : '<span class="sheet__faint">No stage</span>'}</div>`;
+      case "stage": return `<div class="sheet__td">${r.last_stage ? esc(stageLabel(r.last_stage)) : r.sized_stage ? `<span title="Last round has no stage; last staged round">${esc(stageLabel(r.sized_stage))}</span>` : '<span class="sheet__faint">—</span>'}</div>`;
       case "date": return `<div class="sheet__td">${lr.date ? dateCell(lr.date, lr.date_precision) : '<span class="sheet__faint">Undated</span>'}</div>`;
       case "size": return `<div class="sheet__td sheet__num">${isNum(lr.amount_eur_m) ? fmtM(lr.amount_eur_m) : '<span class="sheet__faint">Undisclosed</span>'}</div>`;
       case "lead": {
@@ -873,7 +872,7 @@
   }
   function mobileCard(v, r, i) {
     const why = v === "companies" ? r.why_short : v === "funds" ? (r.lead_share && isNum(r.lead_share.of) ? `Led ${r.lead_share.led} of ${r.lead_share.of} lead-known rounds` : "") : r.score_reason;
-    const right = v === "companies" ? [r.last_stage && stageLabel(r.last_stage), r.sector && (r.sector.tags || [])[0]].filter(Boolean).join(" · ") : v === "founders" ? (r.company && r.company.name) || "" : "";
+    const right = v === "companies" ? [stageLabel(r.last_stage || r.sized_stage), r.sector && (r.sector.tags || [])[0]].filter(Boolean).join(" · ") : v === "founders" ? (r.company && r.company.name) || "" : "";
     return `<a class="card" href="${entHref(v, r.id)}">
       <div class="card__top"><span class="card__rank">${r.rank != null ? r.rank : ""}</span>${cc(r.country)}<span class="card__name">${esc(r.name)}</span></div>
       <div class="card__line"><span>${isNum(r.score) ? `<span class="score-badge score-badge--${esc(r.band || "watch")}">${r.score}</span> ${esc(BAND_NAME[r.band] || "")}` : `<span class="nodata">${esc(v === "funds" ? "Seen only as a co-investor" : r.score_reason || "Not enough data")}</span>`}</span><span>${esc(right)}</span></div>
@@ -1095,6 +1094,7 @@
         const disabled = c.tier === "conditional" && !hasSector;
         const b = c.backtest || {};
         const bt = [isNum(b.next_24m_auc) ? `next round AUC ${b.next_24m_auc}` : "", isNum(b.graduation_auc) ? `Series B+ AUC ${b.graduation_auc}` : ""].filter(Boolean).join(" · ");
+        if (!S.thesis) return `<div class="wrow wrow--plain"><span class="wrow__label">${esc(c.label)}</span><span class="wrow__cov">${labChip(c.lab_verdict)}</span></div>`;
         return `<div class="wrow">
           <span class="wrow__label">${esc(c.label)}${isNum(covPct) && covPct < 25 ? '<span class="chip chip--amber">Low coverage</span>' : ""}</span>
           <span class="wrow__val${changed ? " changed" : ""}" title="Effective weight after renormalising">${fmtW(isNum(eff[c.key]) ? eff[c.key] : raw)}</span>
@@ -1110,10 +1110,10 @@
       <div class="drawer__body">
         <label class="toggle thesis-toggle"><input type="checkbox" data-act="thesis"${S.thesis ? " checked" : ""}><span class="toggle__track"></span><span>Thesis mix</span><span class="chip chip--amber">No measured lift</span></label>
         ${presets.length && S.thesis ? `<div class="wsec"><p class="overline">PRESETS</p><div class="seg seg--sm" role="group" aria-label="Presets"><button class="seg__btn" type="button" data-preset="">Default</button>${presets.map((p) => `<button class="seg__btn" type="button" data-preset="${esc(p.id)}" title="${esc(noDash(p.description || ""))}">${esc(p.label)}</button>`).join("")}</div></div>` : ""}
-        <div class="${S.thesis ? "" : "wsec--off"}">${sec("PARTS", ["measured", "thesis"])}${sec("ONLY WITH A SECTOR QUERY", ["conditional"])}</div>
+        <div>${sec("PARTS", ["measured", "thesis"])}${sec("ONLY WITH A SECTOR QUERY", ["conditional"])}</div>
         ${diff.length && S.thesis ? `<div class="wsec"><p class="overline">CHANGED FROM DEFAULT</p>${diff.map((d) => `<div class="mrow"><span>${esc(compLabel(d.key))}${d.by ? ` <span class="faint">by ${esc(d.by)}</span>` : ""}</span><span class="num">${fmtW(d.from)}</span><span class="num">${fmtW(d.to)}</span></div>`).join("")}</div>` : ""}
       </div>
-      <div class="wsum"><span class="num">${lm.rules_hash ? esc(lm.rules_hash) : ""}</span><button class="btn btn--sm" type="button" data-act="wreset">${ic("reset")}Reset</button></div>`;
+      <div class="wsum"><span></span><button class="btn btn--sm" type="button" data-act="wreset">${ic("reset")}Reset</button></div>`;
     paint(host);
   }
   const reloadCompaniesSoon = debounce(() => loadList("companies"), 150);
@@ -1147,21 +1147,19 @@
     const total = isNum(d.total_known_eur_m) ? d.total_known_eur_m : rows.reduce((s, r) => s + (isNum(r.amount_eur_m) ? r.amount_eur_m : 0), 0);
     const meta = [d.country && d.country.name, lastStage && "Last stage " + stageLabel(lastStage), total ? `Raised to date EUR ${fmtM(total)}m (lower bound)` : "", firstYear && "First round " + firstYear,
       v === "founders" && d.title, v === "founders" && d.company && d.company.name].filter(Boolean);
-    const scoreVal = isNum(sc.value) ? sc.value : isNum(d.score) ? d.score : null;
     const band = sc.band || d.band;
     dr.innerHTML = `
       <div class="drawer__head">
         <div class="drawer__tile${rankTxt ? "" : " drawer__tile--none"}" title="${rankTxt ? `Rank ${sc.rank} of ${sc.of}` : "Not ranked"}">${rankTxt || "n/a"}</div>
         <div>
           <h2 class="drawer__name">${esc(d.name)}${band ? `<span class="chip chip--accent"><span class="group-dot group-dot--${esc(band)}"></span>${esc(BAND_NAME[band] || band)}</span>` : ""}${depthChip(d.history_depth)}${(d.flags || []).map(flagChip).join("")}</h2>
-          <div class="drawer__ids">${cc(d.country)}${d.entity_id ? `<span class="idpill" title="Cala entity id">${esc(String(d.entity_id).slice(0, 18))}<button type="button" data-act="copy" data-copy="${esc(d.entity_id)}" aria-label="Copy Cala id">${ic("copy")}</button></span>` : ""}<span class="idpill">${esc(d.id)}</span></div>
+          <div class="drawer__ids">${cc(d.country)}${d.entity_id ? `<span class="idpill" title="Cala entity id">${esc(String(d.entity_id).slice(0, 18))}<button type="button" data-act="copy" data-copy="${esc(d.entity_id)}" aria-label="Copy Cala id">${ic("copy")}</button></span>` : ""}</div>
           <div class="drawer__meta">${meta.map((x) => esc(x)).join('<span class="sep-dot"></span>')}</div>
         </div>
         <div class="drawer__acts"><button class="icon-btn" type="button" data-act="expand" aria-label="${S.layer.full ? "Back to card" : "Expand to full page"}">${ic("expand")}</button><button class="icon-btn" type="button" data-act="close-layer" aria-label="Close">${ic("x")}</button></div>
       </div>
       <div class="drawer__tabs">
         <div class="seg" role="tablist">${tabs.map(([k, l, n]) => `<a class="seg__btn" role="tab" href="${entHref(v, d.id, k)}" aria-selected="${tab === k}"${tab === k ? ' aria-current="page"' : ""}>${l}${isNum(n) ? ` <span class="seg__count">${n}</span>` : ""}</a>`).join("")}<span class="seg__ind" aria-hidden="true"></span></div>
-        <span class="drawer__stamp">${sc.rules_hash ? esc(sc.rules_hash) + " ·" : ""} ${scoreVal != null ? `score ${scoreVal}` : ""} <span class="kbd">Esc</span></span>
       </div>
       <div class="drawer__body" id="dbody">${detailBody(v, d, tab)}</div>`;
     // seg indicator for tabs uses aria-current
@@ -1209,7 +1207,6 @@
       <div class="stackp"><div class="panel"><div class="panel__head"><h3 class="panel__title">Signal</h3><span class="panel__meta">${esc(sc.mode === "thesis" ? "Thesis mix" : "Size for stage")}</span></div><div class="panel__body">
         <div class="bd__big"><span class="bd__num">${isNum(sc.value) ? sc.value : "n/a"}</span><span class="bd__of">of 100${isNum(sc.rank) ? ` · rank ${fmtInt(sc.rank)} of ${fmtInt(sc.of)}` : ""}</span></div>
         <p class="why-full">${esc(noDash(whyFull))}</p>
-        ${size.peer_group && sc.mode !== "thesis" ? `<p class="frow__note">Compared with ${esc(noDash(size.peer_group.label || ""))}${isNum(size.peer_group.n) ? ` (n ${fmtInt(size.peer_group.n)})` : ""}</p>` : ""}
         ${(size.records || []).length && sc.mode !== "thesis" ? `<div class="chips">${size.records.slice(0, 4).map(recChip).join("")}</div>` : ""}
         <p><a class="link" href="${entHref("companies", d.id, "score")}">Full breakdown</a></p>
       </div></div>
@@ -1328,8 +1325,8 @@
     };
     host.innerHTML = `
       <div class="bt-sentence"><span class="overline">IN ONE SENTENCE</span><p>${esc(noDash(verdict.line || ""))}</p>
-        <p class="sub">The ranking uses size for stage only. The composite below is the opt-in thesis mix. Never read the score as a probability.</p>
-        <div class="chat__chips"><span class="chip ${verdict.verdict === "pass" ? "chip--teal" : verdict.verdict === "fail" ? "chip--red" : "chip--amber"}">Verdict: ${esc(verdict.verdict || "n/a")}</span>${nb ? `<span class="chip chip--outline">Noise band ${nb[0]} to ${nb[1]}</span>` : ""}${b.meta && b.meta.snapshot_version ? `<span class="chip chip--mono">snapshot ${esc(b.meta.snapshot_version)}</span>` : ""}${verdict.gap_vs_size_alone ? `<span class="chip chip--grey">vs size alone: next round ${verdict.gap_vs_size_alone.next_round_24m}, Series B+ ${verdict.gap_vs_size_alone.graduate_b_plus_36m}</span>` : ""}</div></div>
+        <p class="sub">Never read the score as a probability.</p>
+        <div class="chat__chips"><span class="chip ${verdict.verdict === "pass" ? "chip--teal" : verdict.verdict === "fail" ? "chip--red" : "chip--amber"}">Verdict: ${esc(verdict.verdict || "n/a")}</span>${nb ? `<span class="chip chip--outline">Noise band ${nb[0]} to ${nb[1]}</span>` : ""}${verdict.gap_vs_size_alone ? `<span class="chip chip--grey">vs size alone: next round ${verdict.gap_vs_size_alone.next_round_24m}, Series B+ ${verdict.gap_vs_size_alone.graduate_b_plus_36m}</span>` : ""}</div></div>
       <div class="tbar bt-tabs"><div class="seg" role="group" aria-label="Outcome">${outcomes.map(([k, l]) => `<button class="seg__btn" type="button" data-bt-outcome="${k}" aria-pressed="${S.btOutcome === k}">${l}</button>`).join("")}</div>
         <div class="seg seg--sm" role="group" aria-label="Split">${splits.map(([k, l]) => `<button class="seg__btn" type="button" data-bt-split="${k}" aria-pressed="${S.btSplit === k}">${l}</button>`).join("")}</div></div>
       ${S.btSplit === "held_out_all_companies_inflated_by_coverage" ? `<div class="ribbon ribbon--amber">${ic("alert")}<span>All companies: inflated by coverage. Companies seen only through investors look like they never raise again. Read the full-history numbers instead.</span></div><div class="sp12"></div>` : ""}
@@ -1386,15 +1383,15 @@
     const d = S.lab, c = d.counts || {}, ref = d.reference || {};
     const fl = [["all", "All", c.tested], ["Kept", "Kept", c.kept], ["Noise", "Noise", c.noise], ["Not testable", "Not testable", c.not_testable]];
     const rows = (d.rows || []).filter((r) => S.labFilter === "all" || r.verdict === S.labFilter);
-    const refChip = (k, l) => ref[k] ? `<span class="chip chip--outline num">${l}: size alone ${f3(ref[k].size_alone)}, current score ${f3(ref[k].composite)}</span>` : "";
+    const refChip = (k, l) => ref[k] ? `<span class="chip chip--outline num">${l}: size alone ${f3(ref[k].size_alone)}, thesis mix ${f3(ref[k].composite)}</span>` : "";
     const verdict = (r) => `<span class="chip ${LAB_CHIP[r.verdict] || "chip--grey"}">${r.verdict === "Kept" ? ic("check") : ""}${esc(r.verdict)}</span>`;
     const name = (r) => `<div class="labn"><b>${esc(noDash(r.name))}</b><span class="labn__fam">${esc(r.family)}</span></div><p class="labn__def">${esc(noDash(r.definition))}</p>`;
     host.innerHTML = `
       <div class="bt-sentence lab-head"><span class="overline">HELD-OUT RESULT</span><p class="lab-head__big">${esc(noDash(d.headline || ""))}</p>
         <p class="sub">${esc(noDash(d.subline || ""))}</p>
         <div class="chat__chips"><span class="chip chip--teal">${fmtInt(c.kept)} kept</span><span class="chip chip--grey">${fmtInt(c.noise)} noise</span><span class="chip chip--hatch">${fmtInt(c.not_testable)} not testable</span>
-          <span class="chip chip--grey">${fmtInt(c.existing)} current parts, ${fmtInt(c.hunt)} new, ${fmtInt(c.models)} learned model</span>
-          ${refChip("next_round_24m", "Next round")}${refChip("graduate_b_plus_36m", "Series B+")}${d.meta && d.meta.snapshot_version ? `<span class="chip chip--mono">snapshot ${esc(d.meta.snapshot_version)}</span>` : ""}</div></div>
+          <span class="chip chip--grey">${fmtInt(c.existing)} thesis parts, ${fmtInt(c.hunt)} new, ${fmtInt(c.models)} learned model</span>
+          ${refChip("next_round_24m", "Next round")}${refChip("graduate_b_plus_36m", "Series B+")}</div></div>
       <div class="tbar bt-tabs"><div class="seg" role="group" aria-label="Verdict">${fl.map(([k, l, n]) => `<button class="seg__btn" type="button" data-lab-f="${esc(k)}" aria-pressed="${S.labFilter === k}">${l} <span class="seg__count">${fmtInt(n || 0)}</span></button>`).join("")}</div></div>
       <div class="tbl-wrap lab-tbl"><table class="tbl"><thead><tr><th>Signal</th>${LAB_OUT.map(([, l]) => `<th>${l}<br><span class="faint">AUC, 90% CI, noise band</span></th>`).join("")}<th>Adds over size<br><span class="faint">change in AUC, 90% CI</span></th><th>Verdict</th></tr></thead>
         <tbody>${rows.map((r) => `<tr class="lab-row lab-row--${r.verdict === "Kept" ? "kept" : "x"}"><td class="lab-sig">${name(r)}<p class="labn__why">${esc(noDash(r.reason))}</p></td>${LAB_OUT.map(([k]) => `<td>${labCell(r.outcomes[k])}</td>`).join("")}<td>${labAdds(r)}</td><td>${verdict(r)}</td></tr>`).join("") || `<tr><td colspan="5" class="faint">Nothing here.</td></tr>`}</tbody></table></div>
