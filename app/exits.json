@@ -4,22 +4,99 @@
  "caveat": "Acquisitions Cala has on file for companies this fund backed. A deal counts if it closed at least 6 years ago, or a source dates the investment 6 or more years before the deal. Deal value is the total price, not the fund's return. No exit found in Cala does not mean no exit.",
  "value_label": "deal value, not return",
  "funds": {
-  "lifeline": {
-   "fund_key": "lifeline",
-   "name": "Lifeline Ventures",
+  "accel": {
+   "fund_key": "accel",
+   "name": "Accel",
    "fund_entities": [
-    "476a73ac-afa2-4713-9f73-188bc7ec0b95"
+    "aee065b7-5ae9-45c7-8c30-457f6d339958"
    ],
-   "portfolio_edges_in_cala": 47,
+   "portfolio_edges_in_cala": 471,
    "companies_checked": [
+    "Avito",
     "Supercell Oy",
-    "Beddit"
+    "Portfolio Companies",
+    "Hopin",
+    "Algolia, Inc.",
+    "Freshworks Inc.",
+    "OMNEA LIMITED",
+    "Deliveroo plc",
+    "KRY",
+    "Dropbox, Inc",
+    "Lovable",
+    "Lynda.com",
+    "UIPATH, INC.",
+    "Aura",
+    "Jet.com",
+    "Swiggy",
+    "Dropbox",
+    "Spotify AB",
+    "UiPath"
    ],
    "receipts": [
     {
+     "company": "Jet.com",
+     "company_entity": "c1b38c7a-8bf9-4014-a6d5-34dcda088f03",
+     "event_entity": "14a88185-ec34-4017-a68a-5d35496edf9f",
+     "event_type": "MNA_COMPLETED",
+     "role": "TARGET",
+     "date": "2016-09-19",
+     "year": 2016,
+     "acquirers": [
+      {
+       "name": "Walmart Inc",
+       "entity": "3611d824-f140-4313-8dbd-e2ce57b5b7fa"
+      }
+     ],
+     "acquirer_known": true,
+     "value": {
+      "status": "disclosed",
+      "amount": 3300000000.0,
+      "currency": "USD",
+      "reported": {
+       "value": 3300000000.0,
+       "units": "USD"
+      },
+      "display": "3.3B USD",
+      "label": "deal value, not return"
+     },
+     "description": "Walmart completed acquisition of Jet.com on Sept 19, 2016 for ~$3.3B ($3B cash + $300M Walmart shares).",
+     "vintage": {
+      "rule": "exit_at_least_6y_ago",
+      "text": "Acquired 2016, so the fund's stake is at least 6 years old."
+     },
+     "sources": [
+      {
+       "name": "Walmart Completes Acquisition of Jet.com, Inc.",
+       "url": "https://corporate.walmart.com/news/2016/09/19/walmart-completes-acquisition-of-jet-com-inc",
+       "date": "2016-09-19",
+       "rank": null
+      },
+      {
+       "name": "www.sec.gov",
+       "url": "https://www.sec.gov/Archives/edgar/data/104169/000010416916000121/exhibit991-9162016.htm",
+       "date": "2026-08-25",
+       "rank": null
+      }
+     ],
+     "fund_link_sources": [
+      {
+       "name": "Associated Speakers",
+       "url": "https://flaia.org/companies/Accel",
+       "date": "2023-05-18",
+       "rank": null
+      },
+      {
+       "name": "Accel Portfolio and Top investments in 2021 | Eqvista",
+       "url": "https://eqvista.com/accel-portfolio-and-top-investments-in-2021",
+       "date": "2021-08-26",
+       "rank": null
+      }
+     ]
+    },
+    {
      "company": "Supercell Oy",
-     "company_entity": "ac911f72-9207-51bc-bda4-2f19b8de34c5",
-     "event_entity": "2557b4ee-fcc9-41f3-801a-b3e556cf38d8",
+     "company_entity": "41f800e3-f6e8-449c-8734-bc62aa046d76",
+     "event_entity": "090cfab0-de5b-4b8e-99fb-d2671b568356",
      "event_type": "MNA_COMPLETED",
      "role": "TARGET",
      "date": "2016-06-21",
@@ -42,7 +119,1820 @@
       "display": "8.6B USD",
       "label": "deal value, not return"
      },
-     "description": "Tencent-led consortium (Halti S.A.) acquired ~81.4% of Supercell Oy from SoftBank for ~$8.6B, valuing the company at ~$10.2B.",
+     "description": "Tencent-led consortium acquired ~84% of Supercell Oy for $8.6B, valuing the company at ~$10.2B. Deal announced June 21, 2016; Supercell retained independent operations in Helsinki.",
+     "vintage": {
+      "rule": "exit_at_least_6y_ago",
+      "text": "Acquired 2016, so the fund's stake is at least 6 years old."
+     },
+     "sources": [
+      {
+       "name": "Tencent to Acquire Majority Stake in Supercell from SoftBank | SoftBank Group Corp.",
+       "url": "https://group.softbank/en/news/press/20160621",
+       "date": "2016-06-21",
+       "rank": null
+      },
+      {
+       "name": "Tencent acquires Supercell for USD 8.6 billion - Avance Attorneys",
+       "url": "https://www.avance.com/cases/tencent-acquires-supercell-for-usd-8-6-billion-2",
+       "date": "2026-06-09",
+       "rank": null
+      },
+      {
+       "name": "en.wikipedia.org",
+       "url": "https://en.wikipedia.org/wiki/Supercell_(company)",
+       "date": "2026-08-25",
+       "rank": null
+      }
+     ],
+     "fund_link_sources": [
+      {
+       "name": "Supercell | Index Ventures",
+       "url": "https://www.indexventures.com/",
+       "date": "2026-06-01",
+       "rank": null
+      },
+      {
+       "name": "atomico.com",
+       "url": "https://atomico.com/",
+       "date": "2026-06-01",
+       "rank": null
+      },
+      {
+       "name": "Accel Partners - Investor Profile",
+       "url": "https://www.startuphub.ai/",
+       "date": "2026-06-01",
+       "rank": null
+      },
+      {
+       "name": "Technology & Data for Venture Capital, Corp Dev, Investment Banks",
+       "url": "https://tracxn.com/d/companies/supercell/__lak_F-Q57qOwPL-Z6ddclnRrM6yPqSHhqgVwKHd10xQ/funding-and-investors",
+       "date": "2026-06-01",
+       "rank": null
+      },
+      {
+       "name": "gamesbeat.com",
+       "url": "https://gamesbeat.com/clash-of-clans-game-studio-supercell-raises-130m-on-valuation-of-770m",
+       "date": "2026-06-01",
+       "rank": null
+      },
+      {
+       "name": "TechCrunch | Startup and Technology News",
+       "url": "https://techcrunch.com/2013/04/17/supercell-round",
+       "date": "2026-06-01",
+       "rank": null
+      }
+     ]
+    },
+    {
+     "company": "Lynda.com",
+     "company_entity": "a3b65893-a042-419d-ae4f-855516e49441",
+     "event_entity": "23ebadbf-b523-4d29-ae66-ddb65b86efd3",
+     "event_type": "MNA_COMPLETED",
+     "role": "TARGET",
+     "date": "2015-05-01",
+     "year": 2015,
+     "acquirers": [
+      {
+       "name": "LINKEDIN CORP",
+       "entity": "df4911ad-98cb-47aa-a28e-449c4ca7c6ed"
+      }
+     ],
+     "acquirer_known": true,
+     "value": {
+      "status": "disclosed",
+      "amount": 1500000000.0,
+      "currency": "USD",
+      "reported": {
+       "value": 1500000000.0,
+       "units": "USD"
+      },
+      "display": "1.5B USD",
+      "label": "deal value, not return"
+     },
+     "description": "LinkedIn acquired Lynda.com for ~$1.5B (~52% cash, ~48% stock), completing the transaction in May 2015. Lynda.com was later renamed LinkedIn Learning in Oct 2017.",
+     "vintage": {
+      "rule": "exit_at_least_6y_ago",
+      "text": "Acquired 2015, so the fund's stake is at least 6 years old."
+     },
+     "sources": [
+      {
+       "name": "en.wikipedia.org",
+       "url": "https://en.wikipedia.org/wiki/LinkedIn_Learning",
+       "date": "2026-08-25",
+       "rank": null
+      },
+      {
+       "name": "LinkedIn To Buy Online Education Site Lynda.com For $1.5 Billion | TechCrunch",
+       "url": "https://techcrunch.com/2015/04/09/linkedin-to-buy-online-education-site-lynda-com-for-1-5-billion",
+       "date": "2015-04-09",
+       "rank": null
+      },
+      {
+       "name": "Tips From Lynda Weinman On How She Built And Sold Lynda.com To LinkedIn For $1.5 Billion",
+       "url": "https://www.forbes.com/sites/kerryadolan/2017/05/18/lynda-weinman-advice-she-sold-lynda-com-to-linkedin-for-1-5-billion-dollars",
+       "date": "2017-05-18",
+       "rank": null
+      }
+     ],
+     "fund_link_sources": [
+      {
+       "name": "en.wikipedia.org",
+       "url": "https://en.wikipedia.org/wiki/Accel_(company)",
+       "date": "2026-08-25",
+       "rank": null
+      },
+      {
+       "name": "Accel Portfolio and Top investments in 2021 | Eqvista",
+       "url": "https://eqvista.com/accel-portfolio-and-top-investments-in-2021",
+       "date": "2021-08-26",
+       "rank": null
+      }
+     ]
+    }
+   ],
+   "undisclosed": [],
+   "excluded": [
+    {
+     "company": "Avito",
+     "reason": "too recent for the 6 year gate"
+    },
+    {
+     "company": "Portfolio Companies",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Hopin",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Algolia, Inc.",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Freshworks Inc.",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "OMNEA LIMITED",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Deliveroo plc",
+     "reason": "too recent for the 6 year gate"
+    },
+    {
+     "company": "KRY",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Dropbox, Inc",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Lovable",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "UIPATH, INC.",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Aura",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Swiggy",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Dropbox",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Spotify AB",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "UiPath",
+     "reason": "no completed acquisition as target in Cala"
+    }
+   ],
+   "note": null,
+   "caveat": "Acquisitions Cala has on file for companies this fund backed. A deal counts if it closed at least 6 years ago, or a source dates the investment 6 or more years before the deal. Deal value is the total price, not the fund's return. No exit found in Cala does not mean no exit."
+  },
+  "atomico": {
+   "fund_key": "atomico",
+   "name": "Atomico",
+   "fund_entities": [
+    "d4640009-5578-485e-9f77-3ab64881cddd"
+   ],
+   "portfolio_edges_in_cala": 75,
+   "companies_checked": [
+    "Trade",
+    "Strise",
+    "Pipedrive",
+    "ABACUM PLANNING S.L. (SOCIEDAD UNIPERSONAL)",
+    "CLEO AI LTD.",
+    "Supercell Oy",
+    "Light",
+    "Aiven",
+    "Klarna Group",
+    "Klarna, Inc.",
+    "Job&Talent",
+    "Hinge Health, Inc.",
+    "Rekki",
+    "KYC Intelligence",
+    "Lime",
+    "Truecaller"
+   ],
+   "receipts": [
+    {
+     "company": "Pipedrive",
+     "company_entity": "1f14d814-0c82-459b-99d5-24caaeb8b9fb",
+     "event_entity": "4eb2ad76-7b3b-4bd5-802e-165c85c0c0a7",
+     "event_type": "MNA_COMPLETED",
+     "role": "TARGET",
+     "date": "2020-11-12",
+     "year": 2020,
+     "acquirers": [
+      {
+       "name": "Vista Equity Partners",
+       "entity": "95f62258-3b42-4a7c-96d0-9adb1912b10b"
+      }
+     ],
+     "acquirer_known": true,
+     "value": {
+      "status": "disclosed",
+      "amount": 1500000000.0,
+      "currency": "USD",
+      "reported": {
+       "value": 1500000000.0,
+       "units": "USD"
+      },
+      "display": "1.5B USD",
+      "label": "deal value, not return"
+     },
+     "description": "Vista Equity Partners acquired a majority stake in Pipedrive on Nov 12, 2020, valuing the Estonian CRM unicorn at $1.5 billion.",
+     "vintage": {
+      "rule": "exit_at_least_6y_ago",
+      "text": "Acquired 2020, so the fund's stake is at least 6 years old."
+     },
+     "sources": [
+      {
+       "name": "Sales CRM Pipedrive takes majority investment from Vista Equity Partners to reach unicorn status | TechCrunch",
+       "url": "https://techcrunch.com/2020/11/12/european-unicorns-are-no-longer-a-pipe-dream",
+       "date": "2020-11-12",
+       "rank": null
+      },
+      {
+       "name": "Sales CRM Pipedrive Announces Majority Investment from Vista Equity Partners",
+       "url": "https://www.prnewswire.com/news-releases/sales-crm-pipedrive-announces-majority-investment-from-vista-equity-partners-301171963.html",
+       "date": "2020-11-12",
+       "rank": null
+      },
+      {
+       "name": "www.channele2e.com",
+       "url": "https://www.channele2e.com/news/vista-equity-buys-crm-software-unicorn-pipedrive",
+       "date": "2026-07-29",
+       "rank": null
+      },
+      {
+       "name": "Vista Equity Partners acquired Pipedrive",
+       "url": "https://www.sorainen.com/deals/vista-equity-partners-acquired-pipedrive",
+       "date": "2021-01-28",
+       "rank": null
+      }
+     ],
+     "fund_link_sources": [
+      {
+       "name": "atomico.com",
+       "url": "https://atomico.com/investments",
+       "date": "2026-08-24",
+       "rank": null
+      }
+     ]
+    },
+    {
+     "company": "Supercell Oy",
+     "company_entity": "41f800e3-f6e8-449c-8734-bc62aa046d76",
+     "event_entity": "090cfab0-de5b-4b8e-99fb-d2671b568356",
+     "event_type": "MNA_COMPLETED",
+     "role": "TARGET",
+     "date": "2016-06-21",
+     "year": 2016,
+     "acquirers": [
+      {
+       "name": "Tencent Holdings Limited",
+       "entity": "1fc75307-e554-529d-8c36-413e88543618"
+      }
+     ],
+     "acquirer_known": true,
+     "value": {
+      "status": "disclosed",
+      "amount": 8600000000.0,
+      "currency": "USD",
+      "reported": {
+       "value": 8600000000.0,
+       "units": "USD"
+      },
+      "display": "8.6B USD",
+      "label": "deal value, not return"
+     },
+     "description": "Tencent-led consortium acquired ~84% of Supercell Oy for $8.6B, valuing the company at ~$10.2B. Deal announced June 21, 2016; Supercell retained independent operations in Helsinki.",
+     "vintage": {
+      "rule": "exit_at_least_6y_ago",
+      "text": "Acquired 2016, so the fund's stake is at least 6 years old."
+     },
+     "sources": [
+      {
+       "name": "Tencent to Acquire Majority Stake in Supercell from SoftBank | SoftBank Group Corp.",
+       "url": "https://group.softbank/en/news/press/20160621",
+       "date": "2016-06-21",
+       "rank": null
+      },
+      {
+       "name": "Tencent acquires Supercell for USD 8.6 billion - Avance Attorneys",
+       "url": "https://www.avance.com/cases/tencent-acquires-supercell-for-usd-8-6-billion-2",
+       "date": "2026-06-09",
+       "rank": null
+      },
+      {
+       "name": "en.wikipedia.org",
+       "url": "https://en.wikipedia.org/wiki/Supercell_(company)",
+       "date": "2026-08-25",
+       "rank": null
+      }
+     ],
+     "fund_link_sources": [
+      {
+       "name": "atomico.com",
+       "url": "https://atomico.com/investments",
+       "date": "2026-08-24",
+       "rank": null
+      }
+     ]
+    }
+   ],
+   "undisclosed": [],
+   "excluded": [
+    {
+     "company": "Trade",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Strise",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "ABACUM PLANNING S.L. (SOCIEDAD UNIPERSONAL)",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "CLEO AI LTD.",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Light",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Aiven",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Klarna Group",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Klarna, Inc.",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Job&Talent",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Hinge Health, Inc.",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Rekki",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "KYC Intelligence",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Lime",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Truecaller",
+     "reason": "no completed acquisition as target in Cala"
+    }
+   ],
+   "note": null,
+   "caveat": "Acquisitions Cala has on file for companies this fund backed. A deal counts if it closed at least 6 years ago, or a source dates the investment 6 or more years before the deal. Deal value is the total price, not the fund's return. No exit found in Cala does not mean no exit."
+  },
+  "balderton": {
+   "fund_key": "balderton",
+   "name": "Balderton Capital",
+   "fund_entities": [
+    "c96fa533-91c0-5674-bcbe-0d0dc934b7fa"
+   ],
+   "portfolio_edges_in_cala": 79,
+   "companies_checked": [
+    "MOJIWORKS LIMITED",
+    "CLEO AI LTD.",
+    "Soundtrack Your Brand",
+    "Tictail, Inc.",
+    "Betfair",
+    "Lovable",
+    "Cleo",
+    "Betfair",
+    "Bebo",
+    "Frontier Car Group, Inc.",
+    "SOPHiA GENETICS SA"
+   ],
+   "receipts": [
+    {
+     "company": "Bebo",
+     "company_entity": "e269426d-084a-4a82-bde5-dff7b4c6e557",
+     "event_entity": "e80021ff-5ae5-4adb-8003-daef44b92557",
+     "event_type": "MNA_COMPLETED",
+     "role": "TARGET",
+     "date": "2008-03-13",
+     "year": 2008,
+     "acquirers": [
+      {
+       "name": "AOL Inc.",
+       "entity": "6a75e8a4-bbc3-4adf-912d-eaa5a4555a5d"
+      },
+      {
+       "name": "Twitch Interactive, Inc.",
+       "entity": "e4d8d694-d6c8-49db-bd50-eb52a24cf16f"
+      }
+     ],
+     "acquirer_known": true,
+     "value": {
+      "status": "disclosed",
+      "amount": 850000000.0,
+      "currency": "USD",
+      "reported": {
+       "value": 850000000.0,
+       "units": "USD"
+      },
+      "display": "850M USD",
+      "label": "deal value, not return"
+     },
+     "description": "AOL acquired Bebo social network for $850 million in cash. Bebo had over 40 million members at the time.",
+     "vintage": {
+      "rule": "exit_at_least_6y_ago",
+      "text": "Acquired 2008, so the fund's stake is at least 6 years old."
+     },
+     "sources": [
+      {
+       "name": "news.bbc.co.uk",
+       "url": "http://news.bbc.co.uk/2/hi/business/7294174.stm",
+       "date": "2026-08-25",
+       "rank": null
+      },
+      {
+       "name": "en.wikipedia.org",
+       "url": "https://en.wikipedia.org/wiki/Bebo",
+       "date": "2026-08-25",
+       "rank": null
+      }
+     ],
+     "fund_link_sources": [
+      {
+       "name": "Bebo Closes $15M Financing | TechCrunch",
+       "url": "https://techcrunch.com/2006/05/22/bebo-closes-15m-financing",
+       "date": "2006-05-22",
+       "rank": null
+      },
+      {
+       "name": "tracxn.com",
+       "url": "https://tracxn.com/d/companies/bebo/__qfrjqrQzx8lFM7HJrKM6Rb1MW6sTNwcXH0nw1TylU18",
+       "date": "2026-08-25",
+       "rank": null
+      },
+      {
+       "name": "tracxn.com",
+       "url": "https://tracxn.com/d/companies/bebo/__qfrjqrQzx8lFM7HJrKM6Rb1MW6sTNwcXH0nw1TylU18/funding-and-investors",
+       "date": "2026-08-25",
+       "rank": null
+      }
+     ]
+    }
+   ],
+   "undisclosed": [
+    {
+     "company": "Frontier Car Group, Inc.",
+     "company_entity": "f681d6ca-a4fc-462f-89a1-051e3c731cec",
+     "event_entity": "9844b2b2-e728-4262-a1ac-8691735444a0",
+     "event_type": "MNA_COMPLETED",
+     "role": "TARGET",
+     "date": "2020-09-29",
+     "year": 2020,
+     "acquirers": [
+      {
+       "name": "OLX Group",
+       "entity": "5f3e67b0-424c-4aee-afac-ee2327493f4a"
+      }
+     ],
+     "acquirer_known": true,
+     "value": {
+      "status": "undisclosed",
+      "display": "undisclosed",
+      "label": "deal value, not return"
+     },
+     "description": "Frontier Car Group merged with OLX Group (Prosus) to form OLX Autos, completed ~Sept 2020. OLX invested ~$500M total; company renamed OLX Autos.",
+     "vintage": {
+      "rule": "exit_at_least_6y_ago",
+      "text": "Acquired 2020, so the fund's stake is at least 6 years old."
+     },
+     "sources": [
+      {
+       "name": "Frontier Car Group partners with OLX Group to form OLX Autos",
+       "url": "https://latamlist.com/frontier-car-group-partners-with-olx-group-to-form-olx-autos",
+       "date": "2020-09-29",
+       "rank": null
+      },
+      {
+       "name": "www.crunchbase.com",
+       "url": "https://www.crunchbase.com/organization/frontier-cars-group",
+       "date": "2026-08-25",
+       "rank": null
+      },
+      {
+       "name": "thelatinamericanlawyer.com",
+       "url": "https://thelatinamericanlawyer.com/carey-steers-frontier-car-group-olx-group-merger",
+       "date": "2026-08-25",
+       "rank": null
+      },
+      {
+       "name": "www.leadersleague.com",
+       "url": "https://www.leadersleague.com/en/news/olx-group-expands-in-latin-america-with-frontier-car-group-merger",
+       "date": "2026-08-25",
+       "rank": null
+      }
+     ],
+     "fund_link_sources": [
+      {
+       "name": "Berlin's Frontier Car Group lands $22M to disrupt emerging markets car sales | TechCrunch",
+       "url": "https://techcrunch.com/2017/05/23/berlins-frontier-car-group-lands-22m-to-disrupt-emerging-markets-car-sales",
+       "date": "2017-05-23",
+       "rank": null
+      }
+     ]
+    }
+   ],
+   "excluded": [
+    {
+     "company": "MOJIWORKS LIMITED",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "CLEO AI LTD.",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Soundtrack Your Brand",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Tictail, Inc.",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Lovable",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Cleo",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "SOPHiA GENETICS SA",
+     "reason": "no completed acquisition as target in Cala"
+    }
+   ],
+   "note": null,
+   "caveat": "Acquisitions Cala has on file for companies this fund backed. A deal counts if it closed at least 6 years ago, or a source dates the investment 6 or more years before the deal. Deal value is the total price, not the fund's return. No exit found in Cala does not mean no exit."
+  },
+  "business finland": {
+   "fund_key": "business finland",
+   "name": "Business Finland",
+   "fund_entities": [
+    "3b0499bc-3c7e-4d50-aee5-42de34a5f8d0"
+   ],
+   "portfolio_edges_in_cala": 10,
+   "companies_checked": [
+    "Fiberdom",
+    "Dashboa",
+    "PromoRepublic",
+    "Agileday",
+    "Revial",
+    "Vensum",
+    "Jobilla",
+    "Root Signals",
+    "Jaakko.com",
+    "Flowhaven Oy"
+   ],
+   "receipts": [],
+   "undisclosed": [],
+   "excluded": [
+    {
+     "company": "Fiberdom",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Dashboa",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "PromoRepublic",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Agileday",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Revial",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Vensum",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Jobilla",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Root Signals",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Jaakko.com",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Flowhaven Oy",
+     "reason": "no completed acquisition as target in Cala"
+    }
+   ],
+   "note": null,
+   "caveat": "Acquisitions Cala has on file for companies this fund backed. A deal counts if it closed at least 6 years ago, or a source dates the investment 6 or more years before the deal. Deal value is the total price, not the fund's return. No exit found in Cala does not mean no exit."
+  },
+  "byfounders": {
+   "fund_key": "byfounders",
+   "name": "byFounders",
+   "fund_entities": [
+    "a7ef453b-938f-43ee-9bb2-294921d7cc5c"
+   ],
+   "portfolio_edges_in_cala": 6,
+   "companies_checked": [
+    "Bob W",
+    "Eduflow",
+    "Lovable",
+    "Smitten Technologies, Inc.",
+    "Willo",
+    "Fluencify"
+   ],
+   "receipts": [],
+   "undisclosed": [],
+   "excluded": [
+    {
+     "company": "Bob W",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Eduflow",
+     "reason": "deal date missing"
+    },
+    {
+     "company": "Lovable",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Smitten Technologies, Inc.",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Willo",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Fluencify",
+     "reason": "no completed acquisition as target in Cala"
+    }
+   ],
+   "note": null,
+   "caveat": "Acquisitions Cala has on file for companies this fund backed. A deal counts if it closed at least 6 years ago, or a source dates the investment 6 or more years before the deal. Deal value is the total price, not the fund's return. No exit found in Cala does not mean no exit."
+  },
+  "creandum": {
+   "fund_key": "creandum",
+   "name": "Creandum",
+   "fund_entities": [
+    "6ba00a20-2cb4-4559-8fe2-f39484a9e5f6",
+    "7d4ebd18-3539-4f19-a2e0-93bebb838554"
+   ],
+   "portfolio_edges_in_cala": 57,
+   "companies_checked": [
+    "Trade",
+    "Billie GmbH",
+    "SARL ALBERT RILLET",
+    "ABACUM PLANNING S.L. (SOCIEDAD UNIPERSONAL)",
+    "TWAICE Technologies GmbH",
+    "Klaus",
+    "Cint AB",
+    "Portfolio Companies",
+    "Soundtrack Your Brand",
+    "Tictail, Inc.",
+    "KRY",
+    "Kahoot!",
+    "Lovable",
+    "Small Giant Games Oy",
+    "Argent",
+    "Rekki",
+    "Leapsome GmbH",
+    "Causa Prima"
+   ],
+   "receipts": [
+    {
+     "company": "Small Giant Games Oy",
+     "company_entity": "a5660fb2-82e1-467b-9751-cf09e1e69661",
+     "event_entity": "76e23333-5f3b-4355-a58d-ddf05ff8ed2e",
+     "event_type": "MNA_COMPLETED",
+     "role": "TARGET",
+     "date": "2019-01-02",
+     "year": 2019,
+     "acquirers": [
+      {
+       "name": "ZYNGA INC.",
+       "entity": "a4104374-9905-45c4-9307-d4350f87e29d"
+      }
+     ],
+     "acquirer_known": true,
+     "value": {
+      "status": "disclosed",
+      "amount": 363500000.0,
+      "currency": "USD",
+      "reported": {
+       "value": 363500000.0,
+       "units": "USD"
+      },
+      "display": "363.5M USD",
+      "label": "deal value, not return"
+     },
+     "description": "Zynga Inc completed acquisition of 80% of Small Giant Games Oy for $363.5 million cash and 63,794,746 shares of Class A common stock",
+     "vintage": {
+      "rule": "exit_at_least_6y_ago",
+      "text": "Acquired 2019, so the fund's stake is at least 6 years old."
+     },
+     "sources": [
+      {
+       "name": "SEC",
+       "url": "https://www.sec.gov/Archives/edgar/data/1439404/000156459019000043/znga-8k_20190102.htm",
+       "date": "2019-01-02",
+       "rank": null
+      }
+     ],
+     "fund_link_sources": [
+      {
+       "name": "tracxn.com",
+       "url": "https://tracxn.com/d/companies/smallgiantgames/__lf3lUpfznpwmNEwj2KI8SIJb-h998tc6WLVFP3sywVw/funding-and-investors",
+       "date": "2026-08-25",
+       "rank": null
+      }
+     ]
+    }
+   ],
+   "undisclosed": [],
+   "excluded": [
+    {
+     "company": "Trade",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Billie GmbH",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "SARL ALBERT RILLET",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "ABACUM PLANNING S.L. (SOCIEDAD UNIPERSONAL)",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "TWAICE Technologies GmbH",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Klaus",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Cint AB",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Portfolio Companies",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Soundtrack Your Brand",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Tictail, Inc.",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "KRY",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Kahoot!",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Lovable",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Argent",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Rekki",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Leapsome GmbH",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Causa Prima",
+     "reason": "no completed acquisition as target in Cala"
+    }
+   ],
+   "note": null,
+   "caveat": "Acquisitions Cala has on file for companies this fund backed. A deal counts if it closed at least 6 years ago, or a source dates the investment 6 or more years before the deal. Deal value is the total price, not the fund's return. No exit found in Cala does not mean no exit."
+  },
+  "eqt": {
+   "fund_key": "eqt",
+   "name": "EQT Ventures",
+   "fund_entities": [
+    "d6cf13e1-92ff-4567-bd72-30316f2498e5"
+   ],
+   "portfolio_edges_in_cala": 12,
+   "companies_checked": [
+    "CAMION INFRASTRUCTURE LIMITED",
+    "CLEO AI LTD.",
+    "MarvelX",
+    "Timeless",
+    "VSIM TECHNOLOGY LTD"
+   ],
+   "receipts": [],
+   "undisclosed": [],
+   "excluded": [
+    {
+     "company": "CAMION INFRASTRUCTURE LIMITED",
+     "reason": "too recent for the 6 year gate"
+    },
+    {
+     "company": "CLEO AI LTD.",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "MarvelX",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Timeless",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "VSIM TECHNOLOGY LTD",
+     "reason": "no completed acquisition as target in Cala"
+    }
+   ],
+   "note": null,
+   "caveat": "Acquisitions Cala has on file for companies this fund backed. A deal counts if it closed at least 6 years ago, or a source dates the investment 6 or more years before the deal. Deal value is the total price, not the fund's return. No exit found in Cala does not mean no exit."
+  },
+  "fj labs": {
+   "fund_key": "fj labs",
+   "name": "FJ Labs",
+   "fund_entities": [
+    "af455c14-7d52-4318-9418-fd1ee7d573ef"
+   ],
+   "portfolio_edges_in_cala": 12,
+   "companies_checked": [
+    "Bliq",
+    "Neo Financial",
+    "SUN.STORE SPÓŁKA AKCYJNA",
+    "Boxhub",
+    "Cardino",
+    "Reibus",
+    "SEMALOOP LTD",
+    "sun.store",
+    "Job&Talent",
+    "Xepelin",
+    "General Counsel AI, Inc.",
+    "Causa Prima"
+   ],
+   "receipts": [],
+   "undisclosed": [],
+   "excluded": [
+    {
+     "company": "Bliq",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Neo Financial",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "SUN.STORE SPÓŁKA AKCYJNA",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Boxhub",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Cardino",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Reibus",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "SEMALOOP LTD",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "sun.store",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Job&Talent",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Xepelin",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "General Counsel AI, Inc.",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Causa Prima",
+     "reason": "no completed acquisition as target in Cala"
+    }
+   ],
+   "note": null,
+   "caveat": "Acquisitions Cala has on file for companies this fund backed. A deal counts if it closed at least 6 years ago, or a source dates the investment 6 or more years before the deal. Deal value is the total price, not the fund's return. No exit found in Cala does not mean no exit."
+  },
+  "founderful": {
+   "fund_key": "founderful",
+   "name": "Founderful",
+   "fund_entities": [
+    "ac207e7a-24e3-4dad-9b73-7d532d80ec59"
+   ],
+   "portfolio_edges_in_cala": 9,
+   "companies_checked": [
+    "Sparkli AI",
+    "EthonAI",
+    "Lightly",
+    "DePoly",
+    "Bring!"
+   ],
+   "receipts": [],
+   "undisclosed": [],
+   "excluded": [
+    {
+     "company": "Sparkli AI",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "EthonAI",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Lightly",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "DePoly",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Bring!",
+     "reason": "no completed acquisition as target in Cala"
+    }
+   ],
+   "note": null,
+   "caveat": "Acquisitions Cala has on file for companies this fund backed. A deal counts if it closed at least 6 years ago, or a source dates the investment 6 or more years before the deal. Deal value is the total price, not the fund's return. No exit found in Cala does not mean no exit."
+  },
+  "general catalyst cvf": {
+   "fund_key": "general catalyst cvf",
+   "name": "General Catalyst CVF",
+   "fund_entities": [
+    "276a7aad-f22b-43f4-b755-cc923da7e6f5"
+   ],
+   "portfolio_edges_in_cala": 214,
+   "companies_checked": [
+    "EthonAI",
+    "Hopin",
+    "Airbnb, Inc.",
+    "Samsara",
+    "Abacus",
+    "Deliveroo plc",
+    "Warby Parker Inc.",
+    "Loom",
+    "Aura",
+    "Jet.com",
+    "Abacus"
+   ],
+   "receipts": [
+    {
+     "company": "Jet.com",
+     "company_entity": "c1b38c7a-8bf9-4014-a6d5-34dcda088f03",
+     "event_entity": "14a88185-ec34-4017-a68a-5d35496edf9f",
+     "event_type": "MNA_COMPLETED",
+     "role": "TARGET",
+     "date": "2016-09-19",
+     "year": 2016,
+     "acquirers": [
+      {
+       "name": "Walmart Inc",
+       "entity": "3611d824-f140-4313-8dbd-e2ce57b5b7fa"
+      }
+     ],
+     "acquirer_known": true,
+     "value": {
+      "status": "disclosed",
+      "amount": 3300000000.0,
+      "currency": "USD",
+      "reported": {
+       "value": 3300000000.0,
+       "units": "USD"
+      },
+      "display": "3.3B USD",
+      "label": "deal value, not return"
+     },
+     "description": "Walmart completed acquisition of Jet.com on Sept 19, 2016 for ~$3.3B ($3B cash + $300M Walmart shares).",
+     "vintage": {
+      "rule": "exit_at_least_6y_ago",
+      "text": "Acquired 2016, so the fund's stake is at least 6 years old."
+     },
+     "sources": [
+      {
+       "name": "Walmart Completes Acquisition of Jet.com, Inc.",
+       "url": "https://corporate.walmart.com/news/2016/09/19/walmart-completes-acquisition-of-jet-com-inc",
+       "date": "2016-09-19",
+       "rank": null
+      },
+      {
+       "name": "www.sec.gov",
+       "url": "https://www.sec.gov/Archives/edgar/data/104169/000010416916000121/exhibit991-9162016.htm",
+       "date": "2026-08-25",
+       "rank": null
+      }
+     ],
+     "fund_link_sources": [
+      {
+       "name": "E-commerce Site Jet Raises Another $140M | TechCrunch",
+       "url": "https://techcrunch.com/2015/02/11/e-commerce-site-jet-raises-another-140m",
+       "date": "2015-02-11",
+       "rank": null
+      },
+      {
+       "name": "tracxn.com",
+       "url": "https://tracxn.com/d/companies/jet/__h1Yl4evOUd_ySALEqNHQGZrPMkhzVCiTGAi63omtnLw/funding-and-investors",
+       "date": "2026-08-25",
+       "rank": null
+      },
+      {
+       "name": "Jet.com Gets Investment That Values It at $600 Million",
+       "url": "https://dealbook.nytimes.com/2015/02/11/jet-com-gets-investment-that-values-it-at-600-million",
+       "date": "2015-02-11",
+       "rank": null
+      }
+     ]
+    }
+   ],
+   "undisclosed": [],
+   "excluded": [
+    {
+     "company": "EthonAI",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Hopin",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Airbnb, Inc.",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Samsara",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Abacus",
+     "reason": "deal date missing"
+    },
+    {
+     "company": "Deliveroo plc",
+     "reason": "too recent for the 6 year gate"
+    },
+    {
+     "company": "Warby Parker Inc.",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Loom",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Aura",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Abacus",
+     "reason": "deal date missing"
+    },
+    {
+     "company": "Abacus",
+     "reason": "deal date missing"
+    },
+    {
+     "company": "Abacus",
+     "reason": "deal date missing"
+    }
+   ],
+   "note": null,
+   "caveat": "Acquisitions Cala has on file for companies this fund backed. A deal counts if it closed at least 6 years ago, or a source dates the investment 6 or more years before the deal. Deal value is the total price, not the fund's return. No exit found in Cala does not mean no exit."
+  },
+  "icebreaker": {
+   "fund_key": "icebreaker",
+   "name": "Icebreaker.vc",
+   "fund_entities": [
+    "70fb3317-cd8c-4c52-aa86-66502789bce3"
+   ],
+   "portfolio_edges_in_cala": 58,
+   "companies_checked": [
+    "FLOWHAVEN OY",
+    "Tesseract",
+    "Vespia OÜ",
+    "Aibidia",
+    "Klaus",
+    "Cerenion",
+    "Workfellow",
+    "Lumoa",
+    "Kodit.io",
+    "Hoxhunt Oy",
+    "Tab",
+    "Oplane AB",
+    "Accurator",
+    "Finnadvance",
+    "Flowhaven Oy",
+    "IPRally",
+    "Valpas",
+    "Zymego"
+   ],
+   "receipts": [],
+   "undisclosed": [],
+   "excluded": [
+    {
+     "company": "FLOWHAVEN OY",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Tesseract",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Vespia OÜ",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Aibidia",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Klaus",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Cerenion",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Workfellow",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Lumoa",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Kodit.io",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Hoxhunt Oy",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Tab",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Oplane AB",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Accurator",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Finnadvance",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Flowhaven Oy",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "IPRally",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Valpas",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Zymego",
+     "reason": "no completed acquisition as target in Cala"
+    }
+   ],
+   "note": null,
+   "caveat": "Acquisitions Cala has on file for companies this fund backed. A deal counts if it closed at least 6 years ago, or a source dates the investment 6 or more years before the deal. Deal value is the total price, not the fund's return. No exit found in Cala does not mean no exit."
+  },
+  "index": {
+   "fund_key": "index",
+   "name": "Index Ventures",
+   "fund_entities": [
+    "71458374-77cc-414e-ad66-6395395a2c02"
+   ],
+   "portfolio_edges_in_cala": 283,
+   "companies_checked": [
+    "EthonAI",
+    "Dropbox",
+    "Supercell Oy",
+    "Trustpilot",
+    "Zendesk, Inc.",
+    "Algolia, Inc.",
+    "Wiz",
+    "SeedLegals",
+    "Deliveroo plc",
+    "Zuora, Inc.",
+    "Betfair",
+    "Dropbox, Inc",
+    "Wise",
+    "Argent",
+    "UIPATH, INC.",
+    "Dropbox",
+    "Dropbox",
+    "Betfair",
+    "Spotify AB",
+    "Datadog"
+   ],
+   "receipts": [
+    {
+     "company": "Supercell Oy",
+     "company_entity": "41f800e3-f6e8-449c-8734-bc62aa046d76",
+     "event_entity": "090cfab0-de5b-4b8e-99fb-d2671b568356",
+     "event_type": "MNA_COMPLETED",
+     "role": "TARGET",
+     "date": "2016-06-21",
+     "year": 2016,
+     "acquirers": [
+      {
+       "name": "Tencent Holdings Limited",
+       "entity": "1fc75307-e554-529d-8c36-413e88543618"
+      }
+     ],
+     "acquirer_known": true,
+     "value": {
+      "status": "disclosed",
+      "amount": 8600000000.0,
+      "currency": "USD",
+      "reported": {
+       "value": 8600000000.0,
+       "units": "USD"
+      },
+      "display": "8.6B USD",
+      "label": "deal value, not return"
+     },
+     "description": "Tencent-led consortium acquired ~84% of Supercell Oy for $8.6B, valuing the company at ~$10.2B. Deal announced June 21, 2016; Supercell retained independent operations in Helsinki.",
+     "vintage": {
+      "rule": "exit_at_least_6y_ago",
+      "text": "Acquired 2016, so the fund's stake is at least 6 years old."
+     },
+     "sources": [
+      {
+       "name": "Tencent to Acquire Majority Stake in Supercell from SoftBank | SoftBank Group Corp.",
+       "url": "https://group.softbank/en/news/press/20160621",
+       "date": "2016-06-21",
+       "rank": null
+      },
+      {
+       "name": "Tencent acquires Supercell for USD 8.6 billion - Avance Attorneys",
+       "url": "https://www.avance.com/cases/tencent-acquires-supercell-for-usd-8-6-billion-2",
+       "date": "2026-06-09",
+       "rank": null
+      },
+      {
+       "name": "en.wikipedia.org",
+       "url": "https://en.wikipedia.org/wiki/Supercell_(company)",
+       "date": "2026-08-25",
+       "rank": null
+      }
+     ],
+     "fund_link_sources": [
+      {
+       "name": "Why we invested in Supercell... | Index Ventures",
+       "url": "https://www.indexventures.com/perspectives/why-we-invested-in-supercell",
+       "date": "2013-04-17",
+       "rank": null
+      },
+      {
+       "name": "www.cypherhunter.com",
+       "url": "https://www.cypherhunter.com/en/p/index-ventures",
+       "date": "2026-08-25",
+       "rank": null
+      }
+     ]
+    }
+   ],
+   "undisclosed": [],
+   "excluded": [
+    {
+     "company": "EthonAI",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Dropbox",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Trustpilot",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Algolia, Inc.",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Wiz",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "SeedLegals",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Deliveroo plc",
+     "reason": "too recent for the 6 year gate"
+    },
+    {
+     "company": "Dropbox, Inc",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Wise",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Argent",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "UIPATH, INC.",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Dropbox",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Dropbox",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Spotify AB",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Datadog",
+     "reason": "no completed acquisition as target in Cala"
+    }
+   ],
+   "note": null,
+   "caveat": "Acquisitions Cala has on file for companies this fund backed. A deal counts if it closed at least 6 years ago, or a source dates the investment 6 or more years before the deal. Deal value is the total price, not the fund's return. No exit found in Cala does not mean no exit."
+  },
+  "insight": {
+   "fund_key": "insight",
+   "name": "Insight Partners",
+   "fund_entities": [
+    "925e2c39-33fc-4ca5-8439-5d83089fc6b8"
+   ],
+   "portfolio_edges_in_cala": 259,
+   "companies_checked": [
+    "Recorded Future",
+    "Wiz",
+    "Tavily Inc.",
+    "Tavily",
+    "Tavily",
+    "Tavily",
+    "Hinge Health, Inc.",
+    "MOAT",
+    "Cylance",
+    "Leapsome GmbH"
+   ],
+   "receipts": [
+    {
+     "company": "Cylance",
+     "company_entity": "e63c189f-dcb2-43d9-ac3c-910f2c0880ec",
+     "event_entity": "3d734f7b-4514-4ee3-9c83-8087274d30d2",
+     "event_type": "MNA_COMPLETED",
+     "role": "TARGET",
+     "date": "2019-02-21",
+     "year": 2019,
+     "acquirers": [
+      {
+       "name": "BlackBerry Limited",
+       "entity": "52faed27-0d71-44f3-aec8-6d559c6dc41d"
+      }
+     ],
+     "acquirer_known": true,
+     "value": {
+      "status": "disclosed",
+      "amount": 1400000000.0,
+      "currency": "USD",
+      "reported": {
+       "value": 1400000000.0,
+       "units": "USD"
+      },
+      "display": "1.4B USD",
+      "label": "deal value, not return"
+     },
+     "description": "BlackBerry completed its acquisition of Cylance, an AI-based cybersecurity company, for $1.4 billion in cash on February 21, 2019.",
+     "vintage": {
+      "rule": "exit_at_least_6y_ago",
+      "text": "Acquired 2019, so the fund's stake is at least 6 years old."
+     },
+     "sources": [
+      {
+       "name": "BlackBerry Completes Acquisition of Cylance",
+       "url": "https://www.prnewswire.com/news-releases/blackberry-completes-acquisition-of-cylance-300800003.html",
+       "date": "2019-02-21",
+       "rank": null
+      },
+      {
+       "name": "Cylance acquired by BlackBerry for $1.4 billion | Experience",
+       "url": "https://www.jonesday.com/en/practices/experience/2019/02/cylance-to-be-acquired-by-blackberry-for-14-billio",
+       "date": "2026-01-01",
+       "rank": null
+      }
+     ],
+     "fund_link_sources": [
+      {
+       "name": "Cylance, fighting malicious hackers with AI, hits $1B valuation after raising $100M | TechCrunch",
+       "url": "https://techcrunch.com/2016/06/09/cylance-fighting-malicious-hackers-with-ai-hits-1b-valuation-after-raising-100m",
+       "date": "2016-06-09",
+       "rank": null
+      },
+      {
+       "name": "tracxn.com",
+       "url": "https://tracxn.com/d/companies/cylance/__OK2kINXia_eTaJ7yxxrgfC5JERuzYGKa3LLTFiXsQOE/funding-and-investors",
+       "date": "2026-08-24",
+       "rank": null
+      }
+     ]
+    }
+   ],
+   "undisclosed": [],
+   "excluded": [
+    {
+     "company": "Recorded Future",
+     "reason": "too recent for the 6 year gate"
+    },
+    {
+     "company": "Wiz",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Tavily Inc.",
+     "reason": "too recent for the 6 year gate"
+    },
+    {
+     "company": "Tavily",
+     "reason": "too recent for the 6 year gate"
+    },
+    {
+     "company": "Tavily",
+     "reason": "too recent for the 6 year gate"
+    },
+    {
+     "company": "Tavily",
+     "reason": "too recent for the 6 year gate"
+    },
+    {
+     "company": "Hinge Health, Inc.",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "MOAT",
+     "reason": "deal dated before the company was founded"
+    },
+    {
+     "company": "Leapsome GmbH",
+     "reason": "no completed acquisition as target in Cala"
+    }
+   ],
+   "note": null,
+   "caveat": "Acquisitions Cala has on file for companies this fund backed. A deal counts if it closed at least 6 years ago, or a source dates the investment 6 or more years before the deal. Deal value is the total price, not the fund's return. No exit found in Cala does not mean no exit."
+  },
+  "inventure": {
+   "fund_key": "inventure",
+   "name": "Inventure",
+   "fund_entities": [
+    "f1877c0c-bc62-41b3-88be-a2c2320523d3"
+   ],
+   "portfolio_edges_in_cala": 4,
+   "companies_checked": [
+    "Refurbed",
+    "Gett",
+    "Chronext AG",
+    "Cityscoot"
+   ],
+   "receipts": [],
+   "undisclosed": [],
+   "excluded": [
+    {
+     "company": "Refurbed",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Gett",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Chronext AG",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Cityscoot",
+     "reason": "no completed acquisition as target in Cala"
+    }
+   ],
+   "note": null,
+   "caveat": "Acquisitions Cala has on file for companies this fund backed. A deal counts if it closed at least 6 years ago, or a source dates the investment 6 or more years before the deal. Deal value is the total price, not the fund's return. No exit found in Cala does not mean no exit."
+  },
+  "kfund": {
+   "fund_key": "kfund",
+   "name": "K Fund",
+   "fund_entities": [
+    "4712a5e8-fa2e-4f27-9375-73b8fdbd3faf"
+   ],
+   "portfolio_edges_in_cala": 49,
+   "companies_checked": [
+    "Hubtype",
+    "ABACUM PLANNING S.L. (SOCIEDAD UNIPERSONAL)",
+    "Lucera",
+    "Frontity",
+    "IQANA TECHNOLOGIES S.L.(SOCIEDAD UNIPERSONAL)"
+   ],
+   "receipts": [],
+   "undisclosed": [],
+   "excluded": [
+    {
+     "company": "Hubtype",
+     "reason": "too recent for the 6 year gate"
+    },
+    {
+     "company": "ABACUM PLANNING S.L. (SOCIEDAD UNIPERSONAL)",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Lucera",
+     "reason": "too recent for the 6 year gate"
+    },
+    {
+     "company": "Frontity",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "IQANA TECHNOLOGIES S.L.(SOCIEDAD UNIPERSONAL)",
+     "reason": "no completed acquisition as target in Cala"
+    }
+   ],
+   "note": null,
+   "caveat": "Acquisitions Cala has on file for companies this fund backed. A deal counts if it closed at least 6 years ago, or a source dates the investment 6 or more years before the deal. Deal value is the total price, not the fund's return. No exit found in Cala does not mean no exit."
+  },
+  "khosla": {
+   "fund_key": "khosla",
+   "name": "Khosla Ventures",
+   "fund_entities": [
+    "dc7ff25e-150c-4b1c-a538-77e57af99f71"
+   ],
+   "portfolio_edges_in_cala": 149,
+   "companies_checked": [
+    "LanzaTech Global, Inc.",
+    "Rocket Lab Corp",
+    "Blue River Technology",
+    "OMNEA LIMITED",
+    "Okta, Inc.",
+    "Lovable",
+    "GUARDANT HEALTH, INC.",
+    "Cylance",
+    "Opendoor Technologies Inc."
+   ],
+   "receipts": [
+    {
+     "company": "Cylance",
+     "company_entity": "e63c189f-dcb2-43d9-ac3c-910f2c0880ec",
+     "event_entity": "3d734f7b-4514-4ee3-9c83-8087274d30d2",
+     "event_type": "MNA_COMPLETED",
+     "role": "TARGET",
+     "date": "2019-02-21",
+     "year": 2019,
+     "acquirers": [
+      {
+       "name": "BlackBerry Limited",
+       "entity": "52faed27-0d71-44f3-aec8-6d559c6dc41d"
+      }
+     ],
+     "acquirer_known": true,
+     "value": {
+      "status": "disclosed",
+      "amount": 1400000000.0,
+      "currency": "USD",
+      "reported": {
+       "value": 1400000000.0,
+       "units": "USD"
+      },
+      "display": "1.4B USD",
+      "label": "deal value, not return"
+     },
+     "description": "BlackBerry completed its acquisition of Cylance, an AI-based cybersecurity company, for $1.4 billion in cash on February 21, 2019.",
+     "vintage": {
+      "rule": "exit_at_least_6y_ago",
+      "text": "Acquired 2019, so the fund's stake is at least 6 years old."
+     },
+     "sources": [
+      {
+       "name": "BlackBerry Completes Acquisition of Cylance",
+       "url": "https://www.prnewswire.com/news-releases/blackberry-completes-acquisition-of-cylance-300800003.html",
+       "date": "2019-02-21",
+       "rank": null
+      },
+      {
+       "name": "Cylance acquired by BlackBerry for $1.4 billion | Experience",
+       "url": "https://www.jonesday.com/en/practices/experience/2019/02/cylance-to-be-acquired-by-blackberry-for-14-billio",
+       "date": "2026-01-01",
+       "rank": null
+      }
+     ],
+     "fund_link_sources": [
+      {
+       "name": "Cylance, A Cyber Security Data Company Founded By Former McAfee CTO, Raises $15M From Khosla, Fairhaven Capital | TechCrunch",
+       "url": "https://techcrunch.com/2013/02/13/cylance-a-cyber-security-data-company-founded-by-former-mcafee-cto-raises-15m-from-khosla-fairhaven-capital",
+       "date": "2013-02-13",
+       "rank": null
+      },
+      {
+       "name": "tracxn.com",
+       "url": "https://tracxn.com/d/companies/cylance/__OK2kINXia_eTaJ7yxxrgfC5JERuzYGKa3LLTFiXsQOE/funding-and-investors",
+       "date": "2026-08-24",
+       "rank": null
+      },
+      {
+       "name": "pitchbook.com",
+       "url": "https://pitchbook.com/newsletter/math-based-network-security-platform-cylance-grabs-20m",
+       "date": "2026-08-24",
+       "rank": null
+      }
+     ]
+    }
+   ],
+   "undisclosed": [],
+   "excluded": [
+    {
+     "company": "LanzaTech Global, Inc.",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Rocket Lab Corp",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Blue River Technology",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "OMNEA LIMITED",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Okta, Inc.",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Lovable",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "GUARDANT HEALTH, INC.",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Opendoor Technologies Inc.",
+     "reason": "no completed acquisition as target in Cala"
+    }
+   ],
+   "note": null,
+   "caveat": "Acquisitions Cala has on file for companies this fund backed. A deal counts if it closed at least 6 years ago, or a source dates the investment 6 or more years before the deal. Deal value is the total price, not the fund's return. No exit found in Cala does not mean no exit."
+  },
+  "lifeline": {
+   "fund_key": "lifeline",
+   "name": "Lifeline Ventures",
+   "fund_entities": [
+    "476a73ac-afa2-4713-9f73-188bc7ec0b95"
+   ],
+   "portfolio_edges_in_cala": 47,
+   "companies_checked": [
+    "AREX",
+    "MOJIWORKS LIMITED",
+    "Front AI",
+    "Supercell Oy",
+    "Swappie",
+    "Seaber.io",
+    "Digital Workforce Services Oyj",
+    "Aiven",
+    "Reduciner Oy",
+    "Sharetribe Oy",
+    "Bought",
+    "Beddit",
+    "ReceiptHero",
+    "Synoste Oy",
+    "Vensum",
+    "Inven",
+    "Dispelix"
+   ],
+   "receipts": [
+    {
+     "company": "Supercell Oy",
+     "company_entity": "41f800e3-f6e8-449c-8734-bc62aa046d76",
+     "event_entity": "090cfab0-de5b-4b8e-99fb-d2671b568356",
+     "event_type": "MNA_COMPLETED",
+     "role": "TARGET",
+     "date": "2016-06-21",
+     "year": 2016,
+     "acquirers": [
+      {
+       "name": "Tencent Holdings Limited",
+       "entity": "1fc75307-e554-529d-8c36-413e88543618"
+      }
+     ],
+     "acquirer_known": true,
+     "value": {
+      "status": "disclosed",
+      "amount": 8600000000.0,
+      "currency": "USD",
+      "reported": {
+       "value": 8600000000.0,
+       "units": "USD"
+      },
+      "display": "8.6B USD",
+      "label": "deal value, not return"
+     },
+     "description": "Tencent-led consortium acquired ~84% of Supercell Oy for $8.6B, valuing the company at ~$10.2B. Deal announced June 21, 2016; Supercell retained independent operations in Helsinki.",
      "vintage": {
       "rule": "exit_at_least_6y_ago",
       "text": "Acquired 2016, so the fund's stake is at least 6 years old."
@@ -77,10 +1967,482 @@
      ]
     }
    ],
+   "undisclosed": [
+    {
+     "company": "AREX",
+     "company_entity": "052545d7-e48e-4216-b65b-a9338a56b980",
+     "event_entity": "ee822564-8b8e-4bb1-8235-75a472221591",
+     "event_type": "MNA_COMPLETED",
+     "role": "TARGET",
+     "date": "2023-06-20",
+     "year": 2023,
+     "acquirers": [
+      {
+       "name": "Bankable",
+       "entity": "b854fd0a-f167-4919-bc62-58d18fc28064"
+      }
+     ],
+     "acquirer_known": true,
+     "value": {
+      "status": "undisclosed",
+      "display": "undisclosed",
+      "label": "deal value, not return"
+     },
+     "description": "Bankable acquired AREX Markets (embedded finance platform) in June 2023 for an undisclosed sum. Investors including Mosaic Ventures remained shareholders in Bankable.",
+     "vintage": {
+      "rule": "investor_source_6y_before_exit",
+      "text": "A source naming the fund as investor is dated 2016-11-04, at least 6 years before the deal.",
+      "source": {
+       "name": "Invoice financing marketplace Arex picks up €3M backing | TechCrunch",
+       "url": "https://techcrunch.com/2016/11/04/arex",
+       "date": "2016-11-04",
+       "rank": null
+      }
+     },
+     "sources": [
+      {
+       "name": "www.retailbankerinternational.com",
+       "url": "https://www.retailbankerinternational.com/news/bankable-acquires-arex-markets",
+       "date": "2026-07-29",
+       "rank": null
+      },
+      {
+       "name": "www.fintechfutures.com",
+       "url": "https://www.fintechfutures.com/embedded-finance/bankable-acquires-embedded-finance-platform-arex-markets",
+       "date": "2026-07-29",
+       "rank": null
+      },
+      {
+       "name": "Zelig advises Arex Markets on Sale to Bankable - Zelig",
+       "url": "https://zeligfintech.com/zelig-advises-arex-markets-on-sale-to-bankable",
+       "date": "2023-06-20",
+       "rank": null
+      }
+     ],
+     "fund_link_sources": [
+      {
+       "name": "Invoice financing marketplace Arex picks up €3M backing | TechCrunch",
+       "url": "https://techcrunch.com/2016/11/04/arex",
+       "date": "2016-11-04",
+       "rank": null
+      },
+      {
+       "name": "tracxn.com",
+       "url": "https://tracxn.com/d/companies/arex/__BN6-KVHOra9Y41-ZwcB48uKU_khzkcvyWB2YE8hkdzg/funding-and-investors",
+       "date": "2026-07-29",
+       "rank": null
+      }
+     ]
+    }
+   ],
+   "excluded": [
+    {
+     "company": "MOJIWORKS LIMITED",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Front AI",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Swappie",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Seaber.io",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Digital Workforce Services Oyj",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Aiven",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Reduciner Oy",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Sharetribe Oy",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Bought",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Beddit",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "ReceiptHero",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Synoste Oy",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Vensum",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Inven",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Dispelix",
+     "reason": "no completed acquisition as target in Cala"
+    }
+   ],
+   "note": null,
+   "caveat": "Acquisitions Cala has on file for companies this fund backed. A deal counts if it closed at least 6 years ago, or a source dates the investment 6 or more years before the deal. Deal value is the total price, not the fund's return. No exit found in Cala does not mean no exit."
+  },
+  "lightspeed": {
+   "fund_key": "lightspeed",
+   "name": "Lightspeed Venture Partners",
+   "fund_entities": [
+    "5a9d0c1c-1e04-4816-b38a-28c4f560569b"
+   ],
+   "portfolio_edges_in_cala": 267,
+   "companies_checked": [
+    "Stitch Fix, Inc.",
+    "Wiz",
+    "Nimble Storage",
+    "GrubHub Inc.",
+    "AFFIRM HOLDINGS, INC.",
+    "APPDYNAMICS INC"
+   ],
+   "receipts": [
+    {
+     "company": "APPDYNAMICS INC",
+     "company_entity": "b2e95e67-0cdf-4fce-93ba-a12d67579864",
+     "event_entity": "86e0a75b-8653-4254-a5ac-78a19717b347",
+     "event_type": "MNA_COMPLETED",
+     "role": "TARGET",
+     "date": "2017-03-01",
+     "year": 2017,
+     "acquirers": [
+      {
+       "name": "CISCO SYSTEMS, INC.",
+       "entity": "3f3e5f91-1fe7-4094-88ea-4a25b512a75f"
+      }
+     ],
+     "acquirer_known": true,
+     "value": {
+      "status": "disclosed",
+      "amount": 3700000000.0,
+      "currency": "USD",
+      "reported": {
+       "value": 3700000000.0,
+       "units": "USD"
+      },
+      "display": "3.7B USD",
+      "label": "deal value, not return"
+     },
+     "description": "Cisco acquired AppDynamics for $3.7B in March 2017, just days before the company's planned IPO. AppDynamics became a Cisco subsidiary.",
+     "vintage": {
+      "rule": "exit_at_least_6y_ago",
+      "text": "Acquired 2017, so the fund's stake is at least 6 years old."
+     },
+     "sources": [
+      {
+       "name": "en.wikipedia.org",
+       "url": "https://en.wikipedia.org/wiki/AppDynamics",
+       "date": "2026-07-29",
+       "rank": null
+      },
+      {
+       "name": "Why the $3.7 billion AppDynamics acquisition happened right before IPO | TechCrunch",
+       "url": "https://techcrunch.com/2017/01/24/why-the-3-7-billion-appdynamics-acquisition-happened-right-before-ipo",
+       "date": "2017-01-24",
+       "rank": null
+      },
+      {
+       "name": "AppDynamics Cancels IPO, Takes $3.7B Buyout from Cisco",
+       "url": "https://www.cmswire.com/information-management/appdynamics-cancels-ipo-takes-37b-buyout-from-cisco",
+       "date": "2017-01-25",
+       "rank": null
+      }
+     ],
+     "fund_link_sources": [
+      {
+       "name": "lsvp.com",
+       "url": "https://lsvp.com/about",
+       "date": "2026-07-03",
+       "rank": null
+      }
+     ]
+    }
+   ],
    "undisclosed": [],
    "excluded": [
     {
-     "company": "Beddit",
+     "company": "Stitch Fix, Inc.",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Wiz",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Nimble Storage",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "GrubHub Inc.",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "AFFIRM HOLDINGS, INC.",
+     "reason": "no completed acquisition as target in Cala"
+    }
+   ],
+   "note": null,
+   "caveat": "Acquisitions Cala has on file for companies this fund backed. A deal counts if it closed at least 6 years ago, or a source dates the investment 6 or more years before the deal. Deal value is the total price, not the fund's return. No exit found in Cala does not mean no exit."
+  },
+  "localglobe": {
+   "fund_key": "localglobe",
+   "name": "LocalGlobe",
+   "fund_entities": [
+    "1516c337-36cb-4357-ba0c-03b9c6c0d0e0"
+   ],
+   "portfolio_edges_in_cala": 75,
+   "companies_checked": [
+    "AREX",
+    "CLEO AI LTD.",
+    "Lovefilm",
+    "Otonomo",
+    "Deliveroo plc",
+    "Gilion",
+    "Wise",
+    "Noala",
+    "Tweetdeck",
+    "Cleo"
+   ],
+   "receipts": [],
+   "undisclosed": [
+    {
+     "company": "AREX",
+     "company_entity": "052545d7-e48e-4216-b65b-a9338a56b980",
+     "event_entity": "ee822564-8b8e-4bb1-8235-75a472221591",
+     "event_type": "MNA_COMPLETED",
+     "role": "TARGET",
+     "date": "2023-06-20",
+     "year": 2023,
+     "acquirers": [
+      {
+       "name": "Bankable",
+       "entity": "b854fd0a-f167-4919-bc62-58d18fc28064"
+      }
+     ],
+     "acquirer_known": true,
+     "value": {
+      "status": "undisclosed",
+      "display": "undisclosed",
+      "label": "deal value, not return"
+     },
+     "description": "Bankable acquired AREX Markets (embedded finance platform) in June 2023 for an undisclosed sum. Investors including Mosaic Ventures remained shareholders in Bankable.",
+     "vintage": {
+      "rule": "investor_source_6y_before_exit",
+      "text": "A source naming the fund as investor is dated 2016-11-04, at least 6 years before the deal.",
+      "source": {
+       "name": "Invoice financing marketplace Arex picks up €3M backing | TechCrunch",
+       "url": "https://techcrunch.com/2016/11/04/arex",
+       "date": "2016-11-04",
+       "rank": null
+      }
+     },
+     "sources": [
+      {
+       "name": "www.retailbankerinternational.com",
+       "url": "https://www.retailbankerinternational.com/news/bankable-acquires-arex-markets",
+       "date": "2026-07-29",
+       "rank": null
+      },
+      {
+       "name": "www.fintechfutures.com",
+       "url": "https://www.fintechfutures.com/embedded-finance/bankable-acquires-embedded-finance-platform-arex-markets",
+       "date": "2026-07-29",
+       "rank": null
+      },
+      {
+       "name": "Zelig advises Arex Markets on Sale to Bankable - Zelig",
+       "url": "https://zeligfintech.com/zelig-advises-arex-markets-on-sale-to-bankable",
+       "date": "2023-06-20",
+       "rank": null
+      }
+     ],
+     "fund_link_sources": [
+      {
+       "name": "Invoice financing marketplace Arex picks up €3M backing | TechCrunch",
+       "url": "https://techcrunch.com/2016/11/04/arex",
+       "date": "2016-11-04",
+       "rank": null
+      },
+      {
+       "name": "tracxn.com",
+       "url": "https://tracxn.com/d/companies/arex/__BN6-KVHOra9Y41-ZwcB48uKU_khzkcvyWB2YE8hkdzg/funding-and-investors",
+       "date": "2026-07-29",
+       "rank": null
+      }
+     ]
+    }
+   ],
+   "excluded": [
+    {
+     "company": "CLEO AI LTD.",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Lovefilm",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Otonomo",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Deliveroo plc",
+     "reason": "too recent for the 6 year gate"
+    },
+    {
+     "company": "Gilion",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Wise",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Noala",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Tweetdeck",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Cleo",
+     "reason": "no completed acquisition as target in Cala"
+    }
+   ],
+   "note": null,
+   "caveat": "Acquisitions Cala has on file for companies this fund backed. A deal counts if it closed at least 6 years ago, or a source dates the investment 6 or more years before the deal. Deal value is the total price, not the fund's return. No exit found in Cala does not mean no exit."
+  },
+  "maki": {
+   "fund_key": "maki",
+   "name": "Maki.vc",
+   "fund_entities": [
+    "8f0ff46d-d609-4ce0-b719-85f739b92ca3"
+   ],
+   "portfolio_edges_in_cala": 11,
+   "companies_checked": [
+    "Strise",
+    "Upheat",
+    "Baseimmune",
+    "Mixed Reality",
+    "OGOship",
+    "Distance Technologies Oy",
+    "Solid Clouds",
+    "Zevoy Aktiebolag",
+    "KYC Intelligence",
+    "Enfuce Financial Services Oy",
+    "Egg White Company"
+   ],
+   "receipts": [],
+   "undisclosed": [],
+   "excluded": [
+    {
+     "company": "Strise",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Upheat",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Baseimmune",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Mixed Reality",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "OGOship",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Distance Technologies Oy",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Solid Clouds",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Zevoy Aktiebolag",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "KYC Intelligence",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Enfuce Financial Services Oy",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Egg White Company",
+     "reason": "no completed acquisition as target in Cala"
+    }
+   ],
+   "note": null,
+   "caveat": "Acquisitions Cala has on file for companies this fund backed. A deal counts if it closed at least 6 years ago, or a source dates the investment 6 or more years before the deal. Deal value is the total price, not the fund's return. No exit found in Cala does not mean no exit."
+  },
+  "new enterprise associates": {
+   "fund_key": "new enterprise associates",
+   "name": "NEA",
+   "fund_entities": [
+    "672cb768-589c-4a36-addf-e4345bdffbc2"
+   ],
+   "portfolio_edges_in_cala": 8,
+   "companies_checked": [
+    "Liza Health",
+    "Nexo Therapeutics, Inc.",
+    "Firestorm Labs, Inc.",
+    "858 Therapeutics, Inc.",
+    "Weaviate",
+    "The Token Company"
+   ],
+   "receipts": [],
+   "undisclosed": [],
+   "excluded": [
+    {
+     "company": "Liza Health",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Nexo Therapeutics, Inc.",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Firestorm Labs, Inc.",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "858 Therapeutics, Inc.",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Weaviate",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "The Token Company",
      "reason": "no completed acquisition as target in Cala"
     }
    ],
@@ -95,11 +2457,30 @@
    ],
    "portfolio_edges_in_cala": 138,
    "companies_checked": [
-    "Zettle",
-    "Energy Micro",
+    "OpenZeppelin",
+    "BehavioSec Inc.",
+    "Riff",
     "Nimsoft",
+    "PriceRunner",
+    "Avito",
+    "Trustpilot",
+    "Portfolio Companies",
+    "Soundtrack Your Brand",
+    "Hopin",
+    "Einride AB",
     "Mamut",
-    "Kahoot!"
+    "Energy Micro",
+    "Klarna Group",
+    "Disperse",
+    "Kahoot!",
+    "HappyOrNot",
+    "Spektr",
+    "Tier Mobility Se",
+    "fuboTV",
+    "General Counsel AI, Inc.",
+    "Zettle",
+    "Spotify AB",
+    "lastminute.com Limited"
    ],
    "receipts": [
     {
@@ -280,76 +2661,449 @@
    "undisclosed": [],
    "excluded": [
     {
+     "company": "OpenZeppelin",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "BehavioSec Inc.",
+     "reason": "too recent for the 6 year gate"
+    },
+    {
+     "company": "Riff",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "PriceRunner",
+     "reason": "too recent for the 6 year gate"
+    },
+    {
+     "company": "Avito",
+     "reason": "too recent for the 6 year gate"
+    },
+    {
+     "company": "Trustpilot",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Portfolio Companies",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Soundtrack Your Brand",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Hopin",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Einride AB",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
      "company": "Mamut",
      "reason": "no completed acquisition as target in Cala"
     },
     {
+     "company": "Klarna Group",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Disperse",
+     "reason": "too recent for the 6 year gate"
+    },
+    {
      "company": "Kahoot!",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "HappyOrNot",
+     "reason": "deal date missing"
+    },
+    {
+     "company": "Spektr",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Tier Mobility Se",
+     "reason": "too recent for the 6 year gate"
+    },
+    {
+     "company": "fuboTV",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "General Counsel AI, Inc.",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Spotify AB",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "lastminute.com Limited",
      "reason": "no completed acquisition as target in Cala"
     }
    ],
    "note": null,
    "caveat": "Acquisitions Cala has on file for companies this fund backed. A deal counts if it closed at least 6 years ago, or a source dates the investment 6 or more years before the deal. Deal value is the total price, not the fund's return. No exit found in Cala does not mean no exit."
   },
-  "creandum": {
-   "fund_key": "creandum",
-   "name": "Creandum",
+  "novo holdings": {
+   "fund_key": "novo holdings",
+   "name": "Novo Holdings",
    "fund_entities": [
-    "6ba00a20-2cb4-4559-8fe2-f39484a9e5f6",
-    "7d4ebd18-3539-4f19-a2e0-93bebb838554"
+    "fde0f70c-d370-4c71-919a-5e9f8a2233f9"
    ],
-   "portfolio_edges_in_cala": 52,
+   "portfolio_edges_in_cala": 24,
    "companies_checked": [
-    "Small Giant Games Oy",
-    "Tictail, Inc.",
-    "Kahoot!"
+    "LanzaTech Global, Inc.",
+    "Paratek Pharmaceuticals, Inc.",
+    "MEDGENOME LABS LIMITED",
+    "CONVATEC GROUP PLC",
+    "Qure AI",
+    "CATALENT INC"
+   ],
+   "receipts": [],
+   "undisclosed": [],
+   "excluded": [
+    {
+     "company": "LanzaTech Global, Inc.",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Paratek Pharmaceuticals, Inc.",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "MEDGENOME LABS LIMITED",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "CONVATEC GROUP PLC",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Qure AI",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "CATALENT INC",
+     "reason": "no completed acquisition as target in Cala"
+    }
+   ],
+   "note": null,
+   "caveat": "Acquisitions Cala has on file for companies this fund backed. A deal counts if it closed at least 6 years ago, or a source dates the investment 6 or more years before the deal. Deal value is the total price, not the fund's return. No exit found in Cala does not mean no exit."
+  },
+  "plural": {
+   "fund_key": "plural",
+   "name": "Plural",
+   "fund_entities": [
+    "b2b58348-866c-4e90-b2ce-f3019ffb0657"
+   ],
+   "portfolio_edges_in_cala": 9,
+   "companies_checked": [
+    "Sunrise Robotics",
+    "Arcjet Labs, Inc.",
+    "Astral Systems",
+    "ISOMETRIC LTD",
+    "Orbital Materials",
+    "Isometric",
+    "Astral Systems"
+   ],
+   "receipts": [],
+   "undisclosed": [],
+   "excluded": [
+    {
+     "company": "Sunrise Robotics",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Arcjet Labs, Inc.",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Astral Systems",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "ISOMETRIC LTD",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Orbital Materials",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Isometric",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Astral Systems",
+     "reason": "no completed acquisition as target in Cala"
+    }
+   ],
+   "note": null,
+   "caveat": "Acquisitions Cala has on file for companies this fund backed. A deal counts if it closed at least 6 years ago, or a source dates the investment 6 or more years before the deal. Deal value is the total price, not the fund's return. No exit found in Cala does not mean no exit."
+  },
+  "point nine": {
+   "fund_key": "point nine",
+   "name": "Point Nine",
+   "fund_entities": [
+    "c934f7e3-6ee3-4983-b0e1-f7827df567f9"
+   ],
+   "portfolio_edges_in_cala": 44,
+   "companies_checked": [
+    "Qlub",
+    "Algolia, Inc.",
+    "15FIVE, INC.",
+    "Helpling",
+    "OMNEA LIMITED",
+    "Polar Analytics",
+    "Cardino",
+    "Root Global",
+    "Marley Spoon B.V.",
+    "Loom",
+    "Upciti",
+    "remerge GmbH",
+    "Tier Mobility Se",
+    "Fyber"
+   ],
+   "receipts": [],
+   "undisclosed": [],
+   "excluded": [
+    {
+     "company": "Qlub",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Algolia, Inc.",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "15FIVE, INC.",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Helpling",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "OMNEA LIMITED",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Polar Analytics",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Cardino",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Root Global",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Marley Spoon B.V.",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Loom",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Upciti",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "remerge GmbH",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Tier Mobility Se",
+     "reason": "too recent for the 6 year gate"
+    },
+    {
+     "company": "Fyber",
+     "reason": "no completed acquisition as target in Cala"
+    }
+   ],
+   "note": null,
+   "caveat": "Acquisitions Cala has on file for companies this fund backed. A deal counts if it closed at least 6 years ago, or a source dates the investment 6 or more years before the deal. Deal value is the total price, not the fund's return. No exit found in Cala does not mean no exit."
+  },
+  "seedcamp": {
+   "fund_key": "seedcamp",
+   "name": "Seedcamp",
+   "fund_entities": [
+    "d2d11954-6bab-5ac9-8684-a54406623104"
+   ],
+   "portfolio_edges_in_cala": 55,
+   "companies_checked": [
+    "Sunrise Robotics",
+    "Hopin",
+    "THRIVA LIMITED",
+    "THIS",
+    "Light",
+    "SeedLegals",
+    "Arcjet Labs, Inc.",
+    "RESISTANT AI, INC.",
+    "Wise",
+    "Synthesized",
+    "Wluper",
+    "UIPATH, INC.",
+    "Fraugster",
+    "UNCAPPED FINANCE LTD"
+   ],
+   "receipts": [],
+   "undisclosed": [],
+   "excluded": [
+    {
+     "company": "Sunrise Robotics",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Hopin",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "THRIVA LIMITED",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "THIS",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Light",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "SeedLegals",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Arcjet Labs, Inc.",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "RESISTANT AI, INC.",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Wise",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Synthesized",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Wluper",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "UIPATH, INC.",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Fraugster",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "UNCAPPED FINANCE LTD",
+     "reason": "no completed acquisition as target in Cala"
+    }
+   ],
+   "note": null,
+   "caveat": "Acquisitions Cala has on file for companies this fund backed. A deal counts if it closed at least 6 years ago, or a source dates the investment 6 or more years before the deal. Deal value is the total price, not the fund's return. No exit found in Cala does not mean no exit."
+  },
+  "sequoia": {
+   "fund_key": "sequoia",
+   "name": "Sequoia Capital",
+   "fund_entities": [
+    "151bf814-7566-4b14-a7d2-f0d802ef0981"
+   ],
+   "portfolio_edges_in_cala": 280,
+   "companies_checked": [
+    "Apple Inc.",
+    "NVIDIA CORP",
+    "SpaceX",
+    "SARL ALBERT RILLET",
+    "Dropbox",
+    "Instagram, LLC",
+    "Portfolio Companies",
+    "Airbnb, Inc.",
+    "Wiz",
+    "Freshworks Inc.",
+    "Nimble Storage",
+    "Loom",
+    "SpaceX",
+    "Klarna Group",
+    "Okta, Inc.",
+    "Klarna, Inc.",
+    "UIPATH, INC.",
+    "Apple",
+    "Dropbox",
+    "Dropbox"
    ],
    "receipts": [
     {
-     "company": "Small Giant Games Oy",
-     "company_entity": "a5660fb2-82e1-467b-9751-cf09e1e69661",
-     "event_entity": "76e23333-5f3b-4355-a58d-ddf05ff8ed2e",
+     "company": "Instagram, LLC",
+     "company_entity": "3ce9299e-dc6f-48fb-b13c-e20bf4fd4f41",
+     "event_entity": "8784706a-1f11-5457-9359-0751bfe22880",
      "event_type": "MNA_COMPLETED",
      "role": "TARGET",
-     "date": "2019-01-02",
-     "year": 2019,
+     "date": "2012-08-01",
+     "year": 2012,
      "acquirers": [
       {
-       "name": "ZYNGA INC.",
-       "entity": "a4104374-9905-45c4-9307-d4350f87e29d"
+       "name": "META PLATFORMS, INC.",
+       "entity": "b505bbc3-a8c3-4176-a28c-8fa1f31a5ed1"
       }
      ],
      "acquirer_known": true,
      "value": {
       "status": "disclosed",
-      "amount": 363500000.0,
+      "amount": 521000000.0,
       "currency": "USD",
       "reported": {
-       "value": 363500000.0,
+       "value": 521000000.0,
        "units": "USD"
       },
-      "display": "363.5M USD",
+      "display": "521M USD",
       "label": "deal value, not return"
      },
-     "description": "Zynga Inc completed acquisition of 80% of Small Giant Games Oy for $363.5 million cash and 63,794,746 shares of Class A common stock",
+     "description": "Instagram MNA_COMPLETED",
      "vintage": {
       "rule": "exit_at_least_6y_ago",
-      "text": "Acquired 2019, so the fund's stake is at least 6 years old."
+      "text": "Acquired 2012, so the fund's stake is at least 6 years old."
      },
      "sources": [
       {
-       "name": "SEC",
-       "url": "https://www.sec.gov/Archives/edgar/data/1439404/000156459019000043/znga-8k_20190102.htm",
-       "date": "2019-01-02",
-       "rank": null
+       "name": "sec.gov",
+       "url": "https://www.sec.gov/Archives/edgar/data/1326801/000132680112000006/fb-9302012x10q.htm",
+       "date": "2012-10-24",
+       "rank": "FILING"
+      },
+      {
+       "name": "sec.gov",
+       "url": "https://www.sec.gov/Archives/edgar/data/1326801/000119312512240111/d287954d424b4.htm",
+       "date": "2012-05-18",
+       "rank": "FILING"
       }
      ],
      "fund_link_sources": [
       {
-       "name": "tracxn.com",
-       "url": "https://tracxn.com/d/companies/smallgiantgames/__lf3lUpfznpwmNEwj2KI8SIJb-h998tc6WLVFP3sywVw/funding-and-investors",
-       "date": "2026-08-25",
+       "name": "finance.yahoo.com",
+       "url": "https://finance.yahoo.com/news/sequoia-capital-invested-early-google-100000663.html",
+       "date": "2026-08-19",
        "rank": null
+      },
+      {
+       "name": "techcrunch.com",
+       "url": "https://techcrunch.com/2012/04/09/right-before-acquisition-instagram-closed-50m-at-a-500m-valuation-from-sequoia-thrive-greylock-and-benchmark",
+       "date": "2012-04-09",
+       "rank": "PRESS"
       }
      ]
     }
@@ -357,11 +3111,347 @@
    "undisclosed": [],
    "excluded": [
     {
-     "company": "Tictail, Inc.",
+     "company": "Apple Inc.",
      "reason": "no completed acquisition as target in Cala"
     },
     {
-     "company": "Kahoot!",
+     "company": "NVIDIA CORP",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "SpaceX",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "SARL ALBERT RILLET",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Dropbox",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Portfolio Companies",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Airbnb, Inc.",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Wiz",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Freshworks Inc.",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Nimble Storage",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Loom",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "SpaceX",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Klarna Group",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Okta, Inc.",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Klarna, Inc.",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "UIPATH, INC.",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Apple",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Dropbox",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Dropbox",
+     "reason": "no completed acquisition as target in Cala"
+    }
+   ],
+   "note": null,
+   "caveat": "Acquisitions Cala has on file for companies this fund backed. A deal counts if it closed at least 6 years ago, or a source dates the investment 6 or more years before the deal. Deal value is the total price, not the fund's return. No exit found in Cala does not mean no exit."
+  },
+  "speedinvest": {
+   "fund_key": "speedinvest",
+   "name": "Speedinvest",
+   "fund_entities": [
+    "94e0ca6a-4e39-4181-bd84-11f264d0aa62"
+   ],
+   "portfolio_edges_in_cala": 137,
+   "companies_checked": [
+    "Bliq",
+    "COBEE",
+    "Billie GmbH",
+    "TWAICE Technologies GmbH",
+    "wikifolio Financial Technologies",
+    "SILQ Group",
+    "PACKHELP SPÓŁKA AKCYJNA",
+    "Refurbed",
+    "Astral Systems",
+    "Kodit.io",
+    "Tier Mobility Se",
+    "Cobee",
+    "Fraugster",
+    "Shara",
+    "MindsDB",
+    "Astral Systems"
+   ],
+   "receipts": [],
+   "undisclosed": [],
+   "excluded": [
+    {
+     "company": "Bliq",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "COBEE",
+     "reason": "too recent for the 6 year gate"
+    },
+    {
+     "company": "Billie GmbH",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "TWAICE Technologies GmbH",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "wikifolio Financial Technologies",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "SILQ Group",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "PACKHELP SPÓŁKA AKCYJNA",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Refurbed",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Astral Systems",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Kodit.io",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Tier Mobility Se",
+     "reason": "too recent for the 6 year gate"
+    },
+    {
+     "company": "Cobee",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Fraugster",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Shara",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "MindsDB",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Astral Systems",
+     "reason": "no completed acquisition as target in Cala"
+    }
+   ],
+   "note": null,
+   "caveat": "Acquisitions Cala has on file for companies this fund backed. A deal counts if it closed at least 6 years ago, or a source dates the investment 6 or more years before the deal. Deal value is the total price, not the fund's return. No exit found in Cala does not mean no exit."
+  },
+  "superhero": {
+   "fund_key": "superhero",
+   "name": "Superhero Capital",
+   "fund_entities": [
+    "8f18dee5-e41b-4eaa-86e2-f03f1a846edc"
+   ],
+   "portfolio_edges_in_cala": 57,
+   "companies_checked": [
+    "Zadaa",
+    "Battleboxes",
+    "Concepts",
+    "Flowplayer",
+    "Custobar",
+    "Hamina",
+    "Aispeco",
+    "Ziticity",
+    "Furro",
+    "ReceiptHero",
+    "Vapaus.io",
+    "Annie Advisor",
+    "Builderhead"
+   ],
+   "receipts": [],
+   "undisclosed": [],
+   "excluded": [
+    {
+     "company": "Zadaa",
+     "reason": "too recent for the 6 year gate"
+    },
+    {
+     "company": "Battleboxes",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Concepts",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Flowplayer",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Custobar",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Hamina",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Aispeco",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Ziticity",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Furro",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "ReceiptHero",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Vapaus.io",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Annie Advisor",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Builderhead",
+     "reason": "no completed acquisition as target in Cala"
+    }
+   ],
+   "note": null,
+   "caveat": "Acquisitions Cala has on file for companies this fund backed. A deal counts if it closed at least 6 years ago, or a source dates the investment 6 or more years before the deal. Deal value is the total price, not the fund's return. No exit found in Cala does not mean no exit."
+  },
+  "voima": {
+   "fund_key": "voima",
+   "name": "Voima Ventures",
+   "fund_entities": [
+    "1f973216-f1e5-4466-8409-da6608460c02"
+   ],
+   "portfolio_edges_in_cala": 51,
+   "companies_checked": [
+    "Biomensio",
+    "Betolar Oyj",
+    "Sofi Filtration",
+    "Desentum Oy",
+    "Kuva Space",
+    "Solar Foods Oyj",
+    "ElFys",
+    "Reduciner Oy",
+    "Aisti",
+    "Combinostics",
+    "Nadmed",
+    "Dispelix",
+    "Quantagonia",
+    "Genomill Health",
+    "Finnadvance"
+   ],
+   "receipts": [],
+   "undisclosed": [],
+   "excluded": [
+    {
+     "company": "Biomensio",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Betolar Oyj",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Sofi Filtration",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Desentum Oy",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Kuva Space",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Solar Foods Oyj",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "ElFys",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Reduciner Oy",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Aisti",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Combinostics",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Nadmed",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Dispelix",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Quantagonia",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Genomill Health",
+     "reason": "no completed acquisition as target in Cala"
+    },
+    {
+     "company": "Finnadvance",
      "reason": "no completed acquisition as target in Cala"
     }
    ],
@@ -369,9 +3459,90 @@
    "caveat": "Acquisitions Cala has on file for companies this fund backed. A deal counts if it closed at least 6 years ago, or a source dates the investment 6 or more years before the deal. Deal value is the total price, not the fund's return. No exit found in Cala does not mean no exit."
   }
  },
- "not_fetched": {
-  "maki": "Not fetched: the 20 call budget went to older funds; Maki.vc's first fund is from 2018.",
-  "inventure": "Not fetched: the 20 call budget ran out.",
-  "voima": "Not fetched: the 20 call budget went to older funds."
- }
+ "dropped": [
+  {
+   "fund": "accel",
+   "company": "Supercell Oy",
+   "date": "2016-06-21",
+   "event_entity": "2557b4ee-fcc9-41f3-801a-b3e556cf38d8",
+   "reason": "twin entities: same company acquired twice within a year for this fund"
+  },
+  {
+   "fund": "atomico",
+   "company": "Supercell Oy",
+   "date": "2016-06-21",
+   "event_entity": "2557b4ee-fcc9-41f3-801a-b3e556cf38d8",
+   "reason": "twin entities: same company acquired twice within a year for this fund"
+  },
+  {
+   "fund": "balderton",
+   "company": "Betfair",
+   "date": "2016-02-02",
+   "event_entity": "3e4c3d29-d90c-4597-9d1a-65e00bfa772d",
+   "reason": "IPO-like: the target was already a listed company"
+  },
+  {
+   "fund": "balderton",
+   "company": "Betfair",
+   "date": "2016-02-02",
+   "event_entity": "ec528b7d-83d1-4dce-983f-b7d45d390ecd",
+   "reason": "twin entities: event lists 2 TARGET participants"
+  },
+  {
+   "fund": "balderton",
+   "company": "Betfair",
+   "date": "2016-02-02",
+   "event_entity": "ec528b7d-83d1-4dce-983f-b7d45d390ecd",
+   "reason": "twin entities: event lists 2 TARGET participants"
+  },
+  {
+   "fund": "index",
+   "company": "Zuora, Inc.",
+   "date": "2025-02-14",
+   "event_entity": "6aa7a66e-568e-4202-bcb1-75dd8d6cbcb2",
+   "reason": "IPO-like: the target was already a listed company"
+  },
+  {
+   "fund": "index",
+   "company": "Supercell Oy",
+   "date": "2016-06-21",
+   "event_entity": "2557b4ee-fcc9-41f3-801a-b3e556cf38d8",
+   "reason": "twin entities: same company acquired twice within a year for this fund"
+  },
+  {
+   "fund": "index",
+   "company": "Betfair",
+   "date": "2016-02-02",
+   "event_entity": "3e4c3d29-d90c-4597-9d1a-65e00bfa772d",
+   "reason": "IPO-like: the target was already a listed company"
+  },
+  {
+   "fund": "index",
+   "company": "Betfair",
+   "date": "2016-02-02",
+   "event_entity": "ec528b7d-83d1-4dce-983f-b7d45d390ecd",
+   "reason": "twin entities: event lists 2 TARGET participants"
+  },
+  {
+   "fund": "index",
+   "company": "Betfair",
+   "date": "2016-02-02",
+   "event_entity": "ec528b7d-83d1-4dce-983f-b7d45d390ecd",
+   "reason": "twin entities: event lists 2 TARGET participants"
+  },
+  {
+   "fund": "index",
+   "company": "Zendesk, Inc.",
+   "date": "2022-11-22",
+   "event_entity": "35c362c8-f990-40b6-809e-302b4671b0d8",
+   "reason": "no buyer named on the event"
+  },
+  {
+   "fund": "lifeline",
+   "company": "Supercell Oy",
+   "date": "2016-06-21",
+   "event_entity": "2557b4ee-fcc9-41f3-801a-b3e556cf38d8",
+   "reason": "twin entities: same company acquired twice within a year for this fund"
+  }
+ ]
 }

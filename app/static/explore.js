@@ -733,7 +733,7 @@
       tiles([
         ["Roles on file", mt.roles, `${mt.roles_dated} with dates`],
         ["Organisations", mt.employers ?? "n/a", "in roles and companies founded"],
-        ["Average years per role", mt.avg_tenure_years ?? "n/a", mt.avg_tenure_n ? `over ${plural(mt.avg_tenure_n, "dated role")}` : "needs start and end dates"],
+        ["Average years per role", mt.avg_tenure_years ?? "n/a", mt.avg_tenure_n ? `over roles with both start and end dates (n=${mt.avg_tenure_n})` : "needs start and end dates"],
         ["Shortest and longest", mt.shortest_tenure_years == null ? "n/a" : `${mt.shortest_tenure_years} to ${mt.longest_tenure_years} y`],
         ["Title level-ups", mt.level_ups ?? "n/a", mt.level_ups_per_year != null ? `${mt.level_ups_per_year} per year` : ""],
         ["Years before this company", mt.years_before_company ?? "n/a"],

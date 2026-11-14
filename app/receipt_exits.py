@@ -137,7 +137,7 @@ def vintage(event_day: date, links: list[dict], today: date) -> dict | None:
     if event_day <= years_before(today, VINTAGE_YEARS):
         return {"rule": "exit_at_least_6y_ago",
                 "text": f"Acquired {event_day.year}, so the fund's stake is at least {VINTAGE_YEARS} years old."}
-    dated = sorted((parse_day(s.get("date")), s) for s in links if parse_day(s.get("date")))
+    dated = sorted(((parse_day(s.get("date")), s) for s in links if parse_day(s.get("date"))), key=lambda x: x[0])
     if dated and dated[0][0] <= years_before(event_day, VINTAGE_YEARS):
         day, src = dated[0]
         return {"rule": "investor_source_6y_before_exit",
