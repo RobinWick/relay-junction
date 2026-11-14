@@ -11,7 +11,7 @@ import re
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Query, Request
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, PlainTextResponse, RedirectResponse
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
 from typing import Optional
@@ -98,7 +98,7 @@ def merge_live(record_: dict) -> None:
 
 
 GATE_ON = os.environ.get("RELAY_GATE", "off") == "on"  # passcode gate; off by default since 14.11 (Robin)
-OPEN_PATHS = {"/llms.txt", "/login", "/api/login", "/static/styles.css", "/static/login.js", "/static/brand.js",
+OPEN_PATHS = {"/llms.txt", "/robots.txt", "/login", "/api/login", "/static/styles.css", "/static/login.js", "/static/brand.js",
               "/static/favicon.svg"}
 
 
@@ -163,7 +163,6 @@ async def gate(request: Request, call_next):
         resp = JSONResponse({"error": "Enter the demo passcode first."}, status_code=401)
     else:
         resp = RedirectResponse("/login", status_code=303)
-    resp.headers["X-Robots-Tag"] = "noindex, nofollow"
     resp.headers["X-Content-Type-Options"] = "nosniff"
     resp.headers["Referrer-Policy"] = "no-referrer"
     resp.headers["X-Frame-Options"] = "DENY"
@@ -197,6 +196,12 @@ LLMS = HERE.parent / "llms.txt"  # repo root locally, /root/llms.txt on Modal
 def llms_txt():
     """Plain-text summary for AI readers (llmstxt.org format)."""
     return FileResponse(LLMS, media_type="text/plain; charset=utf-8")
+
+
+@app.get("/robots.txt")
+def robots_txt():
+    """Public demo: let search engines and AI crawlers index it."""
+    return PlainTextResponse("User-agent: *\nAllow: /\n")
 
 
 @app.get("/login", response_class=HTMLResponse)
