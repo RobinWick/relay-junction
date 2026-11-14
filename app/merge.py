@@ -79,16 +79,32 @@ def investor_key(name: str) -> str:
     return re.sub(r"\s+", " ", s).strip()
 
 
+NOT_A_NAME = re.compile(r"\b(not|un)\s*(publicly\s+)?(disclosed|confirmed|known|available|specified|named|reported)\b|"
+                        r"\bno lead\b|\bn/?a\b|^(unknown|none|tbd|null|others?|other investors)$|"
+                        r"\bexisting (investors|shareholders)\b|^\d+\s+(others?|more|additional)\b|\bname undisclosed\b|"
+                        r"\bundisclosed\b", re.I)
+PROTECTED = ("plug and play", "johnson & johnson", "johnson and johnson", "procter & gamble", "black & white")
+
+
 def split_investors(raw) -> list[str]:
+    """Split a Cala investor field into names; drop phrases like 'Not confirmed' that are not investors."""
     if raw is None:
         return []
-    parts = raw if isinstance(raw, list) else re.split(r",|;|\band\b|&|\+", str(raw))
+    if isinstance(raw, list):
+        parts = raw
+    else:
+        text = str(raw)
+        for i, p in enumerate(PROTECTED):
+            text = re.sub(re.escape(p), f"__P{i}__", text, flags=re.I)
+        parts = [re.sub(r"__P(\d+)__", lambda m: PROTECTED[int(m.group(1))].title(), x)
+                 for x in re.split(r",|;|\band\b|&|\+", text)]
     names = []
     for part in parts:
         if isinstance(part, dict):
             part = part.get("name") or ""
         name = re.sub(r"\(.*?\)", "", str(part)).strip(" .")
-        if investor_key(name) not in NOT_AN_INVESTOR and len(name) > 1:
+        name = re.sub(r"\s+(participated|also participated|joined|followed on)$", "", name, flags=re.I).strip()
+        if len(name) > 1 and investor_key(name) not in NOT_AN_INVESTOR and not NOT_A_NAME.search(name):
             names.append(name)
     return names
 

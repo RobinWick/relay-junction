@@ -216,7 +216,7 @@ function summaryLine(d, target) {
   const fits = d.rows.filter((r) => r.verdict === "leads" && r.size?.fit === "fits").length;
   parts.push(`<b>${c.leads || 0} of your ${n}</b> ${n === 1 ? "fund" : "funds"} lead ${esc(d.stage)} rounds in Cala's data${target ? `, and <b>${fits}</b> of those lead rounds your size` : ""}`);
   if (c.follows) parts.push(`<b>${c.follows}</b> mostly ${c.follows === 1 ? "follows" : "follow"}`);
-  if (c.stale) parts.push(`<b>${c.stale}</b> ${c.stale === 1 ? "has" : "have"} not led for two years`);
+  if (c.stale) parts.push(`<b>${c.stale}</b> ${c.stale === 1 ? "has" : "have"} not led in the last two years`);
   if (d.conflict_count) parts.push(`<b class="conf-led">${d.conflict_count}</b> already led a competitor`);
   return parts.join(". ") + ".";
 }
@@ -429,6 +429,8 @@ function renderMethod() {
       </section>
       <section class="panel"><h2>What we tested</h2>
         ${v ? `<table class="simple"><thead><tr><th>Test</th><th>Result</th><th>n</th></tr></thead><tbody>${v.rows.map((r) => `<tr><td>${esc(r.test)}</td><td>${esc(r.result)}</td><td class="num">${esc(r.n)}</td></tr>`).join("")}</tbody></table><p class="muted">${esc(v.note || "")}</p>` : `<p class="muted">Validation numbers are being recomputed on the full data.</p>`}
+        ${v?.accuracy?.length ? `<details class="raw"><summary>Every hand check, with its source (${v.accuracy.length})</summary><table class="simple"><thead><tr><th>Round</th><th>Lead in Cala</th><th>Check</th></tr></thead><tbody>${v.accuracy.map((a) => `<tr><td>${esc(a.company)} <span class="faint mono">${esc(a.date)} ${esc(a.stage || "")}</span></td><td>${esc((a.cala_leads || []).join(", "))}</td><td>${esc(a.verdict)}${a.source_url && /^https:\/\//.test(a.source_url) ? ` · <a href="${esc(a.source_url)}" target="_blank" rel="noopener noreferrer">source</a>` : ""}</td></tr>`).join("")}</tbody></table></details>` : ""}
+        <p class="muted"><a href="/static/cala-data-quality.json" download>Data-quality findings we handed to Cala</a> (JSON).</p>
       </section>
       <section class="panel"><h2>Limits</h2>
         <ul>
@@ -452,7 +454,7 @@ function renderMethod() {
         <p class="muted">Endpoints: <span class="pill pill-q">/v1/knowledge/query</span> investor-first and company-first.</p>
       </section>
       <section class="panel"><h2>Stack</h2>
-        <p class="muted">Cala for the data. Aiven Postgres stores every Cala row, the merged rounds and the snapshot. Modal runs the crawl and serves this app.</p>
+        <p class="muted">Cala for the data. Aiven Postgres stores the snapshot, the normalised rounds and every live Cala answer. Modal serves this app and runs the live Cala lookups. Gemini only reads pasted lines our parser cannot match.</p>
       </section>
     </aside>
   </div>`;
@@ -465,7 +467,7 @@ document.addEventListener("DOMContentLoaded", () => {
   $("#sample").addEventListener("click", () => {
     $("#funds").value = SAMPLE; lineCount();
     if (!state.investors.length) { state.investors.push("Antler", "Icebreaker.vc"); state.lead = "Antler"; renderChips("investors"); }
-    if (!state.competitors.length) { state.competitors.push("Reduciner"); renderChips("competitors"); }
+    if (!state.competitors.length) { state.competitors.push("Lovable"); renderChips("competitors"); }
     if (!$("#target").value) $("#target").value = "3";
     run();
   });

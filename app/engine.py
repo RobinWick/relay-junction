@@ -109,7 +109,7 @@ def month_label(r: dict) -> str:
 
 def round_brief(snap: Snapshot, r: dict) -> dict:
     return {"id": r["id"], "company": r["company"], "date": month_label(r), "t": r["t"],
-            "stage": STAGE_LABEL.get(r["stage"] or "", r.get("type") or "Round"),
+            "stage": STAGE_LABEL.get(r["stage"] or "", "Stage not stated"),
             "amount_eur_m": r["amount_eur_m"], "amount_raw": r.get("amount_raw"),
             "n_investors": len(r["leads"]) + len(r["participants"]),
             "leads": [snap.name(k) for k in r["leads"]], "path": r.get("query_path")}
@@ -217,13 +217,22 @@ def tie(snap: Snapshot, key: str, my_investors: list[str], my_company: str | Non
 
 
 def lead_comes_back(snap: Snapshot, lead_key: str) -> dict | None:
-    """For a founder's current lead: in its other companies, did it come back in (and lead) the next round?"""
+    """For a founder's current lead: in its other companies, did it come back in (and lead) the next round?
+
+    Only companies Cala gave us a full round history for (company-first) count: investor-first answers only show
+    rounds the fund was in, which would make every fund look loyal. A later round within 6 months at the same
+    stage is a tranche, not a next round.
+    """
     came, led_again, cases = 0, 0, []
     for rid in snap.by_investor.get(lead_key, []):
         r = snap.rounds[rid]
         if lead_key not in r["leads"]:
             continue
-        later = sorted((snap.rounds[i] for i in snap.by_company[r["ckey"]] if snap.rounds[i]["t"] > r["t"] + 0.17),
+        rs = [snap.rounds[i] for i in snap.by_company[r["ckey"]]]
+        if not any(s["path"] == "company_first" for x in rs for s in x["sources"]):
+            continue
+        later = sorted((x for x in rs if x["t"] > r["t"] + 0.17
+                        and not (x["t"] - r["t"] < 0.5 and (x["stage"] == r["stage"] or not x["stage"]))),
                        key=lambda x: x["t"])
         if not later:
             continue

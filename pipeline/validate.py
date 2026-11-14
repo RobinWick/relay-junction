@@ -116,7 +116,27 @@ def main() -> None:
          "result": f"{pct(lcb['came_back'] / max(1, lcb['cases']))} came back, {pct(lcb['led_again'] / max(1, lcb['cases']))} led again",
          "n": lcb["cases"]},
     ]
+    acc_path = Path(__file__).resolve().parents[2] / "research" / "accuracy.json"
+    accuracy = []
+    if acc_path.exists():
+        accuracy = json.loads(acc_path.read_text())
+        rnd = [a for a in accuracy if a["group"] == "random_30"]
+        smp = [a for a in accuracy if a["group"] == "sample_list"]
+        cnt = lambda xs, v: sum(1 for a in xs if a["verdict"] == v)
+        sourced = len(rnd) - cnt(rnd, "unverifiable")
+        rows.insert(1, {"test": "Cala's named lead matches a public source (random rounds, checked by hand on 14 Nov)",
+                        "result": f"{cnt(rnd, 'correct')} of {sourced} rounds where a source names the lead; "
+                                  f"{cnt(rnd, 'partly')} partly right, {cnt(rnd, 'wrong')} wrong (one was our parsing, now fixed); "
+                                  f"{cnt(rnd, 'unverifiable')} had no public source naming a lead",
+                        "n": len(rnd)})
+        rows.insert(2, {"test": "Most recent led round of each sample Nordic fund, checked by hand",
+                        "result": f"{cnt(smp, 'correct')} of {len(smp)} correct; {cnt(smp, 'partly')} right fund but a co-lead missing",
+                        "n": len(smp)})
+        accuracy = [{"company": a["company"], "date": a["date"], "stage": a.get("stage"), "cala_leads": a.get("cala_leads"),
+                     "verdict": a["verdict"], "source_url": a.get("source_url"), "note": a.get("note", "")[:240],
+                     "group": a["group"]} for a in accuracy]
     out = {"version": snap["version"], "rows": rows, "within_round": wr, "coverage": cov, "lead_comes_back": lcb,
+           "accuracy": accuracy,
            "note": "The prediction test ran on the first 289 companies before the investor-first crawl. All other rows are recomputed on every snapshot."}
     OUT.write_text(json.dumps(out, indent=1))
     print(json.dumps({"within_round": wr, "lead_comes_back": lcb, "seed": cov.get("seed"), "a": cov.get("series a")}, indent=1))

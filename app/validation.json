@@ -1,10 +1,20 @@
 {
- "version": "20261113234852",
+ "version": "20261114000317",
  "rows": [
   {
    "test": "In a round with a named lead, the investor with the stronger earlier lead record is the real lead",
-   "result": "51% vs 37% for a random pick from the same cap table (95% CI 47% to 55%)",
-   "n": 600
+   "result": "53% vs 37% for a random pick from the same cap table (95% CI 50% to 56%)",
+   "n": 927
+  },
+  {
+   "test": "Cala's named lead matches a public source (random rounds, checked by hand on 14 Nov)",
+   "result": "22 of 26 rounds where a source names the lead; 2 partly right, 2 wrong (one was our parsing, now fixed); 4 had no public source naming a lead",
+   "n": 30
+  },
+  {
+   "test": "Most recent led round of each sample Nordic fund, checked by hand",
+   "result": "9 of 11 correct; 2 right fund but a co-lead missing",
+   "n": 11
   },
   {
    "test": "Predicting the next round's new lead from earlier rounds (top 5)",
@@ -13,73 +23,581 @@
   },
   {
    "test": "Seed rounds where Cala names the lead",
-   "result": "71%",
-   "n": 743
+   "result": "69%",
+   "n": 996
   },
   {
    "test": "Series A rounds where Cala names the lead",
-   "result": "75%",
-   "n": 459
+   "result": "71%",
+   "n": 692
   },
   {
    "test": "The lead of a round comes back in the company's next round",
-   "result": "54% came back, 15% led again",
-   "n": 984
+   "result": "56% came back, 16% led again",
+   "n": 1170
   }
  ],
  "within_round": {
-  "n": 600,
-  "hit": 0.5111111111111112,
-  "random": 0.3725473068598069,
-  "ci_low": 0.4711693444097723,
-  "ci_high": 0.5509115015162677
+  "n": 927,
+  "hit": 0.5275440489032722,
+  "random": 0.3720017801328476,
+  "ci_low": 0.4953580129984379,
+  "ci_high": 0.5595027352391426
  },
  "coverage": {
   "pre-seed": {
-   "with_lead": 156,
-   "total": 205
+   "with_lead": 185,
+   "total": 245
   },
   "seed": {
-   "with_lead": 524,
-   "total": 743
+   "with_lead": 686,
+   "total": 996
   },
   "series a": {
-   "with_lead": 343,
-   "total": 459
+   "with_lead": 491,
+   "total": 692
   },
   "series b": {
-   "with_lead": 200,
-   "total": 263
+   "with_lead": 302,
+   "total": 436
   },
   "series c": {
-   "with_lead": 97,
-   "total": 121
+   "with_lead": 151,
+   "total": 208
   },
   "series d": {
-   "with_lead": 45,
-   "total": 57
+   "with_lead": 77,
+   "total": 111
   },
   "unlabelled": {
-   "with_lead": 118,
-   "total": 312
+   "with_lead": 166,
+   "total": 462
   },
   "growth": {
-   "with_lead": 49,
-   "total": 79
+   "with_lead": 67,
+   "total": 111
   },
   "series e": {
-   "with_lead": 13,
-   "total": 14
+   "with_lead": 26,
+   "total": 34
   },
   "series f": {
-   "with_lead": 4,
-   "total": 5
+   "with_lead": 14,
+   "total": 19
   }
  },
  "lead_comes_back": {
-  "cases": 984,
-  "came_back": 530,
-  "led_again": 143
+  "cases": 1170,
+  "came_back": 658,
+  "led_again": 189
  },
+ "accuracy": [
+  {
+   "company": "AMSilk",
+   "date": "2025-09",
+   "stage": "series d",
+   "cala_leads": [
+    "ATHOS"
+   ],
+   "verdict": "correct",
+   "source_url": "https://siliconcanals.com/amsilk-raises-52m/",
+   "note": "ATHOS (AT Newtec) led EUR 52M (EUR 30M cash + EUR 22M convertible), MIG Capital and Novo Holdings joined, announced 9 Sep 2025.",
+   "group": "random_30"
+  },
+  {
+   "company": "Aventix",
+   "date": "2026-09",
+   "stage": "pre-seed",
+   "cala_leads": [
+    "Voima Ventures"
+   ],
+   "verdict": "partly",
+   "source_url": "https://www.bionity.com/en/news/1189969/aventix-raises-1-2-million-pre-seed-to-build-the-future-of-bioanalytics.html",
+   "note": "Round was led by Kost Capital and Voima Ventures (1 Oct 2026); Cala names only Voima and misses Kost Capital.",
+   "group": "random_30"
+  },
+  {
+   "company": "Nivoda",
+   "date": "2024-11",
+   "stage": "series c",
+   "cala_leads": [
+    "Northzone"
+   ],
+   "verdict": "correct",
+   "source_url": "https://www.businesswire.com/news/home/20241121862239/en/Nivoda-Sparkles-Secures-51M-to-Expand-Global-Diamond-Supply-Chain",
+   "note": "Company release (21 Nov 2024) and coverage: Northzone led the $51M round with Avenir, Headline, Abstract, Canaan.",
+   "group": "random_30"
+  },
+  {
+   "company": "NewOrbit",
+   "date": "2026-06",
+   "stage": "series a",
+   "cala_leads": [
+    "Voyager Ventures"
+   ],
+   "verdict": "correct",
+   "source_url": "https://tech.eu/2026/06/08/neworbit-raises-185m-series-a-to-commercialise-vleo/",
+   "note": "Voyager Ventures led the oversubscribed $18.5M Series A, 8 Jun 2026.",
+   "group": "random_30"
+  },
+  {
+   "company": "Ivy",
+   "date": "2023-08",
+   "stage": "series a",
+   "cala_leads": [
+    "Valar Ventures"
+   ],
+   "verdict": "correct",
+   "source_url": "https://www.finsmes.com/2023/09/ivy-raises-20m-in-series-a-funding.html",
+   "note": "Valar Ventures led $20M Series A with Creandum, 10x Founders, Angel Invest; announced 30-31 Aug 2023.",
+   "group": "random_30"
+  },
+  {
+   "company": "Outpost24",
+   "date": "2025-12",
+   "stage": "growth",
+   "cala_leads": [
+    "Vitruvian Partners"
+   ],
+   "verdict": "correct",
+   "source_url": "https://outpost24.com/blog/outpost24-secures-new-investment/",
+   "note": "Company release 16-17 Dec 2025: new investment from Vitruvian Partners (sole investor, terms undisclosed). Follow-on from majority owner, not a classic venture round.",
+   "group": "random_30"
+  },
+  {
+   "company": "ICEYE",
+   "date": "2025-12",
+   "stage": "series e",
+   "cala_leads": [
+    "General Catalyst"
+   ],
+   "verdict": "correct",
+   "source_url": "https://www.iceye.com/newsroom/press-releases/iceye-and-general-catalyst-partner-to-redefine-space-based-intelligence-in-europe",
+   "note": "General Catalyst led EUR 150M Series E at EUR 2.4B valuation, 5 Dec 2025.",
+   "group": "random_30"
+  },
+  {
+   "company": "Fracttal",
+   "date": "2023-10",
+   "stage": "series b",
+   "cala_leads": [
+    "Kayyak Ventures"
+   ],
+   "verdict": "correct",
+   "source_url": "https://www.fracttal.com/en/blog/fracttal-10-million-investment-round-october-2023",
+   "note": "Company blog and LatAm press: Kayyak Ventures led the $10M Series B, Oct 2023.",
+   "group": "random_30"
+  },
+  {
+   "company": "ConfidentialMind",
+   "date": "2023-11",
+   "stage": "seed",
+   "cala_leads": [
+    "D11Z Ventures",
+    "Lifeline Ventures"
+   ],
+   "verdict": "unverifiable",
+   "source_url": "https://vestbee.com/insights/articles/confidential-mind-raises-1-5-m",
+   "note": "No Nov 2023 EUR 3.5M seed found. The company (founded 2023) raised a EUR 1.5M pre-seed led by Failup Ventures in Jun 2024; Lifeline and D11Z appear as investors in an Apr 2026 seed (aggregators only, lead not stated). Cala date looks wrong.",
+   "group": "random_30"
+  },
+  {
+   "company": "xMoney",
+   "date": "2025-09",
+   "stage": null,
+   "cala_leads": [
+    "Sui Foundation"
+   ],
+   "verdict": "correct",
+   "source_url": "https://cointelegraph.com/press-releases/xmoney-secures-21-5m-strategic-funding-led-by-sui-foundation",
+   "note": "Company release 30 Sep 2025: $21.5M strategic round led by Sui Foundation, MultiversX participated.",
+   "group": "random_30"
+  },
+  {
+   "company": "Qida",
+   "date": "2023-03",
+   "stage": "series b",
+   "cala_leads": [
+    "Kibo Ventures"
+   ],
+   "verdict": "correct",
+   "source_url": "https://capital-riesgo.es/en/articles/qida-capta-18-millones-en-una-ronda-liderada-por-kibo-ventures-y-participada-por-ship2b-ventures/",
+   "note": "Kibo Ventures led EUR 18M (21 Mar 2023). Stage label wrong: CB Insights calls it Series A; Qida Series B was the later EUR 37M round.",
+   "group": "random_30"
+  },
+  {
+   "company": "Intergrid",
+   "date": "2023-09",
+   "stage": "pre-seed",
+   "cala_leads": [
+    "Lifeline Ventures"
+   ],
+   "verdict": "correct",
+   "source_url": "https://nordic9.com/news/intergrid-was-pre-seeded-with-1m-by-lifeline-ventures-and-investors-in-finland/",
+   "note": "EUR 1M pre-seed by Lifeline Ventures, 12 Sep 2023; Dealroom also lists Lifeline as lead.",
+   "group": "random_30"
+  },
+  {
+   "company": "Value.Space",
+   "date": "2023-04",
+   "stage": "seed",
+   "cala_leads": [
+    "Specialist VC"
+   ],
+   "verdict": "unverifiable",
+   "source_url": "https://tech.eu/2023/05/09/valuespace-raises-eur21-million-giving-a-boost-to-its-satellite-based-insurance-risk-assessment-tech/",
+   "note": "Tech.eu, AIN and Inventure list Specialist VC first among participants but no source names a lead. Cala also merged an Apr 2023 accelerator row with the 9 May 2023 seed.",
+   "group": "random_30"
+  },
+  {
+   "company": "Codesphere",
+   "date": "2024-05",
+   "stage": "series a",
+   "cala_leads": [
+    "Creandum"
+   ],
+   "verdict": "correct",
+   "source_url": "https://codesphere.com/articles/series-a-press-release",
+   "note": "Company release 17 May 2024: $18M (EUR 16.5M) Series A led by Creandum.",
+   "group": "random_30"
+  },
+  {
+   "company": "Qred AB",
+   "date": "2022-12",
+   "stage": null,
+   "cala_leads": [
+    "Nordic Capital"
+   ],
+   "verdict": "correct",
+   "source_url": "https://nordic9.com/news/qred-raised-sek-111-million-from-nordic-capital/",
+   "note": "SEK 111M from Nordic Capital (sole investor), 31 Dec 2022; Qred report describes it as a directed issue under the 2021 Nordic Capital agreement, so \"lead\" is trivially true.",
+   "group": "random_30"
+  },
+  {
+   "company": "TuringDream",
+   "date": "2025-06",
+   "stage": "seed",
+   "cala_leads": [
+    "Adara Ventures",
+    "HWK"
+   ],
+   "verdict": "correct",
+   "source_url": "https://www.adara.vc/news/why-we-invested-in-turingdream",
+   "note": "EUR 6M seed co-led by Adara Ventures and HWK TechInvestment, Next Tier Ventures joined, Jul 2025.",
+   "group": "random_30"
+  },
+  {
+   "company": "Stegra",
+   "date": "2024-01",
+   "stage": null,
+   "cala_leads": [
+    "Temasek"
+   ],
+   "verdict": "wrong",
+   "source_url": "https://news.cision.com/stegra/r/h2-green-steel-raises-more-than--4-billion-in-debt-financing-for-the-world-s-first-large-scale-green,c3913134",
+   "note": "Company release 22 Jan 2024: close to EUR 300M equity from new holders Microsoft Climate Innovation Fund, Mubea, Siemens Financial Services plus IMAS and Just Climate. No lead named and Temasek not mentioned.",
+   "group": "random_30"
+  },
+  {
+   "company": "Spring Health",
+   "date": "2023-04",
+   "stage": "series d",
+   "cala_leads": [
+    "Not confirmed"
+   ],
+   "verdict": "wrong",
+   "source_url": "https://bhbusiness.com/2023/04/12/digital-mental-health-company-spring-health-raises-71m-hits-2-5b-valuation/",
+   "note": "Lead was never disclosed. Cala row honestly says lead_investor \"Not confirmed\", but our parser turned that text into an investor key, so the app treats \"Not confirmed\" as a fund that led. Fix in pipeline.",
+   "group": "random_30"
+  },
+  {
+   "company": "Moonlight AI",
+   "date": "2026-05",
+   "stage": "seed",
+   "cala_leads": [
+    "Lotus One Investment",
+    "MEDIN Fund",
+    "VP Venture Partners"
+   ],
+   "verdict": "correct",
+   "source_url": "https://inforcapital.com/news/swiss-startup-moonlight-ai-raises-28-million-to-turn-routine-blood-and-cytology-imaging-into-genomic-insights/",
+   "note": "EUR 2.8M seed co-led by Lotus One Investment, VP Venture Partners and MEDIN Fund, 6 May 2026.",
+   "group": "random_30"
+  },
+  {
+   "company": "Haelixa",
+   "date": "2026-02",
+   "stage": "seed",
+   "cala_leads": [
+    "Verve Ventures",
+    "Z\u00fcrcher Kantonalbank"
+   ],
+   "verdict": "correct",
+   "source_url": "https://textination.de/en/node/30105",
+   "note": "Led by existing backers Verve Ventures and Zuercher Kantonalbank, 212 NexT Fund joined, 3 Feb 2026. Press calls it pre-Series A, Cala says seed.",
+   "group": "random_30"
+  },
+  {
+   "company": "Beside",
+   "date": "2025-11",
+   "stage": "series a",
+   "cala_leads": [
+    "EQT Ventures"
+   ],
+   "verdict": "correct",
+   "source_url": "https://stories.eqtventures.com/articles/beside-raises-32m-to-bridge-ai-beyond-techbros",
+   "note": "EQT Ventures: \"Series A lead investors\"; $20M Series A within $32M total, 11 Nov 2025 (Fortune same day).",
+   "group": "random_30"
+  },
+  {
+   "company": "Makersite",
+   "date": "2022-10",
+   "stage": "series a",
+   "cala_leads": [
+    "Hitachi Ventures",
+    "Translink Capital"
+   ],
+   "verdict": "correct",
+   "source_url": "https://www.businesswire.com/news/home/20221013005926/en/Makersite-the-AI-data-platform-that-powers-sustainable-product-and-supply-chain-decisions-at-scale-secures-18M-USD-Series-A",
+   "note": "Company release 13 Oct 2022: Series A led by Hitachi Ventures and Translink Capital, KOMPAS and Planet A joined.",
+   "group": "random_30"
+  },
+  {
+   "company": "Brickken",
+   "date": "2025-01",
+   "stage": "seed",
+   "cala_leads": [
+    "Cryptoplaza"
+   ],
+   "verdict": "unverifiable",
+   "source_url": "https://www.brickken.com/post/brickken-secures-seed-round-global-growth-rwa-tokenization",
+   "note": "Company release (15 Jan 2025) names no lead and does not list Cryptoplaza (names SNZ, Mocha, Psalion, Hodl, Ergodic, Blue Bay). Only Seedtable (estimated allocations) marks Cryptoplaza as lead.",
+   "group": "random_30"
+  },
+  {
+   "company": "Mews",
+   "date": "2026-01",
+   "stage": "series d",
+   "cala_leads": [
+    "EQT Growth"
+   ],
+   "verdict": "correct",
+   "source_url": "https://www.mews.com/en/press/mews-secures-300-million-investment",
+   "note": "Company release 22 Jan 2026: $300M Series D led by EQT Growth.",
+   "group": "random_30"
+  },
+  {
+   "company": "Camphouse",
+   "date": "2023-10",
+   "stage": "series a",
+   "cala_leads": [
+    "eEquity",
+    "Fairpoint Capital"
+   ],
+   "verdict": "unverifiable",
+   "source_url": "https://funding.tech.eu/companies/49B4C59B-574D-4DF3-81E5-5DFA2CF986CE",
+   "note": "EUR 7M round on 19 Oct 2023 from eEquity and Fairpoint Capital (tech.eu funding DB, Mergr). No press release found that names a lead or confirms the Series A label.",
+   "group": "random_30"
+  },
+  {
+   "company": "Pixelgen Technologies",
+   "date": "2022-12",
+   "stage": "seed",
+   "cala_leads": [
+    "Navigare Ventures"
+   ],
+   "verdict": "correct",
+   "source_url": "https://nordiclifescience.org/new-company-with-the-purpose-to-advance-single-cell-spatial-proteomics/",
+   "note": "Approx $6M seed led by Navigare Ventures, Dec 2022.",
+   "group": "random_30"
+  },
+  {
+   "company": "Vugene",
+   "date": "2025-05",
+   "stage": "pre-seed",
+   "cala_leads": [
+    "Superhero Capital"
+   ],
+   "verdict": "correct",
+   "source_url": "https://ceelm.com/lithuania/29578-walless-advises-vugene-on-eur-1-million-funding-round-to-scale-multi-omics-platform",
+   "note": "EUR 1M round led by Superhero Capital, May 2025 (law firm deal note; StartupRise agrees). Most press calls it seed, Cala says pre-seed.",
+   "group": "random_30"
+  },
+  {
+   "company": "Biorce",
+   "date": "2024-11",
+   "stage": "seed",
+   "cala_leads": [
+    "Mustard Seed Maze",
+    "YZR Capital"
+   ],
+   "verdict": "correct",
+   "source_url": "https://biotech-spain.com/en/articles/biorce-closes-3-5m-round-led-by-yzr-capital-and-mustard-seed/",
+   "note": "EUR 3.5M round led by YZR Capital and Mustard Seed Maze, Nov 2024.",
+   "group": "random_30"
+  },
+  {
+   "company": "Stilta",
+   "date": "2026-01",
+   "stage": null,
+   "cala_leads": [
+    "Y Combinator"
+   ],
+   "verdict": "partly",
+   "source_url": "https://www.ycombinator.com/companies/stilta",
+   "note": "YC W26 standard deal (~$500K). YC did invest, but an accelerator cheque is not a led round; counting it lets YC show as \"leads at pre-seed\". Real seed: $10.5M led by a16z, May 2026.",
+   "group": "random_30"
+  },
+  {
+   "company": "Koll",
+   "date": "2025-01",
+   "stage": "seed",
+   "cala_leads": [
+    "Superhero Capital"
+   ],
+   "verdict": "correct",
+   "source_url": "https://paaomasijoittajat.fi/en/ajankohtaista/news/28520/the-koll-phone-app-will-be-launched-on-the-international-market-with-funding-from-superhero-capital/",
+   "note": "EUR 400K from Superhero Capital (sole investor), Jan 2025.",
+   "group": "random_30"
+  },
+  {
+   "company": "Sono",
+   "date": "2026-06",
+   "stage": "seed",
+   "cala_leads": [
+    "Maki.vc"
+   ],
+   "verdict": "correct",
+   "source_url": "https://nordic9.com/news/sono-raises-15m-pre-seed-led-by-makivc-with-w/",
+   "note": "Maki.vc led, with Wave Ventures and Failup, Jun 2026. Size and stage differ: $1.5M pre-seed, Cala says $1M seed.",
+   "group": "sample_list"
+  },
+  {
+   "company": "Vensum Power",
+   "date": "2026-11",
+   "stage": "series a",
+   "cala_leads": [
+    "Eviny Ventures",
+    "Larsen",
+    "Lifeline Ventures",
+    "Toubro Group"
+   ],
+   "verdict": "correct",
+   "source_url": "https://tech.eu/2026/11/06/vensum-power-raises-eur9m-to-cut-power-losses-in-ai-data-centres-ev-charging-and-energy-storage/",
+   "note": "EUR 9M Series A co-led by Lifeline Ventures, Larsen & Toubro and Eviny Ventures, 6 Nov 2026. Lead correct, but our parser split \"Larsen & Toubro Group\" into two investors (\"Larsen\", \"Toubro Group\").",
+   "group": "sample_list"
+  },
+  {
+   "company": "Ancep",
+   "date": "2026-11",
+   "stage": null,
+   "cala_leads": [
+    "Creandum"
+   ],
+   "verdict": "correct",
+   "source_url": "https://tech.eu/2026/11/10/creandum-leads-85m-funding-for-ancep-to-turn-overlooked-insurance-risks-into-revenue/",
+   "note": "Creandum led $8.5M, Kleiner Perkins and Vicus joined, 10 Nov 2026.",
+   "group": "sample_list"
+  },
+  {
+   "company": "Hamina Wireless",
+   "date": "2025-07",
+   "stage": "seed",
+   "cala_leads": [
+    "Inventure"
+   ],
+   "verdict": "correct",
+   "source_url": "https://bebeez.eu/2025/07/24/finnish-hamina-wireless-raises-seed-round-to-advance-network-design-software/",
+   "note": "Seed led by Inventure with Superhero Capital and First Fellow, Jul 2025 (amount undisclosed).",
+   "group": "sample_list"
+  },
+  {
+   "company": "Emmi AI",
+   "date": "2025-04",
+   "stage": "seed",
+   "cala_leads": [
+    "3VC",
+    "PUSH VC",
+    "Serena",
+    "Speedinvest"
+   ],
+   "verdict": "correct",
+   "source_url": "https://tech.eu/2025/04/25/austria-s-emmi-ai-raises-15m-to-bring-real-time-ai-simulations-to-industrial-engineering/",
+   "note": "EUR 15M seed led by 3VC, Speedinvest, Serena and PUSH VC, 25 Apr 2025; Cala lists all four.",
+   "group": "sample_list"
+  },
+  {
+   "company": "Blitzy",
+   "date": "2026-05",
+   "stage": "series b",
+   "cala_leads": [
+    "Northzone"
+   ],
+   "verdict": "correct",
+   "source_url": "https://www.lowenstein.com/news-insights/firm-news/lowenstein-represents-northzone-as-lead-investor-in-200m-funding-round-for-blitzy",
+   "note": "Northzone led $200M at $1.4B valuation, 5 May 2026. \"Series B\" label only in one source.",
+   "group": "sample_list"
+  },
+  {
+   "company": "FleetBrains",
+   "date": "2025-03",
+   "stage": "pre-seed",
+   "cala_leads": [
+    "Icebreaker.vc"
+   ],
+   "verdict": "correct",
+   "source_url": "https://en.ain.ua/2025/03/24/estonian-fleetbrains-secures-eur800k-from-icebreakervc",
+   "note": "EUR 800K (approx $860K) pre-seed from Icebreaker.vc, Mar 2025.",
+   "group": "sample_list"
+  },
+  {
+   "company": "Fluencify",
+   "date": "2026-09",
+   "stage": "pre-seed",
+   "cala_leads": [
+    "byFounders"
+   ],
+   "verdict": "correct",
+   "source_url": "https://thenextweb.com/news/fluencify-4-3m-pre-seed-byfounders",
+   "note": "byFounders led oversubscribed $4.3M (EUR 3.7M) pre-seed, Wave Ventures joined, 7 Sep 2026.",
+   "group": "sample_list"
+  },
+  {
+   "company": "Marble",
+   "date": "2026-11",
+   "stage": "seed",
+   "cala_leads": [
+    "Seedcamp"
+   ],
+   "verdict": "partly",
+   "source_url": "https://itbrief.co.uk/story/marble-raises-usd-3-75-million-to-automate-office-work",
+   "note": "Marble Cognition $3.75M pre-seed co-led by Heartcore and Seedcamp, Nov 2026. Cala names only Seedcamp and says $4M seed.",
+   "group": "sample_list"
+  },
+  {
+   "company": "TesterArmy",
+   "date": "2026-11",
+   "stage": "seed",
+   "cala_leads": [
+    "Point Nine"
+   ],
+   "verdict": "partly",
+   "source_url": "https://therecursive.com/polish-e2e-raises-eur7m-to-develop-ai-powered-software-testing",
+   "note": "Now e2e. $8M (EUR 7M) seed, 3 Nov 2026, \"led by Credo Ventures, KAYA, Point Nine, Baobab Ventures and Script Capital\". Cala credits Point Nine as sole lead.",
+   "group": "sample_list"
+  },
+  {
+   "company": "KineDB",
+   "date": "2026-10",
+   "stage": "pre-seed",
+   "cala_leads": [
+    "Superhero Capital"
+   ],
+   "verdict": "correct",
+   "source_url": "https://itbrief.co.uk/story/kinedb-raises-eur-850k-pre-seed-to-back-offline-database",
+   "note": "EUR 850K pre-seed led by Superhero Capital, NGL Ventures joined, 29 Oct 2026.",
+   "group": "sample_list"
+  }
+ ],
  "note": "The prediction test ran on the first 289 companies before the investor-first crawl. All other rows are recomputed on every snapshot."
 }
