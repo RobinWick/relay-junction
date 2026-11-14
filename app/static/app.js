@@ -31,18 +31,18 @@ const SAMPLE = [
 ].join("\n");
 
 /* Made-up people. The companies are real portfolio companies of the sample funds in the Cala snapshot,
-   so the demo shows real matches; names and roles are invented and belong to no real person. */
+   so the demo shows real matches. Names are invented and roles are kept neutral (no founder or CEO titles),
+   so nothing here reads as a claim about who runs a real company. */
 const SAMPLE_NETWORK = `Notes:
 "Made-up sample network for the demo. These people do not exist."
 
 First Name,Last Name,URL,Email Address,Company,Position,Connected On
-Demo Contact,A,,,Sono,Co-founder & CEO,04 Mar 2025
-Demo Contact,B,,,Aventix,Head of Product,18 Jun 2024
-Demo Contact,C,,,KineDB,CTO and co-founder,02 Feb 2026
+Demo Contact,B,,,Aventix,Product Designer,18 Jun 2024
+Demo Contact,C,,,KineDB,Software Engineer,02 Feb 2026
 Demo Contact,D,,,TesterArmy,Software Engineer,11 Sep 2025
-Demo Contact,E,,,Causa Prima,Sales Lead,29 Jan 2026
+Demo Contact,E,,,Causa Prima,Sales,29 Jan 2026
 Demo Contact,F,,,Marble Cognition,Product Designer,07 Oct 2025
-Demo Contact,G,,,Metaktik,Founder,21 Apr 2026
+Demo Contact,G,,,Metaktik,Operations,21 Apr 2026
 Demo Contact,H,,,Self-employed,Advisor,15 May 2023
 Demo Contact,I,,,Northwind Example Oy,Engineer,30 Aug 2022
 Demo Contact,J,,,Demo Bakery,Owner,12 Dec 2021`;
@@ -51,7 +51,12 @@ async function api(path, opts = {}) {
   const res = await fetch(path, {headers: {"Content-Type": "application/json"}, ...opts});
   if (res.status === 401) { location.href = "/login"; throw new Error("auth"); }
   const body = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(body.detail || body.error || `Request failed (${res.status})`);
+  if (!res.ok) {
+    const d = body.detail;
+    const err = new Error(Array.isArray(d) ? d.map((e) => e.msg).join("; ") : d || body.error || `Request failed (${res.status})`);
+    err.status = res.status;
+    throw err;
+  }
   return body;
 }
 
@@ -136,7 +141,7 @@ function setupChips(kind) {
   let active = -1, items = [], timer;
 
   const add = (name) => {
-    name = name.trim();
+    name = name.trim().slice(0, 120);
     if (!name || list.length >= max || list.some((x) => x.toLowerCase() === name.toLowerCase())) return;
     list.push(name);
     if (kind === "investors" && list.length === 1 && !state.lead) state.lead = name;
@@ -185,7 +190,16 @@ function lineCount() {
   const n = $("#funds").value.split(/\n|;/).filter((l) => l.trim().length > 1).length;
   $("#line-count").textContent = n ? `${plural(n, "line", "lines")}. Times, tables and notes are ignored.` : "Any format works. Times, tables and notes are ignored.";
 }
+const TARGET_MAX = 5000;
 const targetValue = () => { const t = parseFloat(($("#target").value || "").replace(",", ".")); return isFinite(t) && t > 0 ? t : null; };
+/* Shows an inline hint and returns false when the target raise is out of range. */
+function targetOk() {
+  const t = targetValue(), bad = t != null && t > TARGET_MAX;
+  $("#target-err").textContent = bad ? `Enter EUR ${TARGET_MAX} million or less.` : "";
+  $("#target").setAttribute("aria-invalid", String(bad));
+  if (bad) $("#target").focus();
+  return !bad;
+}
 
 /* ---------------- LinkedIn network (read in the browser, never uploaded) ---------------- */
 /* Same rule as merge.company_key on the server, so a connection's company and a portfolio company meet on one key. */
@@ -198,9 +212,18 @@ function companyKey(name) {
 const STOP_KEYS = new Set(["selfemployed", "freelance", "freelancer", "stealth", "stealthstartup", "stealthmode", "confidential",
   "independent", "consultant", "consulting", "none", "retired", "student", "various", "unemployed", "private", "startup",
   "ever", "garage", "home", "studio", "labs", "group", "capital", "ventures", "partners", "digital", "media", "solutions",
-  "technologies", "global", "international", "company", "business", "university"]);
+  "technologies", "global", "international", "company", "business", "university",
+  "junction"]);  // Junction Oy runs the hackathon: nearly every visitor this week is connected to it
 const usableKey = (k) => k.length >= 4 && !STOP_KEYS.has(k);
-const FOUNDER_RE = /\b(co-?founder|founder|ceo|cto|chief executive|chief technology|managing director|partner)\b/i;
+
+/* Founder level only when a title part STARTS with a founder role: "Co-founder & CEO" yes,
+   "Executive Assistant to the CEO" and "Channel Partner Manager" no. */
+const FOUNDER_START = /^(?:co-?\s?founder|founder|founding partner|ceo|cto|chief (?:executive|technology) officer|managing director|(?:general|managing) partner|partner$)/i;
+const NOT_FOUNDER = /\b(assistant|associate|office of|to the|chief of staff|intern)\b/i;
+function isFounderLevel(position) {
+  return String(position || "").split(/\s*(?:[,|/&·]|\band\b|\bat\b|@)\s*/i)
+    .some((seg) => seg && !NOT_FOUNDER.test(seg) && FOUNDER_START.test(seg.trim()));
+}
 
 function parseCsv(text) {
   const rows = []; let row = [], f = "", q = false;
@@ -230,7 +253,7 @@ function parseConnections(text) {
   return rows.slice(h + 1).filter((r) => r.length > 1 && (r[cC] || "").trim()).map((r) => {
     const company = clip(r[cC]), position = clip(cP >= 0 ? r[cP] : "");
     return {first: clip(cF >= 0 ? r[cF] : ""), last: clip(cL >= 0 ? r[cL] : ""), company, position,
-      ckey: companyKey(company), founder: FOUNDER_RE.test(position)};
+      ckey: companyKey(company), founder: isFounderLevel(position)};
   });
 }
 
@@ -239,9 +262,17 @@ function setNetwork(people, label, sample) {
   people.forEach((p) => { if (!usableKey(p.ckey)) return; if (!byKey.has(p.ckey)) byKey.set(p.ckey, []); byKey.get(p.ckey).push(p); });
   state.network = {people, byKey, label, sample};
   paintNetStatus();
-  if (state.view) renderResults();
+  rerenderKeepFocus();
 }
-function clearNetwork() { state.network = null; paintNetStatus(); if (state.view) renderResults(); }
+function clearNetwork() { state.network = null; paintNetStatus(); rerenderKeepFocus(); }
+
+/* Re-rendering the results removes the control that had focus; put focus on the new network bar instead of <body>. */
+function rerenderKeepFocus() {
+  if (!state.view) return;
+  const wasInResults = $("#results").contains(document.activeElement);
+  renderResults();
+  if (wasInResults) ($("#netbar [data-net-clear]") || $("#li-file-2"))?.focus();
+}
 
 function paintNetStatus(msg, isErr) {
   const st = $("#net-status");
@@ -272,17 +303,19 @@ function setupDrop(el) {
 }
 
 /* ---------------- ranking ---------------- */
-const GROUPS = ["pitch", "size", "avoid"];
-const groupOf = (r) => (r.verdict === "leads" ? "pitch" : r.verdict === "leads_size" ? "size" : "avoid");
+const GROUPS = ["pitch", "size", "few", "avoid"];
+const GROUP_NAME = {pitch: "Pitch first", size: "Leads, but a different size", few: "Too little data to tell", avoid: "Mostly follows or avoid"};
+const groupOf = (r) => (r.verdict === "leads" ? "pitch" : r.verdict === "leads_size" ? "size" : r.verdict === "few" ? "few" : "avoid");
 
-/* People in the founder's network at companies this fund led or joined, strongest first. */
+/* Way-in strengths: founder at a company it led 5, anyone there 4, anyone at a company it joined 3,
+   your investor in a small round with it 2, a same-name match on a short or ordinary-word company 1. */
 function networkMatches(r) {
   const net = state.network;
   if (!net) return [];
   const out = [];
   for (const p of r.portfolio || []) {
     for (const person of net.byKey.get(p.ckey) || []) {
-      out.push({person, round: p, strength: p.led ? (person.founder ? 4 : 3) : 2});
+      out.push({person, round: p, weak: !!p.weak, strength: p.weak ? 1 : p.led ? (person.founder ? 5 : 4) : 3});
     }
   }
   return out.sort((a, b) => b.strength - a.strength || b.round.t - a.round.t);
@@ -292,25 +325,35 @@ const shortFund = (name) => String(name).replace(/\s+(ventures|venture capital|c
 
 function wayIn(r) {
   const m = networkMatches(r);
-  if (m.length) {
-    const best = m[0];
+  const best = m[0];
+  if (best && best.strength > 1) {
     return {strength: best.strength, matches: m,
-      text: best.strength === 4 ? `You know a founder at ${best.round.company}` : `You know someone at ${best.round.company}`};
+      text: best.strength === 5 ? `You know a founder at ${best.round.company}` : `You know someone at ${best.round.company}`};
   }
-  if (r.tie) return {strength: 1, matches: [], text: `Ask ${shortFund(r.tie.investor)}`};
+  if (r.tie) return {strength: 2, matches: m, text: `Ask ${shortFund(r.tie.investor)}`};
+  if (best) return {strength: 1, matches: m, text: `Same name: someone at ${best.round.company}`};
   return {strength: 0, matches: [], text: ""};
 }
 
 const hasConflict = (r) => (r.conflicts || []).length > 0;
-const ratio = (r) => (r.known ? r.led / r.known : -1);
 
-/* Group by verdict; competitor conflicts sink to the bottom of their group; then stronger way in; then lead ratio. */
+/* Lower bound of the lead share (Wilson, z = 1): "Led 3 of 3" ranks below "Led 31 of 36". */
+function leadScore(r) {
+  const n = r.known, z = 1;
+  if (!n) return -1;
+  const p = r.led / n;
+  return (p + z * z / (2 * n) - z * Math.sqrt(p * (1 - p) / n + z * z / (4 * n * n))) / (1 + z * z / n);
+}
+
+/* Group by verdict; competitor conflicts sink to the bottom of their group; then stronger way in;
+   then (when finding funds) more led rounds like yours; then the lead share's lower bound. */
 function rankRows(rows) {
   return rows.map((r, idx) => ({...r, group: groupOf(r), way: wayIn(r), idx}))
     .sort((a, b) => GROUPS.indexOf(a.group) - GROUPS.indexOf(b.group)
       || hasConflict(a) - hasConflict(b)
       || b.way.strength - a.way.strength
-      || ratio(b) - ratio(a)
+      || (b.like_you?.length || 0) - (a.like_you?.length || 0)
+      || leadScore(b) - leadScore(a)
       || a.idx - b.idx);
 }
 
@@ -322,17 +365,30 @@ function skeleton() {
 async function run() {
   const text = $("#funds").value;
   if (!text.trim()) { $("#funds").focus(); $("#line-count").textContent = "Paste at least one fund name first."; return; }
-  const body = {funds_text: text, stage: state.stage, target_eur_m: targetValue(), investors: state.investors,
-    lead: state.lead, company: $("#company").value.trim() || null, competitors: state.competitors};
-  await load(() => api("/api/check", {method: "POST", body: JSON.stringify(body)}), (data) => ({...data, mode: "check"}), body);
+  if (!targetOk()) return;
+  await check({funds_text: text, stage: state.stage, target_eur_m: targetValue(), investors: [...state.investors],
+    lead: state.lead, company: $("#company").value.trim() || null, competitors: [...state.competitors]});
+}
+
+/* The sample has its own request, so its investor, competitor and raise never land in the founder's form. */
+function runSample() {
+  setStage("seed");
+  check({funds_text: SAMPLE, stage: "seed", target_eur_m: 3, investors: ["Lifeline Ventures"], lead: "Lifeline Ventures",
+    company: null, competitors: ["Lovable"], sample: true});
+}
+
+function check(body) {
+  const {sample, ...payload} = body;
+  return load(() => api("/api/check", {method: "POST", body: JSON.stringify(payload)}), (data) => ({...data, mode: "check"}), body);
 }
 
 const REGION_LABEL = {nordics: "the Nordics", baltics: "the Baltics", dach: "Germany, Austria and Switzerland", "uk-ie": "the UK and Ireland",
   "france-benelux": "France and Benelux", south: "Southern Europe", cee: "Central and Eastern Europe", "": "Europe"};
 
 async function runFind() {
+  if (!targetOk()) return;
   const req = {stage: state.stage, target_eur_m: targetValue(), region: $("#region").value || null,
-    investors: state.investors, competitors: state.competitors};
+    investors: [...state.investors], competitors: [...state.competitors]};
   await load(() => api("/api/discover", {method: "POST", body: JSON.stringify(req)}), (d) => {
     const sz = d.filters.size ? ` of EUR ${fmtM(d.filters.size[0])} to ${fmtM(d.filters.size[1])}m` : "";
     const where = esc(REGION_LABEL[req.region || ""]);
@@ -357,7 +413,8 @@ async function load(fetcher, toView, req) {
     renderResults();
     $("#results h1")?.focus();
   } catch (err) {
-    if (err.message !== "auth") out.innerHTML = `<div class="alert" role="alert"><h3>Could not check the list</h3>${esc(err.message)}. Try again in a moment.</div><div class="after"><button class="btn line" type="button" data-edit>Back to the list</button></div>`;
+    const retry = !err.status || err.status >= 500 || err.status === 429;
+    if (err.message !== "auth") out.innerHTML = `<div class="alert" role="alert"><h3>Could not check the list</h3>${esc(err.message)}.${retry ? " Try again in a moment." : " Change it and check again."}</div><div class="after"><button class="btn line" type="button" data-edit>Back to the list</button></div>`;
   } finally {
     $("#go").disabled = false;
     out.setAttribute("aria-busy", "false");
@@ -409,10 +466,14 @@ function lastCell(r) {
   if (r.verdict === "public") return `<span class="last muted">Not counted</span>`;
   return r.last_lead ? `<span class="last">${esc(r.last_lead.company)} <span class="d">${esc(r.last_lead.date)}</span></span>` : `<span class="last muted">Never led</span>`;
 }
-const askedForPaths = () => state.investors.length > 0 || !!state.network;
+/* The Way in column only shows once the founder gave us something to look for paths with. */
+const askedForPaths = () => (state.req?.investors?.length || 0) > 0 || !!state.network;
+const sampleNet = () => !!state.network?.sample;
+const wayFromNet = (r) => r.way.matches.length > 0 && r.way.strength !== 2;
 function wayCell(r) {
-  if (r.way.strength) return `<span class="way yes">${ICON.link}${esc(r.way.text)}</span>`;
-  return `<span class="way">${askedForPaths() ? "None found" : "Not checked"}</span>`;
+  if (!r.way.strength) return `<span class="way">None found</span>`;
+  const weak = r.way.strength === 1;
+  return `<span class="way${weak ? " weak" : " yes"}">${ICON.link}${esc(r.way.text)}</span>${sampleNet() && wayFromNet(r) ? `<span class="tag-sample">Sample</span>` : ""}`;
 }
 function conflictFlag(r) {
   const c = (r.conflicts || [])[0];
@@ -420,25 +481,27 @@ function conflictFlag(r) {
   return `<span class="flag">${ICON.flag}${c.level === "led" ? "Led" : "Backed"} ${esc(c.competitor)}</span>`;
 }
 
-function rowHtml(r, i) {
+function rowHtml(r, i, showWay) {
   return `<li class="row" data-i="${i}">
-    <div class="cell c-fund"><button type="button" class="nm" data-open="${i}" aria-haspopup="dialog">${esc(r.name)}</button>${conflictFlag(r)}</div>
-    <div class="cell c-verdict">${verdictPill(r)}</div>
+    <div class="cell c-fund"><span class="fund-l1"><button type="button" class="nm" data-open="${i}" aria-haspopup="dialog">${esc(r.name)}</button>${conflictFlag(r)}</span>${verdictLine(r)}</div>
     <div class="cell c-led"><span class="lbl">Lead record</span>${ledCell(r)}</div>
     <div class="cell c-size"><span class="lbl">Round size it leads</span>${sizeCell(r, state.req?.target_eur_m)}</div>
     <div class="cell c-last"><span class="lbl">Last lead</span>${lastCell(r)}</div>
-    <div class="cell c-way"><span class="lbl">Way in</span>${wayCell(r)}</div>
+    ${showWay ? `<div class="cell c-way"><span class="lbl">Way in</span>${wayCell(r)}</div>` : ""}
   </li>`;
 }
+/* Verdict as one quiet line under the fund name: the group heading already says the rest. */
+const verdictLine = (r) => `<span class="vline v-${esc(r.verdict)}"><span class="g" aria-hidden="true"></span>${esc(verdictText(r))}</span>`;
 
 function groupHead(key, n, d, req) {
   const t = req.target_eur_m;
-  const meta = {
-    pitch: ["Pitch first", `They lead ${d.stage} rounds${t ? ` near your EUR ${fmtM(t)}m` : ""}`],
-    size: ["Leads, but a different size", "They lead, but rounds bigger or smaller than yours"],
-    avoid: ["Mostly follows or avoid", "Ask them to join a round, not to lead it"],
+  const cap = {
+    pitch: `They lead ${d.stage} rounds${t ? ` near your EUR ${fmtM(t)}m` : ""}`,
+    size: "They lead, but rounds bigger or smaller than yours",
+    few: "Too few rounds with a named lead to judge. Open a fund to see its rounds",
+    avoid: "They rarely lead, or have not led lately. Ask them to join a round, not to lead it",
   }[key];
-  return `<h2 class="grp" id="g-${key}">${meta[0]} <span class="n">${n}</span><span class="cap">${esc(meta[1])}</span></h2>`;
+  return `<h2 class="grp" id="g-${key}">${GROUP_NAME[key]} <span class="n">${n}</span><span class="cap">${esc(cap)}</span></h2>`;
 }
 
 function summaryLine(d, ranked, req) {
@@ -450,7 +513,7 @@ function summaryLine(d, ranked, req) {
   const ways = ranked.filter((r) => r.way.strength > 0).length;
   const parts = [`<b class="acc">${by("pitch")} of ${n}</b> lead ${esc(d.stage)} rounds${req.target_eur_m ? ` near your EUR ${fmtM(req.target_eur_m)}m` : ""}`];
   if (by("size")) parts.push(`<b>${by("size")}</b> ${by("size") === 1 ? "leads" : "lead"}, but a different size`);
-  if (conf) parts.push(`<b class="wrn">${conf}</b> backed ${esc(state.req.competitors.join(" or "))}`);
+  if (conf) parts.push(`<b class="wrn">${conf}</b> backed ${esc(req.competitors.join(" or "))}`);
   if (askedForPaths()) parts.push(`you have a way in to <b>${ways}</b>`);
   return parts.join(". ").replace(/\. you/, ". You") + ".";
 }
@@ -458,9 +521,17 @@ function summaryLine(d, ranked, req) {
 function roundLine(req) {
   const bits = [esc(state.view.stage)];
   if (req.target_eur_m) bits.push(`EUR ${fmtM(req.target_eur_m)}m`);
-  if (state.investors.length) bits.push(`with ${esc(state.investors.join(", "))}`);
-  if (state.competitors.length) bits.push(`vs ${esc(state.competitors.join(", "))}`);
+  if (req.investors?.length) bits.push(`with ${esc(req.investors.join(", "))}`);
+  if (req.competitors?.length) bits.push(`vs ${esc(req.competitors.join(", "))}`);
   return bits.join(" · ");
+}
+
+/* Without a target raise the size column is not judged, so "Pitch first" only means "leads at your stage". Say so. */
+function notesUnderSummary(req) {
+  const out = [];
+  if (req.sample) out.push(`<p class="sample-line">Sample round: Seed, EUR 3m, Lifeline Ventures as your lead investor, Lovable as a competitor. <button type="button" class="linkbtn" data-edit>Check your own list</button></p>`);
+  else if (!req.target_eur_m) out.push(`<p class="size-off">Size not checked. <button type="button" class="linkbtn" data-edit-target>Add your target raise</button></p>`);
+  return out.join("");
 }
 
 function netbarHtml() {
@@ -481,9 +552,9 @@ function renderSide(req) {
   $("#props").innerHTML = `
     <div class="prop"><dt>Stage</dt>${dd(state.view.stage)}</div>
     <div class="prop"><dt>Raising</dt>${dd(req.target_eur_m ? `EUR ${fmtM(req.target_eur_m)}m` : "", "Not set")}</div>
-    <div class="prop"><dt>Investors</dt>${dd(state.investors.join(", "), "None added")}</div>
-    <div class="prop"><dt>Competitors</dt>${dd(state.competitors.join(", "), "None added")}</div>
-    <div class="prop"><dt>Network</dt>${dd(n ? plural(n.people.length, "connection", "connections") : "", "Not added")}</div>`;
+    <div class="prop"><dt>Investors</dt>${dd((req.investors || []).join(", "), "None added")}</div>
+    <div class="prop"><dt>Competitors</dt>${dd((req.competitors || []).join(", "), "None added")}</div>
+    <div class="prop"><dt>Network</dt>${dd(n ? `${plural(n.people.length, "connection", "connections")}${n.sample ? ", made-up sample" : ""}` : "", "Not added")}</div>`;
 }
 
 function renderResults() {
@@ -492,9 +563,11 @@ function renderResults() {
   const ranked = rankRows(d.rows || []);
   state.ranked = ranked;
   renderSide(req);
+  const showWay = askedForPaths();
   const groups = GROUPS.map((g) => [g, ranked.map((r, i) => [r, i]).filter(([r]) => r.group === g)]).filter(([, rs]) => rs.length);
-  const list = groups.map(([g, rs]) => `<section aria-labelledby="g-${g}">${groupHead(g, rs.length, d, req)}<ul class="grp-list">${rs.map(([r, i]) => rowHtml(r, i)).join("")}</ul></section>`).join("");
+  const list = groups.map(([g, rs]) => `<section aria-labelledby="g-${g}">${groupHead(g, rs.length, d, req)}<ul class="grp-list">${rs.map(([r, i]) => rowHtml(r, i, showWay)).join("")}</ul></section>`).join("");
   const isFind = d.mode === "discover";
+  out.classList.toggle("has-way", showWay);
   out.innerHTML = `
     <div class="topbar">
       <button class="btn" type="button" data-edit>${ICON.back}${isFind ? "Change search" : "Edit list"}</button>
@@ -502,14 +575,15 @@ function renderResults() {
       <button class="btn" type="button" id="csv">${ICON.copy}Copy as CSV</button>
       <button class="btn" type="button" id="print">${ICON.print}Print sheet</button>
     </div>
-    <p class="print-head"><b>${esc(APP())}</b> · ${roundLine(req)} · Cala round data, retrieved ${esc(state.meta?.retrieved || "")}</p>
+    <p class="print-head"><b>${esc(APP())}</b> · ${roundLine(req)} · Cala round data, retrieved ${esc(state.meta?.retrieved || "")}${req.sample ? " · Sample round" : ""}${sampleNet() ? " · Way in uses a made-up sample network" : ""}</p>
     <div class="head">
       <h1 tabindex="-1">${isFind ? "Funds that led rounds like yours" : "Your shortlist"} <span class="meta">${plural(ranked.length, "fund", "funds")}${isFind ? " found" : " checked"}</span></h1>
       <p class="round-line">${roundLine(req)}</p>
       <p class="summary">${summaryLine(d, ranked, req)}</p>
+      ${notesUnderSummary(req)}
     </div>
     ${ranked.length ? netbarHtml() : ""}
-    ${ranked.length ? `<div class="cols" aria-hidden="true"><span>Fund</span><span>Verdict</span><span>Lead record</span><span>Round size${req.target_eur_m ? ` vs your ${fmtM(req.target_eur_m)}m` : " it leads"}</span><span class="c-last">Last lead</span><span>Way in</span></div>${list}` : `<p class="empty">None of the pasted lines matched a fund in our Cala data.</p>`}
+    ${ranked.length ? `<div class="cols" aria-hidden="true"><span>Fund</span><span>Lead record</span><span>Round size${req.target_eur_m ? ` vs your ${fmtM(req.target_eur_m)}m` : " it leads"}</span><span class="c-last">Last lead</span>${showWay ? "<span>Way in</span>" : ""}</div>${list}` : `<p class="empty">None of the pasted lines matched a fund in our Cala data.</p>`}
     <div class="after">${afterHtml(d)}</div>`;
   $("#csv").onclick = () => copyCsv(ranked);
   $("#print").onclick = () => window.print();
@@ -576,21 +650,22 @@ async function startLookup(names) {
   btn.textContent = "Done";
   if (job.items.some((i) => i.status === "done")) {
     const extra = job.items.filter((i) => i.status === "done").map((i) => i.name).join("\n");
-    const box = $("#funds");
-    if (!box.value.includes(extra)) box.value = box.value.trim() + "\n" + extra;
-    lineCount();
-    run();
+    const req = state.req;
+    if (req?.funds_text == null) return;
+    if (!req.sample) { const box = $("#funds"); if (!box.value.includes(extra)) box.value = box.value.trim() + "\n" + extra; lineCount(); }
+    check({...req, funds_text: req.funds_text.includes(extra) ? req.funds_text : `${req.funds_text.trim()}\n${extra}`});
   }
 }
 
 function copyCsv(rows) {
   const q = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
   const head = ["Group", "Fund", "Verdict", "Led", "Known rounds", "Lead not named", "Size it leads (EUR m)", "Size vs your raise", "Last lead", "Way in", "Conflict"];
-  const gname = {pitch: "Pitch first", size: "Leads, but a different size", avoid: "Mostly follows or avoid"};
   const lines = [head.map(q).join(",")];
-  rows.forEach((r) => lines.push([gname[r.group], r.name, verdictText(r), r.led, r.known, r.unknown,
+  const fake = sampleNet();
+  rows.forEach((r) => lines.push([GROUP_NAME[r.group], r.name, verdictText(r), r.led, r.known, r.unknown,
     r.size ? `${fmtM(r.size.lo)}-${fmtM(r.size.hi)}` : "", r.size?.fit || "", r.last_lead ? `${r.last_lead.company} ${r.last_lead.date}` : "",
-    r.way.text, (r.conflicts || []).map((c) => `${c.level} ${c.competitor}`).join("; ")].map(q).join(",")));
+    fake && wayFromNet(r) ? `SAMPLE, made-up contact: ${r.way.text}` : r.way.text,
+    (r.conflicts || []).map((c) => `${c.level} ${c.competitor}`).join("; ")].map(q).join(",")));
   const btn = $("#csv");
   const done = (msg) => { btn.lastChild.textContent = msg; setTimeout(() => { btn.lastChild.textContent = "Copy as CSV"; }, 1600); };
   if (!navigator.clipboard) return done("Copy not available");
@@ -610,22 +685,15 @@ function openPane(returnFocus) {
   const onKey = (ev) => {
     if (ev.key === "Escape") return closePane();
     if (ev.key === "Tab") {
-      const f = $$("button, a[href], summary, input, [tabindex='0']", root).filter((x) => x.offsetParent !== null && !x.disabled);
+      const f = reachable(root);
       if (!f.length) return;
-      const first = f[0], last = f[f.length - 1];
-      if (ev.shiftKey && document.activeElement === first) { ev.preventDefault(); last.focus(); }
-      else if (!ev.shiftKey && document.activeElement === last) { ev.preventDefault(); first.focus(); }
+      const first = f[0], last = f[f.length - 1], at = document.activeElement;
+      if (!root.contains(at)) { ev.preventDefault(); (ev.shiftKey ? last : first).focus(); }
+      else if (ev.shiftKey && at === first) { ev.preventDefault(); last.focus(); }
+      else if (!ev.shiftKey && at === last) { ev.preventDefault(); first.focus(); }
     }
   };
   document.addEventListener("keydown", onKey);
-  root.addEventListener("click", (e) => {
-    if (e.target.closest("[data-close]")) return closePane();
-    const rid = e.target.closest("[data-rid]");
-    if (rid) { e.preventDefault(); openRound(+rid.dataset.rid); return; }
-    if (e.target.closest("[data-backfund]")) { e.preventDefault(); showFund(state.openIdx); }
-    const more = e.target.closest("[data-more]");
-    if (more) { more.previousElementSibling.querySelectorAll(".hidden").forEach((x) => x.classList.remove("hidden")); more.remove(); }
-  });
   paneCleanup = () => {
     document.removeEventListener("keydown", onKey);
     bg.forEach((el) => el.removeAttribute("inert"));
@@ -634,6 +702,28 @@ function openPane(returnFocus) {
     returnFocus?.focus();
   };
 }
+/* Focusable controls a keyboard user can actually reach: not inside a closed <details>, not hidden. */
+function reachable(root) {
+  return $$("button, a[href], summary, input, [tabindex='0']", root)
+    .filter((x) => !x.disabled && !x.closest("details:not([open]) > :not(summary)") && !x.closest(".hidden") && x.getClientRects().length);
+}
+
+/* One click handler for the pane, attached once at boot (#pane-root persists across opens). */
+function onPaneClick(e) {
+  if (e.target.closest("[data-close]")) return closePane();
+  const rid = e.target.closest("[data-rid]");
+  if (rid) { e.preventDefault(); openRound(+rid.dataset.rid); return; }
+  if (e.target.closest("[data-backfund]")) { e.preventDefault(); showFund(state.openIdx); return; }
+  const more = e.target.closest("[data-more]");
+  const list = more?.previousElementSibling;
+  if (list) {
+    const hidden = $$(".hidden", list);
+    hidden.forEach((x) => x.classList.remove("hidden"));
+    hidden[0]?.querySelector("a")?.focus();
+    more.remove();
+  }
+}
+
 function closePane() {
   $("#pane-root").innerHTML = "";
   const c = paneCleanup; paneCleanup = null; c?.();
@@ -660,15 +750,16 @@ const personName = (p) => [p.first, p.last.length === 1 ? p.last : p.last ? `${p
 function waysHtml(r) {
   const parts = [];
   const m = r.way.matches;
+  const fake = sampleNet();
   if (m.length) {
     const shown = m.slice(0, 8);
-    parts.push(`<div class="introcard"><div class="l1">${ICON.link}You know ${plural(m.length, "person", "people")} at companies it backed</div>
-      <ul class="people">${shown.map(({person, round}) => `<li><span><span class="who">${esc(personName(person))}</span> <span class="role">${esc(person.position || "Role not given")}</span></span>${person.founder ? `<span class="tagx">Founder level</span>` : ""}<span class="via">Works at <a href="#" data-rid="${round.rid}">${esc(round.company)}</a>, whose ${esc(round.stage)} round in ${esc(round.date)} ${esc(r.name)} ${round.led ? "led" : "joined"}.</span></li>`).join("")}</ul>
+    parts.push(`<div class="introcard"><div class="l1">${ICON.link}${fake ? "Made-up sample: " : ""}You know ${plural(m.length, "person", "people")} at companies it backed</div>
+      <ul class="people">${shown.map(({person, round, weak}) => `<li><span><span class="who">${esc(personName(person))}</span> <span class="role">${esc(person.position || "Role not given")}</span></span>${fake ? `<span class="tag-sample">Made-up sample contact</span>` : person.founder && !weak ? `<span class="tagx">Founder level</span>` : ""}<span class="via">Works at <a href="#" data-rid="${round.rid}">${esc(round.company)}</a>, whose ${esc(round.stage)} round in ${esc(round.date)} ${esc(r.name)} ${round.led ? "led" : "joined"}.${weak ? ` <span class="wrn">Same name only: check it is the same company.</span>` : ""}</span></li>`).join("")}</ul>
       ${m.length > shown.length ? `<p>And ${m.length - shown.length} more.</p>` : ""}</div>`);
   }
   if (r.tie) {
     const x = r.tie.round;
-    parts.push(`<div class="introcard"><div class="l1">${ICON.link}Ask ${esc(r.tie.investor)}</div><p>Your investor <b>${esc(r.tie.investor)}</b> and ${esc(r.name)} were both in <a href="#" data-rid="${x.id}">${esc(x.company)}</a>'s ${esc(String(x.stage).toLowerCase())} round, ${esc(x.date)}, with ${x.n_investors} investors in total. Ask which partner was on that deal.</p></div>`);
+    parts[r.way.strength === 2 ? "unshift" : "push"](`<div class="introcard"><div class="l1">${ICON.link}Ask ${esc(r.tie.investor)}</div><p>Your investor <b>${esc(r.tie.investor)}</b> and ${esc(r.name)} were both in <a href="#" data-rid="${x.id}">${esc(x.company)}</a>'s ${esc(String(x.stage).toLowerCase())} round, ${esc(x.date)}, with ${x.n_investors} investors in total. Ask which partner was on that deal.</p></div>`);
   }
   if (!parts.length) {
     parts.push(`<div class="okline">${askedForPaths() ? "No one in your network or among your investors connects to this fund yet." : "Add your investors or LinkedIn connections to find a way in."}</div>`);
@@ -823,9 +914,9 @@ function renderMethod() {
         ${rule("public", "Public funder, not a lead", "Grant bodies, public funds and accelerators. Shown, never judged as a lead.")}
       </ul></section>
     <section><h2>How the list is ordered</h2>
-      <p>Funds are grouped by verdict (leads rounds like yours first, then leads a different size, then everything else), a fund that led or joined a competitor's round sinks to the bottom of its group, and inside a group a stronger way in comes first (a founder at a company the fund led, then anyone at a company it led, then anyone at a company it joined, then one of your investors in a small round with it), then the higher share of rounds led.</p></section>
+      <p>Funds are grouped by verdict (leads rounds like yours first, then leads a different size, then too little data to tell, then mostly follows, sometimes leads, no recent lead or public funder), a fund that led or joined a competitor's round sinks to the bottom of its group, and inside a group a stronger way in comes first (a founder at a company the fund led, then anyone at a company it led, then anyone at a company it joined, then one of your investors in a small round with it, then a same-name match on a short or ordinary-word company), then, when finding funds, more led rounds like yours, then the share of rounds led, judged by its lower bound (Wilson, z = 1) so 3 of 3 does not beat 31 of 36.</p></section>
     <section><h2>Your network</h2>
-      <p>Your LinkedIn connections file is read in your browser. Only first name, last name, company and position are kept, in memory, for this page; URLs and emails are never read, and nothing is uploaded or stored. Each connection's company is matched by name to the companies a fund led or joined in our data. Very short or generic company names are skipped to avoid false matches. A match is a person at a company, not a promise they know the partner.</p></section>
+      <p>Your LinkedIn connections file is read in your browser. Only first name, last name, company and position are kept, in memory, for this page; URLs and emails are never read, and nothing is uploaded or stored. Each connection's company is matched by name to the companies a fund led or joined in our data. Very short or generic company names are skipped. Names of 5 letters or fewer and ordinary words (Junction, Bolt, Garage) are shown as "same name" only, never as founder level, because a stranger's employer can share them. A title counts as founder level only when it starts with founder, co-founder, CEO, CTO, managing director or general or managing partner; assistants and associates do not count. A match is a person at a company, not a promise they know the partner.</p></section>
     <section><h2>What we tested</h2>
       ${v ? `<table class="simple"><thead><tr><th>Test</th><th>Result</th><th>n</th></tr></thead><tbody>${v.rows.map((r) => `<tr><td>${esc(r.test)}</td><td>${esc(r.result)}</td><td class="num">${esc(r.n)}</td></tr>`).join("")}</tbody></table><p class="muted">${esc(v.note || "")}</p>` : `<p class="muted">Validation numbers are being recomputed on the full data.</p>`}
       ${v?.accuracy?.length ? `<details class="fold-raw"><summary>Every hand check, with its source (${v.accuracy.length})</summary><table class="simple"><thead><tr><th>Round</th><th>Lead in Cala</th><th>Check</th></tr></thead><tbody>${v.accuracy.map((a) => `<tr><td>${esc(a.company)} <span class="muted">${esc(a.date)} ${esc(a.stage || "")}</span></td><td>${esc((a.cala_leads || []).join(", "))}</td><td>${esc(a.verdict)}${a.source_url && /^https:\/\//.test(a.source_url) ? `, <a href="${esc(a.source_url)}" target="_blank" rel="noopener noreferrer">source</a>` : ""}</td></tr>`).join("")}</tbody></table></details>` : ""}
@@ -855,20 +946,17 @@ function renderMethod() {
 document.addEventListener("DOMContentLoaded", () => {
   setupChips("investors"); setupChips("competitors");
   $("#funds").addEventListener("input", lineCount);
-  $("#sample").addEventListener("click", () => {
-    $("#funds").value = SAMPLE; lineCount();
-    setStage("seed");
-    if (!state.investors.length) { state.investors.push("Lifeline Ventures"); state.lead = "Lifeline Ventures"; renderChips("investors"); }
-    if (!state.competitors.length) { state.competitors.push("Lovable"); renderChips("competitors"); }
-    if (!$("#target").value) $("#target").value = "3";
-    run();
-  });
+  $("#sample").addEventListener("click", runSample);
+  $("#sample-top").addEventListener("click", runSample);
+  $("#pane-root").addEventListener("click", onPaneClick);
+  $("#target").addEventListener("input", () => { if ($("#target-err").textContent) targetOk(); });
   $("#check-form").addEventListener("submit", (e) => { e.preventDefault(); (state.mode === "find" ? runFind : run)(); });
   $("#to-find").addEventListener("click", () => setMode(state.mode === "find" ? "list" : "find"));
   $("#nav-find").addEventListener("click", () => { setMode("find"); setScreen("paste"); go("/"); $("#region").focus(); });
   $("#side-edit").addEventListener("click", () => { setScreen("paste"); $("#opt").open = true; window.scrollTo(0, 0); $("#funds").focus(); });
   document.addEventListener("click", (e) => {
     if (e.target.closest("[data-edit]")) { closePane(); setScreen("paste"); window.scrollTo(0, 0); (state.mode === "find" ? $("#region") : $("#funds")).focus(); }
+    if (e.target.closest("[data-edit-target]")) { setScreen("paste"); $("#target").focus(); $("#target").scrollIntoView({block: "center"}); }
     if (e.target.closest("[data-net-sample]")) { setNetwork(parseConnections(SAMPLE_NETWORK), "sample", true); announce("Made-up sample network loaded."); }
     if (e.target.closest("[data-net-clear]")) clearNetwork();
   });

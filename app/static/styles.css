@@ -87,6 +87,11 @@ body[data-screen="results"] .only-paste{display:none !important}
 .card{margin-top:24px;border:1px solid var(--line-strong);border-radius:var(--r-xl);background:var(--panel);box-shadow:0 1px 2px rgba(16,17,20,.04),0 6px 20px rgba(16,17,20,.04)}
 .card-pad{padding:20px 20px 18px}
 .flabel{display:block;font-size:15px;font-weight:600;color:var(--ink);margin-bottom:8px}
+.flabel-row{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.m-only{display:none}
+.err-line{color:var(--warn)}
+.err-line:empty{display:none}
+.input[aria-invalid="true"]{border-color:var(--warn)}
 .label{display:block;font-size:13px;font-weight:540;color:var(--ink-2);margin-bottom:6px}
 .hint{font-size:13px;color:var(--ink-3);margin:6px 0 0}
 .input,.textarea,.select{width:100%;border:1px solid var(--line-strong);background:var(--panel);border-radius:8px;padding:9px 11px;font-size:14px;transition:border-color .12s,box-shadow .12s}
@@ -130,7 +135,7 @@ fieldset.field legend{padding:0}
 .drop.over{border-color:var(--accent);background:var(--accent-tint-2)}
 .file-in{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}
 .file-btn{display:inline-flex;align-items:center;min-height:32px;padding:0 12px;border:1px solid var(--line-strong);background:var(--panel);border-radius:var(--r);font-weight:530;cursor:pointer}
-.file-in:focus-visible + .file-btn{outline:2px solid var(--accent);outline-offset:2px}
+.file-in:focus-visible + label{outline:2px solid var(--accent);outline-offset:2px}
 .privacy{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--accent-ink);font-weight:520;margin:8px 0 0}
 .privacy svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 .net-status{font-size:13px;color:var(--ink-2);margin:6px 0 0}
@@ -151,6 +156,9 @@ fieldset.field legend{padding:0}
 .summary .acc{color:var(--accent-ink)}
 .summary .wrn{color:var(--warn)}
 .round-line{display:none}
+.size-off,.sample-line{margin:8px 0 0;font-size:14px;color:var(--ink-2);display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
+.size-off{color:var(--amber)}
+.size-off .linkbtn,.sample-line .linkbtn{padding:0}
 
 .netbar{margin:14px 24px 6px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 14px;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--sunk);font-size:14px;color:var(--ink-2)}
 .netbar.on{background:var(--accent-tint-2);border-color:var(--accent-line)}
@@ -158,7 +166,9 @@ fieldset.field legend{padding:0}
 .netbar b{color:var(--ink);font-weight:600}
 .netbar .privacy{margin:2px 0 0}
 
-.cols,.row{display:grid;grid-template-columns:minmax(140px,1fr) 186px 126px 174px minmax(130px,.85fr) minmax(200px,1.3fr);column-gap:16px;align-items:center;padding:0 20px 0 24px}
+/* Columns: fund (with verdict line), lead record, round size, last lead, and way in once the founder adds investors or a network. */
+.cols,.row{display:grid;grid-template-columns:minmax(190px,1.4fr) 136px 176px minmax(140px,1fr);column-gap:16px;align-items:center;padding:0 20px 0 24px}
+.has-way .cols,.has-way .row{grid-template-columns:minmax(190px,1.4fr) 136px 176px minmax(140px,1fr) minmax(160px,1.1fr)}
 .cols{height:36px;margin-top:14px;font-size:13px;color:var(--ink-3);font-weight:520;border-top:1px solid var(--line);border-bottom:1px solid var(--line);position:sticky;top:52px;background:var(--panel);z-index:4}
 .grp{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;margin:0;min-height:42px;padding:11px 20px 9px 24px;background:var(--sunk);border-bottom:1px solid var(--line);font-size:14px;font-weight:620}
 .grp .n{color:var(--ink-3);font-weight:500}
@@ -171,7 +181,11 @@ fieldset.field legend{padding:0}
 .cell{min-width:0;display:flex;align-items:center;gap:8px}
 .lbl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 h1[tabindex="-1"]:focus{outline:none}
-.c-fund{flex-wrap:wrap;gap:4px 8px}
+.c-fund{flex-direction:column;align-items:flex-start;gap:3px}
+.fund-l1{display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px}
+.vline{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--ink-3)}
+.vline.v-leads{color:var(--accent-ink)}
+.vline.v-stale{color:var(--amber)}
 .nm{border:0;background:none;padding:0;font-weight:600;font-size:14.5px;color:var(--ink);text-align:left;letter-spacing:-.01em}
 .nm:hover{text-decoration:underline;text-underline-offset:3px}
 .flag{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 7px;border-radius:5px;background:var(--warn-tint);color:var(--warn);font-size:13px;font-weight:560;white-space:nowrap}
@@ -199,10 +213,15 @@ h1[tabindex="-1"]:focus{outline:none}
 .strip .rng{fill:#B5B6BD}
 .strip.fit .rng{fill:var(--accent)}
 .strip .you{fill:var(--ink)}
-.last{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
-.last .d{color:var(--ink-3)}
+.last{display:block;min-width:0;overflow-wrap:anywhere}
+.last .d{color:var(--ink-3);white-space:nowrap}
+.c-way{flex-wrap:wrap;gap:4px 6px}
 .way{font-size:13px;color:var(--ink-3)}
-.way.yes{display:inline-flex;align-items:center;gap:6px;min-height:26px;padding:2px 9px 2px 7px;border-radius:999px;background:var(--accent-tint);color:var(--accent-ink);font-weight:560}
+.way.weak{display:inline-flex;align-items:center;gap:6px;color:var(--amber);font-weight:520}
+.way.weak svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.tag-sample{font-size:13px;font-weight:560;color:var(--amber);background:var(--amber-tint);border-radius:4px;padding:1px 6px;white-space:nowrap;align-self:start}
+.wrn{color:var(--warn)}
+.way.yes{display:inline-flex;align-items:center;gap:6px;min-height:26px;padding:2px 9px 2px 7px;border-radius:12px;background:var(--accent-tint);color:var(--accent-ink);font-weight:560}
 .way.yes svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:none}
 
 .after{padding:20px 24px 28px;display:grid;gap:14px}
@@ -352,30 +371,39 @@ table.simple th{font-size:13px;color:var(--ink-3);font-weight:540}
 
 /* ---------- small screens ---------- */
 @media screen and (max-width:1180px){
-  .cols,.row{grid-template-columns:minmax(140px,1fr) 180px 120px 168px minmax(180px,1.2fr);}
+  .cols,.row{grid-template-columns:minmax(190px,1.4fr) 136px 176px}
+  .has-way .cols,.has-way .row{grid-template-columns:minmax(190px,1.4fr) 136px 176px minmax(160px,1fr)}
   .c-last{display:none !important}
 }
-@media screen and (max-width:860px){
+/* Below laptop width the sidebar becomes a top bar so the list keeps its room. */
+@media screen and (max-width:1024px){
   .app{display:block}
   .side{position:sticky;top:0;z-index:20;height:auto;flex-direction:row;align-items:center;gap:6px;padding:8px 12px;background:var(--canvas);border-bottom:1px solid var(--line);overflow:visible}
   .brand{margin:0;padding:0 4px}
   .nav{flex-direction:row;margin-left:auto}
   .nav a,.nav button{width:auto;padding:0 10px}
   .nav svg{display:none}
-  #nav-check,#nav-find{display:none}
   .side-round,.side-foot{display:none}
   .work{margin:0;border:0;border-radius:0;box-shadow:none}
-  .topbar{top:53px;border-radius:0;padding:6px 8px;gap:2px}
+  .topbar{top:53px;border-radius:0}
+  .cols{top:105px}
+  .round-line{display:block;margin:6px 0 0;font-size:13.5px;color:var(--ink-3)}
+}
+@media screen and (max-width:860px){
+  #nav-check,#nav-find{display:none}
+  .topbar{padding:6px 8px;gap:2px}
   .topbar .btn{padding:0 8px}
   #print{display:none}
-  .round-line{display:block;margin:6px 0 0;font-size:13.5px;color:var(--ink-3)}
+  .m-only{display:inline-flex;white-space:nowrap}
+  .c-size .strip{width:36px}
+  .size{white-space:normal;flex-wrap:wrap;gap:6px}
   .cols{display:none}
   .grp{padding:12px 16px 10px}
   .grp-list{padding:4px 0 8px}
-  .row{display:grid;grid-template-columns:1fr 1fr;grid-template-areas:"f f" "v v" "l s" "a i";gap:12px 14px;margin:8px 12px;padding:14px;border:1px solid var(--line);border-radius:var(--r-lg);align-items:start}
+  .row,.has-way .row{display:grid;grid-template-columns:1fr 1fr;grid-template-areas:"f f" "l s" "a i";gap:12px 14px;margin:8px 12px;padding:14px;border:1px solid var(--line);border-radius:var(--r-lg);align-items:start}
   .row:hover{background:var(--panel)}
   .row.sel::before{display:none}
-  .c-fund{grid-area:f}.c-verdict{grid-area:v}.c-led{grid-area:l}.c-size{grid-area:s}.c-last{grid-area:a;display:flex !important}.c-way{grid-area:i}
+  .c-fund{grid-area:f}.c-led{grid-area:l}.c-size{grid-area:s}.c-last{grid-area:a;display:flex !important}.c-way{grid-area:i}
   .cell.c-led,.cell.c-size,.cell.c-last,.cell.c-way{flex-direction:column;align-items:flex-start;gap:3px}
   .lbl{position:static;width:auto;height:auto;overflow:visible;clip:auto;display:block;font-size:13px;color:var(--ink-3)}
   .last{white-space:normal}
@@ -387,7 +415,10 @@ table.simple th{font-size:13px;color:var(--ink-3);font-weight:540}
   .compose h1{font-size:27px}
   .card-pad{padding:16px 14px}
   .round-fields,.row2{grid-template-columns:1fr}
-  .textarea{min-height:200px}
+  .textarea{min-height:120px}
+  .compose h1{font-size:25px}
+  .sub{margin-top:6px}
+  .card{margin-top:16px}
   .method{padding:28px 16px 40px}
   .rules li{grid-template-columns:1fr;gap:6px}
   .stats{grid-template-columns:1fr}
@@ -406,6 +437,9 @@ table.simple th{font-size:13px;color:var(--ink-3);font-weight:540}
   body{background:#fff;font-size:10px}
   *:focus,*:focus-visible{outline:none !important}
   .round-line{display:none}
+.size-off,.sample-line{margin:8px 0 0;font-size:14px;color:var(--ink-2);display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
+.size-off{color:var(--amber)}
+.size-off .linkbtn,.sample-line .linkbtn{padding:0}
   .app{display:block}
   .side,.topbar,.netbar,.after,.pane,.pane-back,.compose,#status,.cols .lbl{display:none !important}
   .work{margin:0;border:0;box-shadow:none}
@@ -413,7 +447,10 @@ table.simple th{font-size:13px;color:var(--ink-3);font-weight:540}
   .head{padding:0}
   .head h1{font-size:14px}
   .summary{font-size:10.5px;margin:2px 0 6px}
-  .cols,.row{grid-template-columns:20% 20% 13% 18% minmax(0,1fr);padding:0 2px;column-gap:6px}
+  .cols,.row{grid-template-columns:36% 18% minmax(0,1fr);padding:0 2px;column-gap:6px}
+  .has-way .cols,.has-way .row{grid-template-columns:26% 13% 20% minmax(0,1fr)}
+  .vline{font-size:9px}
+  .tag-sample{font-size:8.5px;padding:0 3px}
   .cols{position:static;height:auto;padding-top:3px;padding-bottom:3px;margin:0;font-size:9px}
   .c-last,.cols .c-last{display:none !important}
   .grp{position:static;min-height:0;padding:4px 2px 2px;font-size:10.5px;background:#f3f3f3}

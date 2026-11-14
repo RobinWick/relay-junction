@@ -273,6 +273,7 @@ def discover_funds(body: Discover):
     out = discover(s, stage, body.target_eur_m, body.region)
     my_inv = [k for k in (s.match_fund(x) for x in body.investors if x.strip()) if k]
     comps = [c.strip()[:80] for c in body.competitors if c.strip()][:3]
+    out["funds"] = [f for f in out["funds"] if f["key"] not in my_inv]  # never suggest pitching your own investor
     for f in out["funds"]:
         f["conflicts"] = conflicts(s, f["key"], comps) if comps else []
         f["tie"] = tie(s, f["key"], my_inv, None)

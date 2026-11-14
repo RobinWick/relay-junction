@@ -13,6 +13,7 @@ from __future__ import annotations
 from collections import defaultdict
 from dataclasses import dataclass, field
 from difflib import get_close_matches
+from pathlib import Path
 
 from merge import canon, company_key
 
@@ -201,13 +202,21 @@ def fund_profile(snap: Snapshot, key: str, stage: str, target_m: float | None) -
 
 
 PORTFOLIO_CAP = 300
+_COMMON_FILE = Path(__file__).parent / "common_names.txt"  # built by pipeline/common_names.py
+COMMON_NAMES = frozenset(_COMMON_FILE.read_text().split()) if _COMMON_FILE.exists() else frozenset()
 
 
-def portfolio(rounds: list[dict], key: str, cap: int = PORTFOLIO_CAP) -> list[dict]:
+def weak_name(ckey: str, common: frozenset = COMMON_NAMES) -> bool:
+    """A short or ordinary-word company name (Junction, Bolt, Well) says little about who works where."""
+    return len(ckey) <= 5 or ckey in common
+
+
+def portfolio(rounds: list[dict], key: str, cap: int = PORTFOLIO_CAP, common: frozenset = COMMON_NAMES) -> list[dict]:
     """Companies a fund backed, for matching a founder's own network in the browser.
 
     One entry per company (merge.company_key): the most recent round the fund led there, else the most recent
-    round it joined. Newest first, capped. Pure: takes the fund's rounds, so tests need no snapshot.
+    round it joined. Newest first, capped. `weak` marks names a stranger's employer could share by accident.
+    Pure: takes the fund's rounds, so tests need no snapshot.
     """
     best: dict[str, dict] = {}
     for r in rounds:
@@ -218,7 +227,8 @@ def portfolio(rounds: list[dict], key: str, cap: int = PORTFOLIO_CAP) -> list[di
         cur = best.get(ckey)
         if cur is None or (led, r["t"]) > (cur["led"], cur["t"]):
             best[ckey] = {"company": r["company"], "ckey": ckey, "stage": STAGE_LABEL.get(r.get("stage") or "", "Stage not stated"),
-                          "date": month_label(r), "t": r["t"], "led": led, "rid": r["id"]}
+                          "date": month_label(r), "t": r["t"], "led": led, "rid": r["id"],
+                          "weak": weak_name(ckey, common)}
     return sorted(best.values(), key=lambda p: -p["t"])[:cap]
 
 

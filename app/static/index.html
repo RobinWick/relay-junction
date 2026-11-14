@@ -13,9 +13,9 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Lead Check","applicationCategory":"BusinessApplication","operatingSystem":"Web","description":"Checks whether venture capital funds actually lead funding rounds at a founder's stage and size or mostly follow, when they last led, whether they backed a competitor, and which of the founder's investors can introduce them. Deterministic counting over 5,200 funding rounds from Cala, with source records behind every number.","isAccessibleForFree":true,"creator":{"@type":"Organization","name":"Team Wicflow, Junction 2026"},"about":["venture capital","lead investor","fundraising","Cala"]}</script>
 <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
 <link rel="preload" href="/static/fonts/geist-variable.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/static/styles.css?v=5">
-<script src="/static/brand.js?v=5" defer></script>
-<script src="/static/app.js?v=5" defer></script>
+<link rel="stylesheet" href="/static/styles.css?v=6">
+<script src="/static/brand.js?v=6" defer></script>
+<script src="/static/app.js?v=6" defer></script>
 </head>
 <body data-screen="paste">
 <div class="app">
@@ -44,8 +44,8 @@
 
         <form class="card card-pad" id="check-form" autocomplete="off" novalidate>
           <div id="mode-list">
-            <label for="funds" class="flabel">Paste the funds you plan to pitch, one per line</label>
-            <textarea class="textarea" id="funds" maxlength="8000" aria-describedby="line-count" placeholder="Maki.vc&#10;Voima Ventures&#10;Creandum"></textarea>
+            <div class="flabel-row"><label for="funds" class="flabel">Paste the funds you plan to pitch, one per line</label><button type="button" class="linkbtn m-only" id="sample-top">Try a sample</button></div>
+            <textarea class="textarea" id="funds" rows="5" maxlength="8000" aria-describedby="line-count" placeholder="Maki.vc&#10;Voima Ventures&#10;Creandum"></textarea>
             <p class="hint" id="line-count">Any format works. Times, tables and notes are ignored.</p>
           </div>
           <div id="mode-find" class="hidden">
@@ -71,7 +71,8 @@
             </fieldset>
             <div class="field">
               <label for="target" class="label">Target raise, EUR million</label>
-              <div class="input-unit"><span aria-hidden="true">EUR</span><input class="input num" id="target" inputmode="decimal" placeholder="3"></div>
+              <div class="input-unit"><span aria-hidden="true">EUR</span><input class="input num" id="target" inputmode="decimal" placeholder="e.g. 3" aria-describedby="target-err"></div>
+              <p class="hint err-line" id="target-err" aria-live="polite"></p>
             </div>
           </div>
 
