@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Recount Explore</title>
+<meta name="description" content="Explore funds, companies and founder careers counted from Cala data. Filters, receipts and timelines, no scores.">
+<meta name="robots" content="noindex,nofollow">
+<link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="/static/fonts/geist-variable.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/static/explore.css?v=1">
+<script src="/static/explore.js?v=1" defer></script>
+</head>
+<body data-role="">
+<a class="skip" href="#main">Skip to content</a>
+<div class="app">
+  <aside class="side">
+    <a class="brand" href="#/" aria-label="Recount Explore home"><img class="logo" src="/static/brand/recount.svg" alt="" width="104" height="20"><span class="brand-tag">Explore</span></a>
+    <nav class="nav" aria-label="Explore">
+      <a href="#/" data-nav="start"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6"/><circle cx="8" cy="8" r="2.2"/></svg>Start</a>
+      <p class="nav-h">Founder</p>
+      <a href="#/funds" data-nav="funds"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 13V7M8 13V3M13 13V9"/></svg>Funds</a>
+      <p class="nav-h">Investor</p>
+      <a href="#/companies" data-nav="companies"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 13.5V4l5-2v11.5M8 6h5v7.5M2 13.5h12"/></svg>Companies</a>
+      <a href="#/founders" data-nav="founders"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="5.5" r="2.5"/><path d="M3 13.5c.6-2.6 2.6-4 5-4s4.4 1.4 5 4"/></svg>Founders</a>
+      <a href="/" class="nav-out"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 4.5h10M3 8h10M3 11.5h6"/></svg>Check a list</a>
+    </nav>
+    <div class="side-foot">
+      <span class="live"><span class="dot" aria-hidden="true"></span><span id="side-source">Cala round data</span></span>
+      <span class="num" id="side-date"></span>
+      <span class="mode" id="side-mode"></span>
+    </div>
+  </aside>
+  <main class="work" id="main" tabindex="-1">
+    <p class="loading">Loading</p>
+  </main>
+</div>
+</body>
+</html>
