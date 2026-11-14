@@ -220,6 +220,12 @@ def method_page():
     return FileResponse(STATIC / "index.html")
 
 
+@app.get("/video", response_class=HTMLResponse)
+def video_page():
+    """Pitch video page for the Junction submission."""
+    return FileResponse(STATIC / "pitch" / "index.html")
+
+
 @app.get("/explore", response_class=HTMLResponse)
 def explore_page():
     return FileResponse(STATIC / "explore.html")
