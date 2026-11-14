@@ -463,3 +463,14 @@ table.simple th{font-size:13px;color:var(--ink-3);font-weight:540}
   .bar{width:20px}
   .way{font-size:9px}
 }
+
+/* Row honesty: unnamed-lead share, size range with too few sized rounds, disputed rounds. */
+.bar rect.jn,.bar.lead rect.jn{fill:#D4D4DA}
+.ratio.two{flex-direction:column;align-items:flex-start;gap:3px}
+.ratio .sub{display:flex;align-items:center;gap:8px}
+.ratio small,.size small{font-size:12.5px;color:var(--ink-3);font-weight:450}
+.size.unclear{flex-wrap:wrap;row-gap:2px}
+.size.unclear small{flex-basis:100%}
+.size.unclear .rng{fill:#D4D4DA}
+.size.unclear > span{color:var(--ink-3)}
+.disp{display:block;margin-top:4px;color:var(--amber);font-size:13.5px}

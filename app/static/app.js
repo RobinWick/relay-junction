@@ -304,7 +304,7 @@ function setupDrop(el) {
 
 /* ---------------- ranking ---------------- */
 const GROUPS = ["pitch", "size", "few", "avoid"];
-const GROUP_NAME = {pitch: "Pitch first", size: "Leads, but a different size", few: "Too little data to tell", avoid: "Mostly follows or avoid"};
+const GROUP_NAME = {pitch: "Pitch first", size: "Leads, but a different size", few: "Too little data to tell", avoid: "Mostly follows or sometimes leads"};
 const groupOf = (r) => (r.verdict === "leads" ? "pitch" : r.verdict === "leads_size" ? "size" : r.verdict === "few" ? "few" : "avoid");
 
 /* Way-in strengths: founder at a company it led 5, anyone there 4, anyone at a company it joined 3,
@@ -453,14 +453,20 @@ function sizeCell(r, target) {
   if (!r.size) return `<span class="muted">Not stated</span>`;
   const s = r.size, a = sx(s.lo), b = sx(s.hi);
   const fits = s.fit === "fits";
+  /* Fewer than 5 led rounds with an amount: grey range, its n, and no size verdict. */
+  const unclear = s.unclear ? `<small>${plural(s.n, "sized round", "sized rounds")}, size unclear</small>` : "";
   const you = target ? `<rect class="you" x="${(sx(target) - 1).toFixed(1)}" y="0" width="2" height="14" rx="1"/>` : "";
   const fitWord = {fits: "fits your raise", larger: "smaller than your raise", smaller: "larger than your raise"}[s.fit] || "";
-  return `<span class="size"><svg class="strip${fits ? " fit" : ""}" viewBox="0 0 56 14" aria-hidden="true"><rect class="trk" x="0" y="6" width="56" height="2" rx="1"/><rect class="rng" x="${a.toFixed(1)}" y="4" width="${Math.max(4, b - a).toFixed(1)}" height="6" rx="3"/>${you}</svg><span>EUR ${fmtM(s.lo)}${s.hi !== s.lo ? ` to ${fmtM(s.hi)}` : ""}m</span>${fitWord ? `<span class="sr">, ${fitWord}</span>` : ""}</span>`;
+  return `<span class="size${s.unclear ? " unclear" : ""}"><svg class="strip${fits ? " fit" : ""}" viewBox="0 0 56 14" aria-hidden="true"><rect class="trk" x="0" y="6" width="56" height="2" rx="1"/><rect class="rng" x="${a.toFixed(1)}" y="4" width="${Math.max(4, b - a).toFixed(1)}" height="6" rx="3"/>${you}</svg><span>EUR ${fmtM(s.lo)}${s.hi !== s.lo ? ` to ${fmtM(s.hi)}` : ""}m</span>${unclear}${fitWord ? `<span class="sr">, ${fitWord}</span>` : ""}</span>`;
 }
+/* Two-tone bar over every round in the window: led, joined with a named lead, and (track) lead not named.
+   The ratio only uses named leads, so the unnamed share is printed beside it. */
 function ledCell(r) {
   if (!r.known) return `<span class="muted">No named leads</span>`;
-  const w = Math.max(r.led ? 3 : 0, (r.led / r.known) * 34);
-  return `<span class="ratio"><svg class="bar${r.verdict === "leads" ? " lead" : ""}" viewBox="0 0 34 6" aria-hidden="true"><rect width="${w.toFixed(1)}" height="6" rx="3"/></svg><span>Led <b>${r.led}</b> of ${r.known}</span></span>`;
+  const all = r.known + r.unknown, w = Math.max(r.led ? 3 : 0, (r.led / all) * 34), j = ((r.known - r.led) / all) * 34;
+  const bar = `<svg class="bar${r.verdict === "leads" ? " lead" : ""}" viewBox="0 0 34 6" aria-hidden="true"><rect class="jn" x="${w.toFixed(1)}" width="${j.toFixed(1)}" height="6"/><rect width="${w.toFixed(1)}" height="6" rx="3"/></svg>`;
+  if (!r.unknown) return `<span class="ratio">${bar}<span>Led <b>${r.led}</b> of ${r.known}</span></span>`;
+  return `<span class="ratio two"><span>Led <b>${r.led}</b> of ${r.known} named</span><span class="sub">${bar}<small>${r.unknown} unnamed</small></span></span>`;
 }
 function lastCell(r) {
   if (r.verdict === "public") return `<span class="last muted">Not counted</span>`;
@@ -496,10 +502,10 @@ const verdictLine = (r) => `<span class="vline v-${esc(r.verdict)}"><span class=
 function groupHead(key, n, d, req) {
   const t = req.target_eur_m;
   const cap = {
-    pitch: `They lead ${d.stage} rounds${t ? ` near your EUR ${fmtM(t)}m` : ""}`,
+    pitch: `They led at least half of the ${d.stage} rounds they joined where the lead is named${t ? `. Size is judged against your EUR ${fmtM(t)}m only with 5 or more sized rounds` : ""}`,
     size: "They lead, but rounds bigger or smaller than yours",
     few: "Too few rounds with a named lead to judge. Open a fund to see its rounds",
-    avoid: "They rarely lead, or have not led lately. Ask them to join a round, not to lead it",
+    avoid: "They lead less than half the time, or have not led lately. Open a fund to see its rounds",
   }[key];
   return `<h2 class="grp" id="g-${key}">${GROUP_NAME[key]} <span class="n">${n}</span><span class="cap">${esc(cap)}</span></h2>`;
 }
@@ -511,7 +517,8 @@ function summaryLine(d, ranked, req) {
   const by = (g) => ranked.filter((r) => r.group === g).length;
   const conf = ranked.filter(hasConflict).length;
   const ways = ranked.filter((r) => r.way.strength > 0).length;
-  const parts = [`<b class="acc">${by("pitch")} of ${n}</b> lead ${esc(d.stage)} rounds${req.target_eur_m ? ` near your EUR ${fmtM(req.target_eur_m)}m` : ""}`];
+  const fits = ranked.filter((r) => r.group === "pitch" && r.size?.fit === "fits").length;
+  const parts = [`<b class="acc">${by("pitch")} of ${n}</b> mostly lead ${esc(d.stage)} rounds${req.target_eur_m ? `, ${fits} of them at a size like your EUR ${fmtM(req.target_eur_m)}m` : ""}`];
   if (by("size")) parts.push(`<b>${by("size")}</b> ${by("size") === 1 ? "leads" : "lead"}, but a different size`);
   if (conf) parts.push(`<b class="wrn">${conf}</b> backed ${esc(req.competitors.join(" or "))}`);
   if (askedForPaths()) parts.push(`you have a way in to <b>${ways}</b>`);
@@ -774,11 +781,11 @@ function showFund(i) {
   const req = state.req;
   $("#ph").innerHTML = `<span class="muted">${i + 1} of ${state.ranked.length}</span>${closeBtn}`;
   const s1 = r.known
-    ? `<div class="v">${r.led} <span class="of">of ${r.known}</span></div><div class="s">rounds with a named lead near your stage${r.unknown ? `. ${r.unknown} more had no named lead` : ""}</div>`
+    ? `<div class="v">${r.led} <span class="of">of ${r.known}</span></div><div class="s">rounds with a named lead near your stage${r.unknown ? `. ${r.unknown} more had no named lead` : ""}${r.disputed ? `. ${r.disputed} disputed by its own source, not counted` : ""}</div>`
     : `<div class="v of">No data</div><div class="s">No rounds with a named lead near your stage</div>`;
   const fit = r.size?.fit;
   const s2 = r.size
-    ? `<div class="v">EUR ${fmtM(r.size.lo)}${r.size.hi !== r.size.lo ? ` to ${fmtM(r.size.hi)}` : ""}m</div><div class="s">${fit === "fits" ? `<span class="acc">Your ${fmtM(req.target_eur_m)}m fits</span>` : fit ? `<span class="wrn">Your ${fmtM(req.target_eur_m)}m is ${fit === "larger" ? "larger" : "smaller"}</span>` : `From ${plural(r.size.n, "led round", "led rounds")}`}</div>`
+    ? `<div class="v${r.size.unclear ? " of" : ""}">EUR ${fmtM(r.size.lo)}${r.size.hi !== r.size.lo ? ` to ${fmtM(r.size.hi)}` : ""}m</div><div class="s">${r.size.unclear ? `Middle half of ${plural(r.size.n, "sized led round", "sized led rounds")}, size unclear` : fit === "fits" ? `<span class="acc">Your ${fmtM(req.target_eur_m)}m fits</span>` : fit ? `<span class="wrn">Your ${fmtM(req.target_eur_m)}m is ${fit === "larger" ? "larger" : "smaller"}</span>` : `From ${plural(r.size.n, "led round", "led rounds")}`}</div>`
     : `<div class="v of">Not stated</div><div class="s">No round sizes in the data</div>`;
   const s3 = r.last_lead
     ? `<div class="v"><a href="#" data-rid="${r.last_lead.id}">${esc(r.last_lead.company)}</a></div><div class="s">${esc(r.last_lead.stage)}, ${esc(r.last_lead.date)}</div>`
@@ -803,6 +810,7 @@ function showFund(i) {
     <div class="sec"><h3 class="sech">Rounds it led <span class="n">${r.rounds_led.length}, newest first</span></h3>${roundTable(r.rounds_led) || `<div class="okline">No led rounds near your stage in the last four years.</div>`}</div>
     ${r.rounds_joined.length ? `<details class="fold"><summary>Joined, did not lead (${r.rounds_joined.length})</summary>${roundTable(r.rounds_joined)}</details>` : ""}
     ${r.rounds_unknown.length ? `<details class="fold"><summary>Lead not named (${r.rounds_unknown.length})</summary>${roundTable(r.rounds_unknown)}</details>` : ""}
+    ${r.rounds_disputed?.length ? `<details class="fold"><summary>Disputed by the source, not counted (${r.rounds_disputed.length})</summary>${roundTable(r.rounds_disputed)}</details>` : ""}
     <p class="pnote">Counted over the last four years, at your stage and the stages next to it. ${esc(counts)}. Click any company to see the Cala record behind it.</p>`;
   $(".pane .x").focus();
 }
@@ -820,7 +828,7 @@ async function openRound(rid) {
         <dt>Date</dt><dd>${esc(r.date)}</dd>
         <dt>Round</dt><dd>${esc(r.type || r.stage)}</dd>
         <dt>Amount</dt><dd>${r.amount_raw ? esc(r.amount_raw) : `<span class="none">not stated</span>`}${r.amount_eur_m ? ` <span class="muted">about EUR ${fmtM(r.amount_eur_m)}m</span>` : ""}</dd>
-        <dt>Lead</dt><dd>${r.leads.length ? r.leads.map(esc).join(", ") : `<span class="none">not named</span>`}</dd>
+        <dt>Lead</dt><dd>${r.leads.length ? r.leads.map(esc).join(", ") : `<span class="none">not named</span>`}${disputeHtml(r.disputed)}</dd>
         <dt>Also in</dt><dd>${r.participants.length ? r.participants.map(esc).join(", ") : `<span class="none">none named</span>`}</dd>
         <dt>Found by</dt><dd>${r.path === "both" ? "Asking about the fund and about the company, both agree" : r.path === "investor_first" ? "Asking Cala about the fund" : "Asking Cala about the company"}</dd>
         <dt>Cala ids</dt><dd>${entityHtml(r)}</dd>
@@ -846,6 +854,12 @@ async function openRound(rid) {
   } catch (err) {
     if (err.message !== "auth") $("#pb").innerHTML = `<h2 id="pane-h">Could not load this round</h2><p role="alert">${esc(err.message)}</p>`;
   }
+}
+
+/* The round's own Cala source text names another lead: say so next to the lead, in the source's words. */
+function disputeHtml(d) {
+  if (!d) return "";
+  return `<span class="disp">Disputed: Cala's source text below names ${d.source_leads.map((x) => `<b>${esc(x)}</b>`).join(", ")} as lead, not ${d.not_lead_in_source.map(esc).join(", ")}. Not counted in any fund's lead record.</span>`;
 }
 
 function entityHtml(r) {
@@ -904,12 +918,14 @@ function renderMethod() {
       <p>Verdicts, counts, intro paths and conflicts are plain counting over Cala round records. The same input always gives the same list, and every number opens the rounds behind it. No language model ranks or judges a fund. Gemini only reads pasted lines our parser cannot match, and only picks out fund names.</p></section>
     <section><h2>Verdict rules</h2>
       <p>Counted over the last four years, at your stage and the stages next to it. A round counts as known when Cala names its lead. Follow-on rounds in a fund's own companies are not counted as new investments.</p>
+      <p>Answers to "which rounds did this fund invest in" name the rounds a fund led more often than the rounds it only joined, so the lead share is an upper bound. Every row shows how many of its rounds had no named lead. When a round's own Cala source text names a different lead, the round is marked disputed and left out of every fund's lead count.</p>
       <ul class="rules">
-        ${rule("leads", "Leads rounds like yours", "Led 2 or more rounds at your stage, led at least 30% of its new investments where the lead is named, and your target raise sits inside the range it leads (the middle half of its led round sizes, from 0.8x the low end to 1.25x the high end).")}
+        ${rule("leads", "Leads rounds like yours", "Led 2 or more rounds at your stage, led at least half of its new investments where the lead is named, and your target raise sits inside the range it leads (the middle half of its led round sizes, from 0.8x the low end to 1.25x the high end).")}
         ${rule("leads_size", "Leads larger rounds", "Leads at your stage, but your target is outside that size range. Sizes come from its leads at your exact stage when there are at least 2, otherwise from the stages next to it.")}
+        ${rule("leads", "Leads at your stage, size unclear", "Leads at your stage, but fewer than 5 of its led rounds have a known amount. The range is shown in grey with its count, and no size verdict is given.")}
         ${rule("follows", "Mostly follows", "5 or more new investments with a named lead, and led fewer than 15% of them.")}
         ${rule("stale", "No lead since a date", "Has led before, but not in the last 24 months.")}
-        ${rule("mixed", "Sometimes leads", "Everything in between.")}
+        ${rule("mixed", "Sometimes leads", "Everything in between, for example a fund that led 4 of 10.")}
         ${rule("few", "Too little data", "Fewer than 3 known rounds in the window. We show the rounds, not a verdict.")}
         ${rule("public", "Public funder, not a lead", "Grant bodies, public funds and accelerators. Shown, never judged as a lead.")}
       </ul></section>
