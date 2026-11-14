@@ -187,6 +187,34 @@ def _field(row: dict, *names: str):
     return None
 
 
+LEAD_FIELDS = ("lead_investor", "lead_investors", "lead")
+PART_FIELDS = ("participating_investors", "all_participating_investors", "investors", "other_investors", "co_investors")
+
+
+OPEN_LIST = re.compile(r"(?:,|\band\b|\+|\bplus\b|\bamong\b|\bincluding\b)\s*(\d+\s+)?(others?|more)\b|\betc\b|"
+                       r"\bundisclosed\b|\bnot (fully |publicly )?disclosed\b", re.I)  # a list that says it is partial
+
+
+def _compact(s: str) -> str:
+    """Lower-case letters and digits only, accents folded, brackets kept ('Wingman Ventures (Founderful)')."""
+    return re.sub(r"[^a-z0-9]", "", unicodedata.normalize("NFKD", str(s)).encode("ascii", "ignore").decode().lower())
+
+
+def _names_fund(row: dict, fund_name: str, parts: list[str]) -> bool:
+    """May the queried fund be put in this row's round as a participant?
+
+    Yes when the row's lead or participant text names it. Also yes when the row lists no participants at all
+    (field missing or 'Not disclosed'): the row comes from the fund's own answer and nothing in it says otherwise.
+    No when the row lists participants and the fund is not among them (Tencent on Uzum's Mar 2024 round).
+    """
+    key = canon(fund_name)
+    text = " ".join(str(row.get(f) or "") for f in LEAD_FIELDS + PART_FIELDS)
+    if not parts or any(canon(x) == key for x in parts) or OPEN_LIST.search(text):
+        return True
+    flat = _compact(text)
+    return any(len(c) >= 4 and c in flat for c in {key.replace(" ", ""), _compact(fund_name)})
+
+
 def _led_flag(row: dict):
     for k, v in row.items():
         kl = k.lower()
@@ -332,7 +360,12 @@ class Builder:
         return n
 
     def add_fund_record(self, rec: dict) -> int:
-        """Merge one fund's investor-first answers (crawl or live lookup). Returns rows merged."""
+        """Merge one fund's investor-first answers (crawl or live lookup). Returns rows merged.
+
+        The queried fund is attributed only when the row says so: its led flag is yes (then it is a lead), or its own
+        lead or participant text names the fund. A row that never names the fund ('Uzum, Mar 2024' in Tencent's
+        answer) keeps its round but does not put the fund in it.
+        """
         n = 0
         fund_name = rec["name"]
         if fund_name:
@@ -340,14 +373,13 @@ class Builder:
                 self.add_entities(q.get("entities"))
                 for row in q["rows"]:
                     company = _field(row, "company", "company_name", "startup", "name")
-                    leads = split_investors(_field(row, "lead_investor", "lead_investors", "lead"))
-                    parts = split_investors(_field(row, "participating_investors", "all_participating_investors",
-                                                   "investors", "other_investors"))
+                    leads = split_investors(_field(row, *LEAD_FIELDS))
+                    parts = split_investors(_field(row, *PART_FIELDS))
                     flag = _led_flag(row)
                     fund_in_leads = any(canon(x) == canon(fund_name) for x in leads)
                     if flag is True and not fund_in_leads:
                         leads.append(fund_name)
-                    elif flag is not True and not fund_in_leads:
+                    elif flag is not True and not fund_in_leads and _names_fund(row, fund_name, parts):
                         parts.append(fund_name)
                     idx = self.add(company=company, country=_field(row, "country", "company_country"),
                                    when=parse_date(_field(row, "announcement_date", "date", "announced")),
