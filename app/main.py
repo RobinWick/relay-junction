@@ -258,7 +258,7 @@ def check(body: Check, request: Request):
                 elif not key and canon(name) and name not in lookup_candidates:
                     lookup_candidates.append(name)
             read_by_gemini = {"lines": len(parsed["unmatched"]), "funds": g["funds"], "matched": found,
-                              "model": g["model"], "ms": g["ms"]}
+                              "model": g["model"], "ms": g["ms"], "saved": g.get("saved", False)}
             parsed["unmatched"] = []
         else:
             read_by_gemini = {"error": g["error"]}

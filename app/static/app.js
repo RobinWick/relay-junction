@@ -707,10 +707,15 @@ function wayCell(r) {
   const weak = r.way.strength === 1;
   return `<span class="way${weak ? " weak" : " yes"}">${ICON.link}${esc(r.way.text)}</span>${sampleNet() && wayFromNet(r) ? `<span class="tag-sample">Sample</span>` : ""}`;
 }
+/* "Led Lovable" when the fund led any of the competitor's rounds, else "Backed Lovable". List, Map and phone say the same. */
+function conflictText(r) {
+  const cs = r.conflicts || [];
+  const c = cs.find((x) => x.level === "led") || cs[0];
+  return c ? `${c.level === "led" ? "Led" : "Backed"} ${c.competitor}` : "";
+}
 function conflictFlag(r) {
-  const c = (r.conflicts || [])[0];
-  if (!c) return "";
-  return `<span class="flag">${ICON.flag}${c.level === "led" ? "Led" : "Backed"} ${esc(c.competitor)}</span>`;
+  const t = conflictText(r);
+  return t ? `<span class="flag">${ICON.flag}${esc(t)}</span>` : "";
 }
 
 function rowHtml(r, i, showWay) {
@@ -739,7 +744,7 @@ function groupHead(key, n, d, req) {
 function summaryLine(d, ranked, req) {
   if (d.headline) return d.headline;
   const n = ranked.length;
-  if (!n) return "None of the pasted lines matched a fund in our Cala data.";
+  if (!n) return "";
   const by = (g) => ranked.filter((r) => r.group === g).length;
   const conf = ranked.filter(hasConflict).length;
   const ways = ranked.filter((r) => r.way.strength > 0).length;
@@ -848,8 +853,8 @@ const mapviewHtml = () => `<div class="say" id="say"></div>
   <div class="flow-scroll"><div class="flow" id="flow"></div></div>
   <p class="flow-legend" id="flow-legend"></p>
   <section class="explain" aria-labelledby="explain-h"><h2 id="explain-h">What a line means</h2><ul>
-    <li><b>A line</b> means this person can introduce you to this fund.</li>
-    <li><b>Where it comes from:</b> your investor was in a round with the fund, or someone in your LinkedIn works at a company the fund backed. Counted from Cala round data and your LinkedIn file, read in your browser.</li>
+    <li><b>A line</b> is someone who might introduce you to this fund.</li>
+    <li><b>Where it comes from:</b> Cala round data, matched to your investors and any LinkedIn file, read in your browser.</li>
     <li><b>Solid</b> means the fund led that company's round, <b>dashed</b> that it only joined it. <b>Dotted</b> is a round your investor shared with it.</li>
     <li><b>No way in found</b> means no path yet, not a bad fund.</li>
     <li>A line is a lead to check, not proof they know the partner.</li>
@@ -869,7 +874,7 @@ function setResultView(v) {
   $("#listview")?.classList.toggle("hidden", isMap);
   $("#mapview")?.classList.toggle("hidden", !isMap);
   hideTip();
-  if (isMap) { drawFlow({animate: !state.mapRevealed}); announce("Map view. Each line is someone who can introduce you to a fund."); }
+  if (isMap) { drawFlow({animate: !state.mapRevealed}); announce("Map view. Each line is someone who might introduce you to a fund."); }
   else { stopFlow(); announce("List view."); }
 }
 
@@ -879,7 +884,7 @@ function afterHtml(d) {
     const l = d.lead_back;
     notes.push(`<div class="note"><h3>Will your lead come back?</h3>In the data, <b>${esc(l.lead)}</b> led ${plural(l.cases, "round", "rounds")} whose company raised again. It joined the next round in <b>${l.came_back} of ${l.cases}</b> and led it in <b>${l.led_again}</b>.</div>`);
   }
-  if (d.timing) {
+  if (d.timing && d.rows?.length) {
     const t = d.timing;
     notes.push(`<div class="note"><h3>Timing from peers</h3>Companies here raised their ${esc(t.to)} a median <b>${t.median} months</b> after their ${esc(t.from)}. Middle half: ${t.p25} to ${t.p75} months, ${t.n} companies.</div>`);
   }
@@ -897,7 +902,7 @@ function geminiNote(g) {
   if (!g) return "";
   if (g.error) return "";
   const notFound = g.funds.filter((f) => !g.matched.includes(f));
-  return `<p class="plain">${plural(g.lines, "line", "lines")} our parser could not read went to ${esc(g.model)}, which only picks out fund names. ${g.matched.length ? `Found: ${g.matched.map((f) => `<b>${esc(f)}</b>`).join(", ")}.` : "No fund names matched our data."}${notFound.length ? ` Not in our data: ${notFound.map(esc).join(", ")}.` : ""} Every verdict is still counted.</p>`;
+  return `<p class="plain">${plural(g.lines, "line", "lines")} our parser could not read went to ${esc(g.model)}, which only picks out fund names${g.saved ? " (its saved answer for this sample line)" : ""}. ${g.matched.length ? `Found: ${g.matched.map((f) => `<b>${esc(f)}</b>`).join(", ")}.` : "No fund names matched our data."}${notFound.length ? ` Not in our data: ${notFound.map(esc).join(", ")}.` : ""} Every verdict is still counted.</p>`;
 }
 
 function lookupPanel(names) {
@@ -1023,7 +1028,7 @@ function roundTable(rounds, limit = 8) {
   return `<div class="rt"><div class="rr hd"><span>Company</span><span>Stage</span><span class="am">EUR</span><span>Date</span></div><div>${rounds.map(li).join("")}</div>${rounds.length > limit ? `<button type="button" class="more" data-more>Show ${rounds.length - limit} more</button>` : ""}</div>`;
 }
 
-const personName = (p) => [p.first, p.last.length === 1 ? p.last : p.last ? `${p.last[0]}.` : ""].filter(Boolean).join(" ");
+const personName = (p) => [p.first, p.last.length === 1 ? p.last : p.last ? `${p.last[0]}.` : ""].filter(Boolean).join(" ") || "A connection";
 
 function waysHtml(r) {
   const parts = [];
@@ -1179,7 +1184,7 @@ function sourceHtml(src, fresh) {
 
 /* ---------------- first run: two real funds recounted on a loop ---------------- */
 const andList = (xs) => (xs.length < 2 ? xs.join("") : `${xs.slice(0, -1).join(", ")} and ${xs[xs.length - 1]}`);
-let proofTimer = 0, proofPaused = false;
+let proofTimer = 0, proofPaused = false, proofLoops = 0, proofLandAt = 0;
 
 async function loadProof() {
   let d;
@@ -1205,19 +1210,23 @@ async function loadProof() {
 function proofLive() { return document.body.dataset.screen === "paste" && location.pathname !== "/method" && !document.hidden; }
 function stopProof() { clearTimeout(proofTimer); }
 
-/* Same speed per dot in both rows, so the short all-led record lands first while the long one keeps counting. */
-function runProof() {
+/* Same speed per dot in both rows, so the short all-led record lands first while the long one keeps counting.
+   It counts twice, then the final count stays (a moving strip nobody can stop on touch is not fine). */
+function runProof(again = false) {
   clearTimeout(proofTimer);
   const d = state.proof;
   if (!d) return;
+  if (!again) proofLoops = 0;
   const rows = $$("#proof .proof-row");
   if (reduceMotion()) return;
   rows.forEach((el, i) => startCount(el, d.funds[i], 250, 34));
   const total = 250 + Math.max(...d.funds.map((r) => tallyRounds(r).length)) * 34 + 300;
+  proofLandAt = performance.now() + total;
+  if (++proofLoops >= 2) return;
   proofTimer = setTimeout(function hold() {
     if (proofPaused || !proofLive()) { proofTimer = setTimeout(hold, 600); return; }
     $("#proof").classList.add("resetting");
-    proofTimer = setTimeout(() => { $("#proof").classList.remove("resetting"); runProof(); }, 420);
+    proofTimer = setTimeout(() => { $("#proof").classList.remove("resetting"); runProof(true); }, 420);
   }, total + 3600);
 }
 
@@ -1244,7 +1253,8 @@ const roundOf = (company, stage) => `${possessive(company)} ${stageWord(stage) ?
 const whoList = (people) => (people.length === 1 ? personName(people[0])
   : people.length === 2 ? `${personName(people[0])} and ${personName(people[1])}` : `${personName(people[0])} and ${people.length - 1} others`);
 
-/* One node per investor and one per company your contacts work at. Same-name-only matches draw no line. */
+/* One node per investor and one per company your contacts work at. Same-name-only matches draw no line.
+   Returns what is drawn (over 15 collapse into "+N more") and every node, so the sentences count every way in. */
 function flowPeople(rows) {
   const nodes = new Map();
   const add = (key, make, link) => {
@@ -1269,13 +1279,13 @@ function flowPeople(rows) {
     if (n.kind === "co") n.sub = whoList(n.people);
   }
   all.sort((a, b) => (b.kind === "inv") - (a.kind === "inv") || b.s - a.s || b.links.length - a.links.length);
-  if (all.length <= FLOW_PEOPLE) return all;
+  if (all.length <= FLOW_PEOPLE) return {shown: all, all};
   const shown = all.slice(0, FLOW_PEOPLE - 1), rest = all.slice(FLOW_PEOPLE - 1);
   const best = new Map();
   for (const n of rest) for (const l of n.links) if (!best.has(l.i) || l.s > best.get(l.i).s) best.set(l.i, {...l, via: n});
   shown.push({key: "more", kind: "more", title: `+${rest.length} more`, sub: `Ways in to ${plural(best.size, "fund", "funds")}`,
     links: [...best.values()], s: Math.max(...rest.map((n) => n.s)), rest});
-  return shown;
+  return {shown, all};
 }
 
 function stopFlow() { cancelAnimationFrame(flowRaf); flowRaf = 0; if (FLOW) FLOW.playing = false; }
@@ -1307,24 +1317,50 @@ function drawFlow({animate = false} = {}) {
   if (!W) return;
   flowW = W;
   const rows = state.ranked;
-  const people = flowPeople(rows);
+  const {shown: people, all} = flowPeople(rows);
   const reach = new Set(people.flatMap((n) => n.links.map((l) => l.i)));
-  const phone = W < 600;
+  /* Below about 720 px the fund column has no room for the verdict next to "Led X of Y"; a landscape phone is too
+     short for the two-column map. Both get one fund per row. */
+  const phone = W < 720 || innerHeight < 500;
   $("#mapview").classList.toggle("phone", phone);
   FLOW = null;
-  if (phone) paintFlowPhone(host, rows, people);
-  else drawFlowSvg(host, W, rows, people, reach);
+  const box = host.parentElement;
+  box.classList.remove("tall");
+  box.style.maxHeight = "";
+  if (phone) paintFlowPhone(host, rows, all);
+  else drawFlowSvg(host, W, rows, people, reach, all);
   paintFlowLegend();
   state.mapRevealed = true;
   if (!FLOW) return;
   reserveSay();
-  if (animate && !reduceMotion()) revealFlow();
+  fitFlowBox();
+  if (animate && !reduceMotion()) revealFlow(bringMapIntoView() ? 420 : 120);
   else { FLOW.clip.setAttribute("width", FLOW.W); paintSay(); }
 }
 
-function drawFlowSvg(host, W, rows, people, reach) {
+/* Only a really long flow scrolls inside its panel, sized so the panel and the sentence box above it fit on screen.
+   Shorter ones show at full height and the page scrolls, with the sentence box stuck under the top bar. */
+function fitFlowBox() {
+  const box = $("#flow").parentElement, say = $("#say");
+  const stick = parseFloat(getComputedStyle(say).top) || 60;
+  const room = innerHeight - stick - say.offsetHeight - 24;
+  const tall = FLOW.H > innerHeight * 1.4;
+  box.classList.toggle("tall", tall);
+  box.style.maxHeight = tall ? `${Math.max(320, Math.round(room))}px` : "";
+}
+
+/* The lines draw where you can see them: scroll the sentence box to the top first, unless it is already there. */
+function bringMapIntoView() {
+  const mv = $("#mapview"), stick = parseFloat(getComputedStyle($("#say")).top) || 60;
+  const sayTop = mv.getBoundingClientRect().top + parseFloat(getComputedStyle(mv).paddingTop);  // where the box sits unstuck
+  if (sayTop >= stick - 2 && sayTop <= stick + 140) return false;
+  window.scrollTo({top: Math.round(scrollY + sayTop - stick), behavior: "smooth"});
+  return true;
+}
+
+function drawFlowSvg(host, W, rows, people, reach, all) {
   host.innerHTML = "";
-  const svg = svgEl("svg", {class: "flow-svg", role: "group", "aria-label": "Who can introduce you to each fund. Funds are in the same groups and order as the list."}, host);
+  const svg = svgEl("svg", {class: "flow-svg", role: "group", "aria-label": "Who might introduce you to each fund. Funds are in the same groups and order as the list."}, host);
   const TOP = 30, SEC = 34, ROW = 42, PILL_H = 40, PITCH = PILL_H + 10;
   const YOU_R = 24, YOU_X = 46;
   const PILL_W = Math.round(Math.min(214, Math.max(150, W * 0.19)));
@@ -1353,14 +1389,19 @@ function drawFlowSvg(host, W, rows, people, reach) {
     }
     if (people.length && people[0].y < minY) { const s = minY - people[0].y; people.forEach((n) => { n.y += s; }); }
   }
-  const H = Math.ceil(Math.max(y, people.length ? people[people.length - 1].y + PILL_H / 2 : 0) + 10);
-  const youY = people.length ? (people[0].y + people[people.length - 1].y) / 2 : Math.min(H / 2, TOP + 120);
+  /* No network yet: the next step sits under the people as a dashed pill, so the empty column asks for it. */
+  const ghostY = state.network ? null : people.length ? people[people.length - 1].y + PITCH + 8 : minY;
+  const lastY = ghostY ?? (people.length ? people[people.length - 1].y : null);
+  const H = Math.ceil(Math.max(y, lastY != null ? lastY + PILL_H / 2 : 0) + 10);
+  const tall = H > innerHeight * 1.4;
+  const mid = people.length ? (people[0].y + people[people.length - 1].y) / 2 : Math.min(H / 2, TOP + 120);
+  const youY = tall ? Math.min(mid, TOP + 260) : mid;
   svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
   svg.setAttribute("width", W);
   svg.setAttribute("height", H);
 
   const heads = svgEl("g", {class: "colh-g", "aria-hidden": "true"}, svg);
-  svgEl("text", {class: "colh", x: PILL_X, y: 13}, heads).textContent = "WHO CAN INTRODUCE YOU";
+  svgEl("text", {class: "colh", x: PILL_X, y: 13}, heads).textContent = "WHO MIGHT INTRODUCE YOU";
   svgEl("text", {class: "colh", x: FUND_X - 8, y: 13}, heads).textContent = "FUNDS, IN LIST ORDER";
   svgEl("text", {class: "colh", x: LED_X, y: 13, "text-anchor": "end"}, heads).textContent = "LEAD RECORD";
   const secG = svgEl("g", {class: "secs", "aria-hidden": "true"}, svg);
@@ -1398,7 +1439,7 @@ function drawFlowSvg(host, W, rows, people, reach) {
     const label = n.kind === "inv" ? `${n.title}, your investor. A way in to ${funds}.`
       : n.kind === "co" ? `${n.sub} at ${n.title}${sampleNet() ? ", made-up sample" : ""}. A way in to ${funds}.`
       : `${n.title} people or companies. Ways in to ${funds}.`;
-    const g = svgEl("g", {class: `fl-p ${n.kind}`, transform: `translate(${PILL_X} ${n.y - PILL_H / 2})`, tabindex: 0, role: "button", "aria-label": label}, pillsG);
+    const g = svgEl("g", {class: `fl-p ${n.kind}`, transform: `translate(${PILL_X} ${n.y - PILL_H / 2})`, tabindex: 0, role: "button", "aria-pressed": "false", "aria-label": label}, pillsG);
     n.g = g;
     svgEl("rect", {class: "box", width: PILL_W, height: PILL_H, rx: 10}, g);
     const ic = svgEl("g", {transform: `translate(21 ${PILL_H / 2})`}, g);
@@ -1425,14 +1466,18 @@ function drawFlowSvg(host, W, rows, people, reach) {
     g.addEventListener("click", (e) => { e.stopPropagation(); toggleFlowSel(hit); });
     g.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleFlowSel(hit); } });
   }
-  if (!people.length) {
-    const note = document.createElement("p");
-    note.className = "flow-empty";
-    note.textContent = askedForPaths() ? "No one among your investors or connections links to these funds yet." : "Add your investors or LinkedIn connections to see who can introduce you.";
-    note.style.left = `${PILL_X}px`;
-    note.style.top = `${TOP + SEC}px`;
-    note.style.width = `${PILL_W + 40}px`;
-    host.appendChild(note);
+  if (ghostY != null) {
+    const g = svgEl("g", {class: "fl-p ghost", transform: `translate(${PILL_X} ${ghostY - PILL_H / 2})`, tabindex: 0, role: "button",
+      "aria-label": "Try a sample network, or add your LinkedIn connections in the bar above."}, pillsG);
+    svgEl("rect", {class: "box", width: PILL_W, height: PILL_H, rx: 10}, g);
+    const ic = svgEl("g", {transform: `translate(21 ${PILL_H / 2})`}, g);
+    svgEl("circle", {class: "ic-c", r: 11}, ic);
+    svgEl("path", {class: "ic-p", d: "M-4.5 0h9M0 -4.5v9"}, ic);
+    svgEl("text", {class: "t1", x: 41, y: 17}, g).textContent = fitText(svg, "Try a sample network", "t1", PILL_W - 50);
+    svgEl("text", {class: "t2", x: 41, y: 31}, g).textContent = fitText(svg, "or add LinkedIn above", "t2", PILL_W - 50);
+    const add = () => { setNetwork(parseConnections(SAMPLE_NETWORK), "sample", true); announce("Made-up sample network loaded."); };
+    g.addEventListener("click", (e) => { e.stopPropagation(); add(); });
+    g.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); add(); } });
   }
 
   const fundsG = svgEl("g", {class: "funds"}, svg);
@@ -1442,7 +1487,7 @@ function drawFlowSvg(host, W, rows, people, reach) {
     const has = reach.has(i);
     const weak = !has && r.way.strength === 1;
     const g = svgEl("g", {class: `fl-f v-${r.verdict}${has ? "" : " noway"}`, transform: `translate(0 ${fy[i]})`, tabindex: 0, role: "button", "aria-haspopup": "dialog",
-      "aria-label": `${r.name}. ${GROUP_NAME[r.group]}. ${r.known ? `Led ${r.led} of ${r.known} rounds with a named lead.` : "No rounds with a named lead."}${has ? "" : weak ? " Same company name only, check it." : " No way in found."}${hasConflict(r) ? ` Backed ${r.conflicts[0].competitor}.` : ""} Opens the rounds behind it.`}, fundsG);
+      "aria-label": `${r.name}. ${GROUP_NAME[r.group]}. ${r.known ? `Led ${r.led} of ${r.known} rounds with a named lead.` : "No rounds with a named lead."}${has ? "" : weak ? " Same company name only, check it." : " No way in found."}${hasConflict(r) ? ` ${conflictText(r)}.` : ""} Opens the rounds behind it.`}, fundsG);
     fundEls[i] = g;
     svgEl("rect", {class: "bg", x: FUND_X - 14, y: -ROW / 2 + 2, width: W - FUND_X + 14, height: ROW - 4, rx: 7}, g);
     svgEl("circle", {class: "ping", cx: FUND_X, r: 6}, g);
@@ -1454,12 +1499,12 @@ function drawFlowSvg(host, W, rows, people, reach) {
     const nx = FUND_X + 18, ledLeft = (wide ? BAR_X : LED_X - 96) - 12;
     const nm = svgEl("text", {class: "nm", x: nx, y: -3}, g);
     nm.textContent = fitText(svg, r.name, "nm", ledLeft - nx);
-    const conflict = hasConflict(r) ? `Backed ${r.conflicts[0].competitor}` : "";
+    const conflict = conflictText(r);
     let tagInline = false;
     if (conflict) {
       const x = nx + nm.getComputedTextLength() + 9, w = textW(svg, conflict, "tag-t") + 14;
       if (x + w < ledLeft) {
-        svgEl("rect", {class: "tag", x, y: -16, width: w, height: 15, rx: 7.5}, g);
+        svgEl("rect", {class: "fl-tag", x, y: -16, width: w, height: 15, rx: 7.5}, g);
         svgEl("text", {class: "tag-t", x: x + 7, y: -4.5}, g).textContent = conflict;
         tagInline = true;
       }
@@ -1471,12 +1516,12 @@ function drawFlowSvg(host, W, rows, people, reach) {
     if (r.last_lead && r.verdict !== "public") parts.push([`last lead ${r.last_lead.date}`, "dt"]);
     const sub = svgEl("text", {class: "sub", x: nx, y: 14}, g);
     let used = 0;
-    parts.forEach(([t, cls], k) => {
-      const s = k ? `  ·  ${t}` : t, w = textW(svg, s, "sub");
-      if (k && used + w > ledLeft - nx) return;
+    for (const [k, [t, cls]] of parts.entries()) {
+      const s = k ? `  ·  ${t}` : fitText(svg, t, "sub", ledLeft - nx), w = textW(svg, s, "sub");
+      if (k && used + w > ledLeft - nx) break;
       svgEl("tspan", {class: cls}, sub).textContent = s;
       used += w;
-    });
+    }
     const pct = r.known ? r.led / r.known : 0;
     if (wide) {
       svgEl("rect", {class: "barbg", x: BAR_X, y: -3, width: BAR_W, height: 6, rx: 3}, g);
@@ -1497,8 +1542,14 @@ function drawFlowSvg(host, W, rows, people, reach) {
     g.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openFund(i, g); } });
   });
 
-  FLOW = {svg, W, rows, people, reach, edges, fundEls, clip, you, PILL_X, FUND_X, comps, hover: null, sel: null, playing: false};
+  FLOW = {svg, W, H, rows, people, all, reach, edges, fundEls, clip, you, PILL_X, FUND_X, comps, hover: null, sel: null, playing: false};
+  /* A screen reader hears the ways in too, not only the lead record. */
+  fundEls.forEach((g, i) => {
+    const ways = fundWays(i).slice(0, 3).map((w) => plainText(w.html));
+    if (ways.length) g.setAttribute("aria-label", `${g.getAttribute("aria-label").replace(/ Opens the rounds behind it\.$/, "")} Ways in: ${ways.join(" ")} Opens the rounds behind it.`);
+  });
 }
+const plainText = (html) => { const d = document.createElement("div"); d.innerHTML = html; return d.textContent; };
 
 /* ---------------- hover, select and the sentence above the flow ---------------- */
 function setFlowHover(h) { if (!FLOW) return; FLOW.hover = h; applyFlowFocus(); paintSay(); }
@@ -1516,7 +1567,9 @@ function applyFlowFocus() {
   for (const e of FLOW.edges) e.g.classList.toggle("lit", !!key && e.owners.has(key));
   for (const n of FLOW.people) {
     n.g.classList.toggle("lit", !!a && (a.type === "p" ? a.n === n : n.links.some((l) => l.i === a.i)));
-    n.g.classList.toggle("on", !!sel && sel.type === "p" && sel.n === n);
+    const on = !!sel && sel.type === "p" && sel.n === n;
+    n.g.classList.toggle("on", on);
+    n.g.setAttribute("aria-pressed", String(on));
   }
   FLOW.fundEls.forEach((g, i) => g.classList.toggle("lit", !!a && (a.type === "f" ? a.i === i : a.n.links.some((l) => l.i === i))));
 }
@@ -1546,18 +1599,22 @@ function sayIdle() {
   }
   const inv = state.req?.investors || [], net = state.network;
   const via = [inv.length ? esc(andList(inv)) : "", net ? (net.sample ? "a made-up sample network" : "your LinkedIn connections") : ""].filter(Boolean).join(" or ");
-  return {cls: "", html: `<span class="say-ic">${SAY_IC.path}</span><div class="say-body"><p class="say-main">Follow a line from you to a fund: that is who can introduce you.</p>
+  return {cls: "", html: `<span class="say-ic">${SAY_IC.path}</span><div class="say-body"><p class="say-main">Follow a line from you to a fund: that is who to ask for an intro.</p>
     <p class="say-sub"><b>${n} of ${total}</b> funds have a way in, through ${via}. Hover a fund or a person for the round behind the line.</p></div>`};
+}
+/* Every way in to one fund, strongest first, from all people (the "+N more" node only shortens the drawing). */
+function fundWays(i) {
+  const r = FLOW.rows[i], out = [];
+  for (const n of FLOW.all) for (const l of n.links) {
+    if (l.i !== i) continue;
+    if (l.tie) out.push({s: l.s, html: tieLine(l.tie, r.name), k: "Investor", cls: "tie"});
+    else if (l.round) out.push({s: l.s, html: contactLine(l.people, l.round, r.name), k: "Contact", cls: l.round.led ? "" : "j"});
+  }
+  return out.sort((a, b) => b.s - a.s);
 }
 function sayFund(i) {
   const r = FLOW.rows[i];
-  const items = [];
-  for (const n of FLOW.people) for (const l of n.links) {
-    if (l.i !== i) continue;
-    if (l.tie) items.push([l.s, sayLi("Investor", "tie", tieLine(l.tie, r.name))]);
-    else if (l.round) items.push([l.s, sayLi("Contact", l.round.led ? "" : "j", contactLine(l.people, l.round, r.name))]);
-  }
-  items.sort((a, b) => b[0] - a[0]);
+  const items = fundWays(i).map((w) => [w.s, sayLi(w.k, w.cls, w.html)]);
   const lines = items.slice(0, 3).map((x) => x[1]);  // the strongest three; the fund's pane lists every one
   if (items.length > 3) lines.push(`<li class="j"><span class="k"></span><span>And ${plural(items.length - 3, "more way in", "more ways in")}. Click the fund for all of them.</span></li>`);
   if (hasConflict(r)) lines.push(sayLi("Conflict", "w", conflictLine(r)));
@@ -1580,7 +1637,7 @@ function sayPerson(n) {
   });
   const moreFunds = n.links.length - shown.length;
   const funds = andList(n.links.map((l) => `<b>${esc(l.r.name)}</b>`));
-  const sub = n.kind === "inv" ? `${esc(n.title)}, your investor, can introduce you to ${funds}.`
+  const sub = n.kind === "inv" ? `${esc(n.title)}, your investor, might introduce you to ${funds}.`
     : n.kind === "co" ? `${esc(n.sub)} ${n.people.length === 1 ? "works" : "work"} at ${esc(n.title)}${sampleNet() ? " (made-up sample)" : ""}, a way in to ${funds}. A lead to check, not proof they know the partner.`
     : `${n.rest.length} more people and companies are ways in to ${funds}. Each fund's rounds list all of them.`;
   return {cls: "on", html: `<span class="say-ic">${ICON.link}</span><div class="say-body"><ul class="say-lines">${lines.join("")}${moreFunds > 0 ? `<li class="j"><span class="k"></span><span>And ${plural(moreFunds, "more fund", "more funds")}.</span></li>` : ""}</ul><p class="say-sub">${sub}</p></div>`};
@@ -1611,17 +1668,17 @@ function reserveSay() {
 }
 
 /* ---------------- motion: the lines draw from you to the funds, left to right, in about 1.5 s ---------------- */
-function revealFlow() {
+function revealFlow(T0 = 120) {
   const F = FLOW;
   F.playing = true;
   F.svg.classList.remove("focus");
   F.svg.classList.add("playing");
-  const T0 = 120, SWEEP = 1250, END = 1600;
+  const SWEEP = 1250, END = T0 + 1480;
   F.clip.setAttribute("width", 0);
-  $(".you", F.you).animate([{transform: "scale(.4)"}, {transform: "scale(1)"}], {duration: 380, easing: "cubic-bezier(.2,.9,.25,1.2)"});
-  $(".you-halo", F.you).animate([{transform: "scale(.4)", opacity: 0}, {transform: "scale(1)", opacity: 0.1}], {duration: 520, easing: "cubic-bezier(.2,.8,.2,1)"});
+  $(".you", F.you).animate([{transform: "scale(.4)"}, {transform: "scale(1)"}], {duration: 380, delay: T0 - 120, easing: "cubic-bezier(.2,.9,.25,1.2)", fill: "backwards"});
+  $(".you-halo", F.you).animate([{transform: "scale(.4)", opacity: 0}, {transform: "scale(1)", opacity: 0.1}], {duration: 520, delay: T0 - 120, easing: "cubic-bezier(.2,.8,.2,1)", fill: "backwards"});
   F.people.forEach((n) => n.g.classList.add("pre"));
-  F.fundEls.forEach((g, i) => g.animate([{opacity: 0}, {opacity: 1}], {duration: 240, delay: 30 + Math.min(i, 30) * 14, easing: "ease-out", fill: "backwards"}));
+  F.fundEls.forEach((g, i) => g.animate([{opacity: 0}, {opacity: 1}], {duration: 240, delay: T0 - 90 + Math.min(i, 30) * 14, easing: "ease-out", fill: "backwards"}));
   const popped = new Set();
   const start = performance.now();
   const ease = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
@@ -1662,10 +1719,10 @@ function paintFlowPhone(host, rows, people) {
     return `<li>${sw(LINK_KIND[l.s])}<span>${who}</span></li>`;
   };
   const groups = GROUPS.map((g) => [g, rows.map((r, i) => [r, i]).filter(([r]) => r.group === g)]).filter(([, rs]) => rs.length);
-  host.innerHTML = `<div class="vflow"><p class="vf-note">${people.length ? "Each fund with who can introduce you." : askedForPaths() ? "No way in found to these funds yet." : "Add your investors or LinkedIn connections to see who can introduce you."} Turn your phone sideways for the full map.</p>
+  host.innerHTML = `<div class="vflow"><p class="vf-note">${people.length ? "Each fund with who might introduce you." : askedForPaths() ? "No way in found to these funds yet." : "Add your investors or LinkedIn connections to see who might introduce you."}</p>
     ${groups.map(([g, rs]) => `<section><h3 class="vf-g ${g}">${esc(GROUP_NAME[g])} <span>${rs.length}</span></h3><ul class="vf-list">${rs.map(([r, i]) => {
       const ways = (byFund.get(i) || []).sort((a, b) => b.l.s - a.l.s), extra = ways.length - 3;
-      return `<li><button type="button" class="vf-fund" data-i="${i}" aria-haspopup="dialog"><span class="vline v-${esc(r.verdict)}"><span class="g" aria-hidden="true"></span></span><span class="vf-nm">${esc(r.name)}</span>${hasConflict(r) ? `<span class="vf-cf">Backed ${esc(r.conflicts[0].competitor)}</span>` : ""}<span class="vf-led num">${r.known ? `Led ${r.led} of ${r.known}` : "No named leads"}</span></button>
+      return `<li><button type="button" class="vf-fund" data-i="${i}" aria-haspopup="dialog"><span class="vline v-${esc(r.verdict)}"><span class="g" aria-hidden="true"></span></span><span class="vf-nm">${esc(r.name)}</span>${hasConflict(r) ? `<span class="vf-cf">${esc(conflictText(r))}</span>` : ""}<span class="vf-led num">${r.known ? `Led ${r.led} of ${r.known}` : "No named leads"}</span></button>
         ${ways.length ? `<ul class="vf-ways">${ways.slice(0, 3).map(wayLi).join("")}${extra > 0 ? `<li class="vf-more">And ${plural(extra, "more way in", "more ways in")}</li>` : ""}</ul>` : `<p class="vf-none">${r.way.strength === 1 ? "Same name only, check it" : "No way in found"}</p>`}</li>`;
     }).join("")}</ul></section>`).join("")}</div>`;
   $$(".vf-fund", host).forEach((b) => b.addEventListener("click", () => openFund(+b.dataset.i, b)));
@@ -1701,12 +1758,12 @@ const TOUR = [
     anchor: () => (state.mode === "find" ? $("#mode-find") : $("#mode-list"))},
   {screen: "paste", title: "Your round", text: "Pick your stage and how much you want to raise. We check if each fund leads rounds like that.",
     anchor: () => $(".round-fields")},
-  {screen: "paste", title: "Who can introduce you", text: "Optional: add your investors or LinkedIn connections. We show who can introduce you to each fund.",
+  {screen: "paste", title: "Who can introduce you", text: "Optional: add your investors or LinkedIn connections. We show who might introduce you to each fund.",
     anchor: () => $("#opt > summary")},
-  {screen: "results", title: "Read your shortlist", text: "Funds come in groups, best first. Click a fund to see the rounds behind every number. Map shows who can introduce you to each fund.",
-    anchor: () => [$("#results .grp"), $("#results .grp-list .row"), innerWidth >= 600 ? $("#results .viewtog") : null]},
+  {screen: "results", title: "Read your shortlist", text: "Funds come in groups, best first. Click a fund to see the rounds behind every number. Map shows who might introduce you to each fund.",
+    anchor: () => (innerWidth < 600 ? $("#results .head") : [$("#results .grp"), $("#results .grp-list .row"), $("#results .viewtog")])},
 ];
-const tour = {i: -1, back: null, raf: 0, dotAt: null};
+const tour = {i: -1, back: null, raf: 0, dotAt: null, used: false};
 
 function tourRect(anchor) {
   const els = (Array.isArray(anchor) ? anchor : [anchor]).filter((x) => x && x.getClientRects().length);
@@ -1751,8 +1808,9 @@ function tourShow(i) {
   back.classList.toggle("hidden", i === 0);
   next.textContent = i === TOUR.length - 1 ? "Done" : i === 2 && !state.view ? "Got it" : "Next";
   const r = tourRect(step.anchor());
-  const roomBelow = innerWidth < 600 ? 200 : 40;  // the card sits under the anchor, or as a sheet on phones
-  if (r && (r.top < 64 || r.bottom > innerHeight - roomBelow)) r.els[0].scrollIntoView({block: "center", behavior: reduceMotion() ? "auto" : "smooth"});
+  const roomBelow = innerWidth < 600 ? 200 : 40;  // the card sits next to the anchor, or as a sheet on phones
+  const onScreen = i === 0 && r && r.top >= 64 && r.top < innerHeight - 120;  // step 1: keep the headline in view
+  if (r && !onScreen && (r.top < 64 || r.bottom > innerHeight - roomBelow)) r.els[0].scrollIntoView({block: i === 3 ? "start" : "center", behavior: reduceMotion() ? "auto" : "smooth"});
   tourPlace();
   next.focus({preventScroll: true});
   announce(`${step.title}. ${step.text}`);
@@ -1776,11 +1834,15 @@ function tourPlace() {
   card.classList.toggle("sheet", narrow);
   if (narrow) { card.style.transform = ""; return; }
   const cw = card.offsetWidth, ch = card.offsetHeight;
-  const x = Math.max(16, Math.min(innerWidth - cw - 16, left));
-  let y = top + h + 12;
-  if (y + ch > innerHeight - 12) y = top - ch - 12;
-  if (y < 12) y = Math.min(innerHeight - ch - 12, Math.max(12, top + 24));
-  card.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
+  /* Never on the buttons the card points to, or on the first-run strip: beside the ring when there is room, then
+     below, then above, then inside the ring's right edge. */
+  const avoid = TOUR[tour.i].screen === "paste" ? [$("#proof"), $(".actions")].filter((x) => x && x.getClientRects().length).map((x) => x.getBoundingClientRect()) : [];
+  const hits = (x, y) => avoid.some((a) => x < a.right && x + cw > a.left && y < a.bottom && y + ch > a.top);
+  const fits = (x, y) => x >= 12 && y >= 12 && x + cw <= innerWidth - 12 && y + ch <= innerHeight - 12;
+  const cx = Math.max(16, Math.min(innerWidth - cw - 16, left));
+  const cands = [[left + w + 16, Math.max(12, top)], [cx, top + h + 12], [cx, top - ch - 12], [left + w - cw - 16, top + 30]];
+  const pick = cands.find(([x, y]) => fits(x, y) && !hits(x, y)) || cands.find(([x, y]) => fits(x, y)) || [cx, Math.min(innerHeight - ch - 12, Math.max(12, top + 24))];
+  card.style.transform = `translate(${Math.round(pick[0])}px, ${Math.round(pick[1])}px)`;
 }
 
 function tourClose(flag) {
@@ -1792,10 +1854,15 @@ function tourClose(flag) {
   window.removeEventListener("scroll", tourPlaceSoon, true);
   window.removeEventListener("resize", tourPlaceSoon);
   root.innerHTML = "";
+  const was = tour.i;
   tour.i = -1;
   const back = tour.back;
   tour.back = null;
-  if (back && back.isConnected && back.getClientRects().length) back.focus({preventScroll: true});
+  if (was === 3 && innerWidth < 600) window.scrollTo(0, 0);  // the phone step scrolled to the list; the answer is on top
+  /* Opened on load, focus was on <body>: return it to the form or the results, not the top of the sidebar. */
+  const home = document.body.dataset.screen === "paste" ? (state.mode === "find" ? $("#region") : $("#funds")) : $("#results h1");
+  const to = back && back !== document.body && back.isConnected && back.getClientRects().length ? back : home;
+  to?.focus({preventScroll: true});
 }
 
 function onTourClick(e) {
@@ -1812,14 +1879,28 @@ function onTourKey(e) {
   if (e.key === "Escape" && !$("#pane-root .pane")) { e.stopPropagation(); tourClose("done"); }
 }
 
-/* First results after steps 1 to 3 (or the guide still open on them): show step 4 once. */
+/* First results after steps 1 to 3 (or the guide still open on them): show step 4 once, after the rows have counted
+   in, so the card never sits on a tally while it counts. */
 function tourAfterResults() {
   const open = !!$("#tour-root").firstChild;
-  if (open || tourGet() === "p") setTimeout(() => { if (state.view && $("#results .grp")) tourOpen(3); }, reduceMotion() ? 0 : 600);
+  if (!open && tourGet() !== "p") return;
+  const t0 = performance.now();
+  const wait = () => {
+    if (!state.view || !$("#results .grp")) return;
+    const counting = [...countJobs].some((j) => j.host.closest("#results"));
+    if (counting && performance.now() - t0 < 5000) { setTimeout(wait, 150); return; }
+    tourOpen(3);
+  };
+  setTimeout(wait, reduceMotion() ? 0 : 600);
 }
 function tourMaybeStart() {
-  if (location.pathname === "/method" || location.hash === "#demo") return;
+  if (location.pathname === "/method" || location.hash === "#demo" || tour.used || document.body.dataset.screen !== "paste") return;
   if (tourGet() == null) tourOpen(0);
+}
+/* First real use (typing the list, or pressing a main button) parks the guide; step 4 still follows the first results. */
+function tourParkOnUse() {
+  tour.used = true;
+  if (tour.i >= 0 && tour.i < 3) tourClose("p");
 }
 
 /* ---------------- method ---------------- */
@@ -1902,9 +1983,11 @@ document.addEventListener("DOMContentLoaded", () => {
     if (location.pathname === "/method") go("/");
     tourOpen(document.body.dataset.screen === "results" && state.view ? 3 : 0);
   });
+  $("#funds").addEventListener("input", tourParkOnUse);
+  ["#sample", "#sample-top", "#go", "#to-find"].forEach((sel) => $(sel).addEventListener("click", tourParkOnUse));
   init().then(async () => {
     await loadProof();
     if (location.hash === "#demo") $("#sample").click();
-    else tourMaybeStart();
+    else setTimeout(tourMaybeStart, Math.max(0, proofLandAt - performance.now()));  // after the strip's first count lands
   });
 });

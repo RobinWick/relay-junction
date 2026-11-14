@@ -95,7 +95,7 @@ body[data-screen="results"] .only-paste{display:none !important}
 .hint{font-size:13px;color:var(--ink-3);margin:6px 0 0}
 .input,.textarea,.select{width:100%;border:1px solid var(--line-strong);background:var(--panel);border-radius:8px;padding:9px 11px;font-size:14px;transition:border-color .12s,box-shadow .12s}
 .input:focus,.textarea:focus,.select:focus{border-color:var(--accent);outline:none;box-shadow:var(--focus)}
-.textarea{min-height:240px;resize:vertical;line-height:22px;padding:12px 14px;font-size:14.5px}
+.textarea{min-height:136px;resize:vertical;line-height:22px;padding:12px 14px;font-size:14.5px}
 .textarea::placeholder,.input::placeholder{color:#8C8D95}
 .round-fields{display:grid;grid-template-columns:minmax(0,1fr) 160px;gap:16px;margin-top:18px;align-items:start}
 fieldset.field{border:0;margin:0;padding:0;min-width:0}
@@ -509,6 +509,7 @@ table.simple th{font-size:13px;color:var(--ink-3);font-weight:540}
 .legend i.l{background:var(--accent);border-color:var(--accent)}
 .legend i.w{box-shadow:0 0 0 1.5px var(--panel),0 0 0 3px var(--accent)}
 .legend i.x{box-shadow:0 0 0 1.5px var(--panel),0 0 0 3px var(--warn)}
+.legend i.w,.legend i.x{margin-right:8px;margin-left:3px}
 
 /* hover and focus card for one round */
 .tip{position:fixed;left:0;top:0;z-index:60;pointer-events:none;background:var(--ink);color:#fff;border-radius:8px;padding:8px 10px 9px;font-size:13px;line-height:1.45;max-width:280px;box-shadow:0 8px 24px rgba(16,17,20,.18);opacity:0;visibility:hidden;transition:opacity .12s}
@@ -556,7 +557,9 @@ table.simple th{font-size:13px;color:var(--ink-3);font-weight:540}
 
 /* ---------- map: the way-in flow ---------- */
 .mapview{padding:14px 24px 16px;min-width:0}
-.say{display:flex;align-items:flex-start;gap:12px;padding:11px 14px;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--sunk);transition:background .2s,border-color .2s}
+.say{display:flex;align-items:flex-start;gap:12px;padding:11px 14px;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--sunk);transition:background .2s,border-color .2s;position:sticky;top:60px;z-index:5}
+.say:not(.on):not(.cold){align-items:center}
+@media screen and (max-width:1024px){.say{top:113px}}
 .say.on{background:var(--accent-tint-2);border-color:var(--accent-line)}
 .say.cold{border-color:var(--line-strong)}
 .say-ic{flex:none;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--ink);color:#fff;margin-top:1px}
@@ -576,10 +579,10 @@ table.simple th{font-size:13px;color:var(--ink-3);font-weight:540}
 .say-in{animation:sayin .2s cubic-bezier(.2,.8,.2,1)}
 @keyframes sayin{from{opacity:.2;transform:translateY(2px)}to{opacity:1;transform:none}}
 
-.flow-scroll{margin-top:10px;max-height:max(520px,76vh);overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain}
+.flow-scroll{margin-top:10px;overflow-x:hidden}
+.flow-scroll.tall{overflow-y:auto}
 .flow{position:relative;min-width:0}
 .flow-svg{display:block;max-width:100%;font-family:var(--sans)}
-.flow-empty{position:absolute;margin:0;font-size:13.5px;line-height:1.5;color:var(--ink-3)}
 .colh{font-family:var(--mono);font-size:10.5px;font-weight:560;letter-spacing:.08em;fill:var(--ink-3)}
 .sech{font-family:var(--mono);font-size:10.5px;font-weight:600;letter-spacing:.08em;fill:var(--ink-3)}
 .sech.pitch{fill:var(--accent-ink)}
@@ -611,6 +614,9 @@ table.simple th{font-size:13px;color:var(--ink-3);font-weight:540}
 .fl-p.inv .box{stroke:var(--accent-line)}
 .fl-p.more .box{stroke-dasharray:3 3}
 .fl-p.pre{opacity:0}
+.fl-p.ghost .box{fill:var(--panel);stroke:var(--line-strong);stroke-dasharray:4 4}
+.fl-p.ghost .t1{fill:var(--accent-ink)}
+.fl-p.ghost:hover .box,.fl-p.ghost:focus-visible .box{stroke:var(--accent);stroke-dasharray:none}
 
 .fl-f{cursor:pointer;outline:none;transition:opacity .2s}
 .fl-f .bg{fill:transparent;transition:fill .15s}
@@ -627,7 +633,7 @@ table.simple th{font-size:13px;color:var(--ink-3);font-weight:540}
 .fl-f.v-few .dotc,.fl-f.v-public .dotc{stroke-dasharray:2.2 2}
 .fl-f.v-stale .dotc{stroke:var(--amber)}
 .fl-f .conf{fill:none;stroke:var(--warn);stroke-width:2}
-.fl-f .tag{fill:var(--warn-tint);stroke:var(--warn-line);stroke-width:1}
+.fl-tag{fill:var(--warn-tint);stroke:var(--warn-line);stroke-width:1}
 .tag-t{fill:var(--warn);font-size:11.5px;font-weight:560}
 .fl-f .ping{fill:none;stroke:var(--accent);stroke-width:1.5;opacity:0;transform-box:fill-box;transform-origin:center}
 .fl-f .barbg{fill:#E9E9EC}
