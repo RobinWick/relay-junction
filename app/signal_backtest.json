@@ -1,0 +1,1322 @@
+{
+ "meta": {
+  "snapshot_version": "20261114133847",
+  "retrieved": "2026-11-14",
+  "built_by": "signal_backtest.py",
+  "bootstrap": 1000,
+  "seed": 7,
+  "validation_cutoffs": [
+   2018,
+   2019,
+   2020
+  ],
+  "held_out_cutoffs": {
+   "next_round_24m": [
+    2021,
+    2022,
+    2023
+   ],
+   "graduate_b_plus_36m": [
+    2021,
+    2022
+   ]
+  },
+  "rows_total": 2505,
+  "rows_full_history": 922,
+  "weights": {
+   "default": {
+    "size_for_stage": 0.4,
+    "syndicate_breadth": 0.2,
+    "lead_named": 0.12,
+    "acceleration": 0.05,
+    "backer_graduation": 0.06,
+    "insider_follow_on": 0.03,
+    "named_angels": 0.03,
+    "lead_supply": 0.03,
+    "cross_border": 0.02,
+    "step_up": 0.02,
+    "backer_exits": 0.02,
+    "freshness": 0.02,
+    "sector_heat": 0.0
+   },
+   "measured_only": {
+    "size_for_stage": 0.5195,
+    "syndicate_breadth": 0.2597,
+    "lead_named": 0.1558,
+    "acceleration": 0.0649,
+    "backer_graduation": 0.0,
+    "insider_follow_on": 0.0,
+    "named_angels": 0.0,
+    "lead_supply": 0.0,
+    "cross_border": 0.0,
+    "step_up": 0.0,
+    "backer_exits": 0.0,
+    "freshness": 0.0,
+    "sector_heat": 0.0
+   },
+   "thesis_max": {
+    "size_for_stage": 0.3738,
+    "syndicate_breadth": 0.1869,
+    "lead_named": 0.1121,
+    "acceleration": 0.0467,
+    "backer_graduation": 0.1026,
+    "insider_follow_on": 0.0479,
+    "named_angels": 0.0547,
+    "lead_supply": 0.0205,
+    "cross_border": 0.0137,
+    "step_up": 0.0137,
+    "backer_exits": 0.0137,
+    "freshness": 0.0137,
+    "sector_heat": 0.0
+   }
+  }
+ },
+ "selection": {
+  "criterion": "mean of validation AUC (next round, graduation), full history",
+  "candidates": {
+   "default": {
+    "next_round_24m": 0.56,
+    "graduate_b_plus_36m": 0.609,
+    "mean": 0.584,
+    "n_next": 314,
+    "n_grad": 218
+   },
+   "measured_only": {
+    "next_round_24m": 0.552,
+    "graduate_b_plus_36m": 0.604,
+    "mean": 0.578,
+    "n_next": 314,
+    "n_grad": 218
+   },
+   "thesis_max": {
+    "next_round_24m": 0.566,
+    "graduate_b_plus_36m": 0.619,
+    "mean": 0.592,
+    "n_next": 314,
+    "n_grad": 218
+   }
+  },
+  "chosen": "thesis_max"
+ },
+ "results": {
+  "next_round_24m": {
+   "held_out": {
+    "signal": {
+     "n": 608,
+     "companies": 255,
+     "auc": 0.539,
+     "per_cutoff": {
+      "2021": 0.614,
+      "2022": 0.538,
+      "2023": 0.48
+     },
+     "one_row_per_company": {
+      "n": 255,
+      "auc": 0.482
+     },
+     "cluster_ci90": [
+      0.491,
+      0.582
+     ],
+     "positives": 364,
+     "base_rate": 0.599,
+     "top_decile_n": 62,
+     "top_decile_rate": 0.661,
+     "lift": 1.105,
+     "share_of_positives_in_top_decile": 0.113,
+     "top_quartile_rate": 0.641,
+     "bottom_quartile_rate": 0.569,
+     "precision_at_50": {
+      "2021": {
+       "precision": 0.82,
+       "base": 0.674,
+       "n": 175
+      },
+      "2022": {
+       "precision": 0.6,
+       "base": 0.578,
+       "n": 206
+      },
+      "2023": {
+       "precision": 0.5,
+       "base": 0.559,
+       "n": 227
+      }
+     },
+     "precision_at_100": {
+      "2022": {
+       "precision": 0.6,
+       "base": 0.578,
+       "n": 206
+      },
+      "2023": {
+       "precision": 0.52,
+       "base": 0.559,
+       "n": 227
+      }
+     },
+     "null_band90": [
+      0.463,
+      0.542
+     ]
+    },
+    "size_for_stage_baseline": {
+     "n": 608,
+     "companies": 255,
+     "auc": 0.551,
+     "per_cutoff": {
+      "2021": 0.631,
+      "2022": 0.539,
+      "2023": 0.503
+     },
+     "one_row_per_company": {
+      "n": 255,
+      "auc": 0.512
+     },
+     "cluster_ci90": [
+      0.505,
+      0.599
+     ],
+     "positives": 364,
+     "base_rate": 0.599,
+     "top_decile_n": 62,
+     "top_decile_rate": 0.645,
+     "lift": 1.078,
+     "share_of_positives_in_top_decile": 0.11,
+     "top_quartile_rate": 0.647,
+     "bottom_quartile_rate": 0.556,
+     "precision_at_50": {
+      "2021": {
+       "precision": 0.82,
+       "base": 0.674,
+       "n": 175
+      },
+      "2022": {
+       "precision": 0.6,
+       "base": 0.578,
+       "n": 206
+      },
+      "2023": {
+       "precision": 0.56,
+       "base": 0.559,
+       "n": 227
+      }
+     },
+     "precision_at_100": {
+      "2022": {
+       "precision": 0.61,
+       "base": 0.578,
+       "n": 206
+      },
+      "2023": {
+       "precision": 0.56,
+       "base": 0.559,
+       "n": 227
+      }
+     }
+    },
+    "n_rounds_baseline": {
+     "n": 608,
+     "companies": 255,
+     "auc": 0.437,
+     "per_cutoff": {
+      "2021": 0.401,
+      "2022": 0.431,
+      "2023": 0.491
+     },
+     "one_row_per_company": {
+      "n": 255,
+      "auc": 0.494
+     }
+    },
+    "recency_baseline": {
+     "n": 608,
+     "companies": 255,
+     "auc": 0.476,
+     "per_cutoff": {
+      "2021": 0.453,
+      "2022": 0.514,
+      "2023": 0.543
+     },
+     "one_row_per_company": {
+      "n": 255,
+      "auc": 0.556
+     }
+    },
+    "random_baseline": {
+     "n": 608,
+     "companies": 255,
+     "auc": 0.49,
+     "per_cutoff": {
+      "2021": 0.517,
+      "2022": 0.463,
+      "2023": 0.505
+     },
+     "one_row_per_company": {
+      "n": 255,
+      "auc": 0.509
+     }
+    },
+    "components": {
+     "size_for_stage": {
+      "present_only": {
+       "n": 571,
+       "companies": 240,
+       "auc": 0.55,
+       "per_cutoff": {
+        "2021": 0.628,
+        "2022": 0.54,
+        "2023": 0.5
+       },
+       "one_row_per_company": {
+        "n": 240,
+        "auc": 0.507
+       }
+      },
+      "as_used_with_neutral": {
+       "n": 608,
+       "companies": 255,
+       "auc": 0.551,
+       "per_cutoff": {
+        "2021": 0.631,
+        "2022": 0.539,
+        "2023": 0.503
+       },
+       "one_row_per_company": {
+        "n": 255,
+        "auc": 0.512
+       }
+      }
+     },
+     "syndicate_breadth": {
+      "present_only": {
+       "n": 576,
+       "companies": 247,
+       "auc": 0.524,
+       "per_cutoff": {
+        "2021": 0.523,
+        "2022": 0.551,
+        "2023": 0.493
+       },
+       "one_row_per_company": {
+        "n": 247,
+        "auc": 0.489
+       }
+      },
+      "as_used_with_neutral": {
+       "n": 608,
+       "companies": 255,
+       "auc": 0.522,
+       "per_cutoff": {
+        "2021": 0.518,
+        "2022": 0.549,
+        "2023": 0.494
+       },
+       "one_row_per_company": {
+        "n": 255,
+        "auc": 0.485
+       }
+      }
+     },
+     "lead_named": {
+      "present_only": {
+       "n": 579,
+       "companies": 248,
+       "auc": 0.517,
+       "per_cutoff": {
+        "2021": 0.558,
+        "2022": 0.528,
+        "2023": 0.475
+       },
+       "one_row_per_company": {
+        "n": 248,
+        "auc": 0.485
+       }
+      },
+      "as_used_with_neutral": {
+       "n": 608,
+       "companies": 255,
+       "auc": 0.518,
+       "per_cutoff": {
+        "2021": 0.561,
+        "2022": 0.529,
+        "2023": 0.473
+       },
+       "one_row_per_company": {
+        "n": 255,
+        "auc": 0.474
+       }
+      }
+     },
+     "acceleration": {
+      "present_only": {
+       "n": 296,
+       "companies": 135,
+       "auc": 0.544,
+       "per_cutoff": {
+        "2021": 0.456,
+        "2022": 0.551,
+        "2023": 0.582
+       },
+       "one_row_per_company": {
+        "n": 135,
+        "auc": 0.587
+       }
+      },
+      "as_used_with_neutral": {
+       "n": 608,
+       "companies": 255,
+       "auc": 0.529,
+       "per_cutoff": {
+        "2021": 0.478,
+        "2022": 0.533,
+        "2023": 0.555
+       },
+       "one_row_per_company": {
+        "n": 255,
+        "auc": 0.557
+       }
+      }
+     },
+     "backer_graduation": {
+      "present_only": {
+       "n": 245,
+       "companies": 122,
+       "auc": 0.502,
+       "per_cutoff": {
+        "2021": 0.559,
+        "2022": 0.427,
+        "2023": 0.522
+       },
+       "one_row_per_company": {
+        "n": 122,
+        "auc": 0.534
+       }
+      },
+      "as_used_with_neutral": {
+       "n": 608,
+       "companies": 255,
+       "auc": 0.504,
+       "per_cutoff": {
+        "2021": 0.511,
+        "2022": 0.475,
+        "2023": 0.52
+       },
+       "one_row_per_company": {
+        "n": 255,
+        "auc": 0.531
+       }
+      }
+     },
+     "insider_follow_on": {
+      "present_only": {
+       "n": 393,
+       "companies": 173,
+       "auc": 0.5,
+       "per_cutoff": {
+        "2021": 0.551,
+        "2022": 0.486,
+        "2023": 0.486
+       },
+       "one_row_per_company": {
+        "n": 173,
+        "auc": 0.464
+       }
+      },
+      "as_used_with_neutral": {
+       "n": 608,
+       "companies": 255,
+       "auc": 0.492,
+       "per_cutoff": {
+        "2021": 0.526,
+        "2022": 0.476,
+        "2023": 0.485
+       },
+       "one_row_per_company": {
+        "n": 255,
+        "auc": 0.467
+       }
+      }
+     },
+     "named_angels": {
+      "present_only": {
+       "n": 158,
+       "companies": 64,
+       "auc": 0.515,
+       "per_cutoff": {
+        "2021": 0.507,
+        "2022": 0.569,
+        "2023": 0.497
+       },
+       "one_row_per_company": {
+        "n": 64,
+        "auc": 0.488
+       }
+      },
+      "as_used_with_neutral": {
+       "n": 608,
+       "companies": 255,
+       "auc": 0.496,
+       "per_cutoff": {
+        "2021": 0.539,
+        "2022": 0.487,
+        "2023": 0.477
+       },
+       "one_row_per_company": {
+        "n": 255,
+        "auc": 0.484
+       }
+      }
+     },
+     "lead_supply": {
+      "present_only": {
+       "n": 605,
+       "companies": 254,
+       "auc": 0.478,
+       "per_cutoff": {
+        "2021": 0.483,
+        "2022": 0.479,
+        "2023": 0.465
+       },
+       "one_row_per_company": {
+        "n": 254,
+        "auc": 0.475
+       }
+      },
+      "as_used_with_neutral": {
+       "n": 608,
+       "companies": 255,
+       "auc": 0.478,
+       "per_cutoff": {
+        "2021": 0.482,
+        "2022": 0.479,
+        "2023": 0.465
+       },
+       "one_row_per_company": {
+        "n": 255,
+        "auc": 0.475
+       }
+      }
+     },
+     "cross_border": {
+      "present_only": {
+       "n": 406,
+       "companies": 174,
+       "auc": 0.461,
+       "per_cutoff": {
+        "2021": 0.577,
+        "2022": 0.449,
+        "2023": 0.398
+       },
+       "one_row_per_company": {
+        "n": 174,
+        "auc": 0.421
+       }
+      },
+      "as_used_with_neutral": {
+       "n": 608,
+       "companies": 255,
+       "auc": 0.463,
+       "per_cutoff": {
+        "2021": 0.567,
+        "2022": 0.443,
+        "2023": 0.411
+       },
+       "one_row_per_company": {
+        "n": 255,
+        "auc": 0.433
+       }
+      }
+     },
+     "step_up": {
+      "present_only": {
+       "n": 401,
+       "companies": 177,
+       "auc": 0.528,
+       "per_cutoff": {
+        "2021": 0.53,
+        "2022": 0.522,
+        "2023": 0.506
+       },
+       "one_row_per_company": {
+        "n": 177,
+        "auc": 0.521
+       }
+      },
+      "as_used_with_neutral": {
+       "n": 608,
+       "companies": 255,
+       "auc": 0.506,
+       "per_cutoff": {
+        "2021": 0.517,
+        "2022": 0.476,
+        "2023": 0.508
+       },
+       "one_row_per_company": {
+        "n": 255,
+        "auc": 0.519
+       }
+      }
+     },
+     "backer_exits": {
+      "present_only": {
+       "n": 181,
+       "companies": 79,
+       "auc": 0.482,
+       "per_cutoff": {
+        "2021": 0.487,
+        "2022": 0.478,
+        "2023": 0.475
+       },
+       "one_row_per_company": {
+        "n": 79,
+        "auc": 0.478
+       }
+      },
+      "as_used_with_neutral": {
+       "n": 608,
+       "companies": 255,
+       "auc": 0.501,
+       "per_cutoff": {
+        "2021": 0.524,
+        "2022": 0.494,
+        "2023": 0.498
+       },
+       "one_row_per_company": {
+        "n": 255,
+        "auc": 0.496
+       }
+      }
+     },
+     "freshness": {
+      "present_only": {
+       "n": 603,
+       "companies": 254,
+       "auc": 0.508,
+       "per_cutoff": {
+        "2021": 0.452,
+        "2022": 0.498,
+        "2023": 0.535
+       },
+       "one_row_per_company": {
+        "n": 254,
+        "auc": 0.576
+       }
+      },
+      "as_used_with_neutral": {
+       "n": 608,
+       "companies": 255,
+       "auc": 0.514,
+       "per_cutoff": {
+        "2021": 0.47,
+        "2022": 0.5,
+        "2023": 0.539
+       },
+       "one_row_per_company": {
+        "n": 255,
+        "auc": 0.579
+       }
+      }
+     },
+     "sector_heat": {
+      "present_only": {
+       "n": 0
+      },
+      "as_used_with_neutral": {
+       "n": 608,
+       "companies": 255,
+       "auc": 0.5,
+       "per_cutoff": {
+        "2021": 0.5,
+        "2022": 0.5,
+        "2023": 0.5
+       },
+       "one_row_per_company": {
+        "n": 255,
+        "auc": 0.5
+       }
+      }
+     }
+    },
+    "not_chosen_candidates_for_transparency": {
+     "default": {
+      "n": 608,
+      "companies": 255,
+      "auc": 0.54,
+      "per_cutoff": {
+       "2021": 0.615,
+       "2022": 0.543,
+       "2023": 0.479
+      },
+      "one_row_per_company": {
+       "n": 255,
+       "auc": 0.483
+      }
+     },
+     "measured_only": {
+      "n": 608,
+      "companies": 255,
+      "auc": 0.545,
+      "per_cutoff": {
+       "2021": 0.613,
+       "2022": 0.554,
+       "2023": 0.484
+      },
+      "one_row_per_company": {
+       "n": 255,
+       "auc": 0.485
+      }
+     }
+    }
+   },
+   "validation": {
+    "signal": {
+     "n": 314,
+     "companies": 152,
+     "auc": 0.566,
+     "per_cutoff": {
+      "2018": 0.569,
+      "2019": 0.583,
+      "2020": 0.558
+     },
+     "one_row_per_company": {
+      "n": 152,
+      "auc": 0.543
+     }
+    }
+   },
+   "held_out_all_companies_inflated_by_coverage": {
+    "n": 1799,
+    "companies": 971,
+    "auc": 0.543,
+    "per_cutoff": {
+     "2021": 0.584,
+     "2022": 0.542,
+     "2023": 0.522
+    },
+    "one_row_per_company": {
+     "n": 971,
+     "auc": 0.52
+    },
+    "positives": 573,
+    "base_rate": 0.319,
+    "top_decile_n": 181,
+    "top_decile_rate": 0.464,
+    "lift": 1.457,
+    "share_of_positives_in_top_decile": 0.147,
+    "top_quartile_rate": 0.379,
+    "bottom_quartile_rate": 0.288,
+    "precision_at_50": {
+     "2021": {
+      "precision": 0.6,
+      "base": 0.39,
+      "n": 423
+     },
+     "2022": {
+      "precision": 0.4,
+      "base": 0.301,
+      "n": 518
+     },
+     "2023": {
+      "precision": 0.44,
+      "base": 0.294,
+      "n": 858
+     }
+    },
+    "precision_at_100": {
+     "2021": {
+      "precision": 0.55,
+      "base": 0.39,
+      "n": 423
+     },
+     "2022": {
+      "precision": 0.36,
+      "base": 0.301,
+      "n": 518
+     },
+     "2023": {
+      "precision": 0.45,
+      "base": 0.294,
+      "n": 858
+     }
+    }
+   }
+  },
+  "graduate_b_plus_36m": {
+   "held_out": {
+    "signal": {
+     "n": 234,
+     "companies": 150,
+     "auc": 0.555,
+     "per_cutoff": {
+      "2021": 0.553,
+      "2022": 0.555
+     },
+     "one_row_per_company": {
+      "n": 150,
+      "auc": 0.588
+     },
+     "cluster_ci90": [
+      0.471,
+      0.633
+     ],
+     "positives": 72,
+     "base_rate": 0.308,
+     "top_decile_n": 25,
+     "top_decile_rate": 0.44,
+     "lift": 1.43,
+     "share_of_positives_in_top_decile": 0.153,
+     "top_quartile_rate": 0.367,
+     "bottom_quartile_rate": 0.317,
+     "precision_at_50": {
+      "2021": {
+       "precision": 0.38,
+       "base": 0.345,
+       "n": 113
+      },
+      "2022": {
+       "precision": 0.34,
+       "base": 0.273,
+       "n": 121
+      }
+     },
+     "precision_at_100": {},
+     "null_band90": [
+      0.437,
+      0.569
+     ]
+    },
+    "size_for_stage_baseline": {
+     "n": 234,
+     "companies": 150,
+     "auc": 0.552,
+     "per_cutoff": {
+      "2021": 0.541,
+      "2022": 0.558
+     },
+     "one_row_per_company": {
+      "n": 150,
+      "auc": 0.598
+     },
+     "cluster_ci90": [
+      0.471,
+      0.63
+     ],
+     "positives": 72,
+     "base_rate": 0.308,
+     "top_decile_n": 25,
+     "top_decile_rate": 0.44,
+     "lift": 1.43,
+     "share_of_positives_in_top_decile": 0.153,
+     "top_quartile_rate": 0.433,
+     "bottom_quartile_rate": 0.267,
+     "precision_at_50": {
+      "2021": {
+       "precision": 0.36,
+       "base": 0.345,
+       "n": 113
+      },
+      "2022": {
+       "precision": 0.28,
+       "base": 0.273,
+       "n": 121
+      }
+     },
+     "precision_at_100": {}
+    },
+    "n_rounds_baseline": {
+     "n": 234,
+     "companies": 150,
+     "auc": 0.586,
+     "per_cutoff": {
+      "2021": 0.625,
+      "2022": 0.551
+     },
+     "one_row_per_company": {
+      "n": 150,
+      "auc": 0.567
+     }
+    },
+    "recency_baseline": {
+     "n": 234,
+     "companies": 150,
+     "auc": 0.45,
+     "per_cutoff": {
+      "2021": 0.45,
+      "2022": 0.49
+     },
+     "one_row_per_company": {
+      "n": 150,
+      "auc": 0.369
+     }
+    },
+    "random_baseline": {
+     "n": 234,
+     "companies": 150,
+     "auc": 0.493,
+     "per_cutoff": {
+      "2021": 0.511,
+      "2022": 0.476
+     },
+     "one_row_per_company": {
+      "n": 150,
+      "auc": 0.47
+     }
+    },
+    "components": {
+     "size_for_stage": {
+      "present_only": {
+       "n": 215,
+       "companies": 140,
+       "auc": 0.561,
+       "per_cutoff": {
+        "2021": 0.549,
+        "2022": 0.571
+       },
+       "one_row_per_company": {
+        "n": 140,
+        "auc": 0.608
+       }
+      },
+      "as_used_with_neutral": {
+       "n": 234,
+       "companies": 150,
+       "auc": 0.552,
+       "per_cutoff": {
+        "2021": 0.541,
+        "2022": 0.558
+       },
+       "one_row_per_company": {
+        "n": 150,
+        "auc": 0.598
+       }
+      }
+     },
+     "syndicate_breadth": {
+      "present_only": {
+       "n": 224,
+       "companies": 145,
+       "auc": 0.497,
+       "per_cutoff": {
+        "2021": 0.508,
+        "2022": 0.5
+       },
+       "one_row_per_company": {
+        "n": 145,
+        "auc": 0.503
+       }
+      },
+      "as_used_with_neutral": {
+       "n": 234,
+       "companies": 150,
+       "auc": 0.497,
+       "per_cutoff": {
+        "2021": 0.509,
+        "2022": 0.499
+       },
+       "one_row_per_company": {
+        "n": 150,
+        "auc": 0.502
+       }
+      }
+     },
+     "lead_named": {
+      "present_only": {
+       "n": 224,
+       "companies": 145,
+       "auc": 0.569,
+       "per_cutoff": {
+        "2021": 0.59,
+        "2022": 0.547
+       },
+       "one_row_per_company": {
+        "n": 145,
+        "auc": 0.569
+       }
+      },
+      "as_used_with_neutral": {
+       "n": 234,
+       "companies": 150,
+       "auc": 0.583,
+       "per_cutoff": {
+        "2021": 0.604,
+        "2022": 0.562
+       },
+       "one_row_per_company": {
+        "n": 150,
+        "auc": 0.578
+       }
+      }
+     },
+     "acceleration": {
+      "present_only": {
+       "n": 53,
+       "companies": 39,
+       "auc": 0.635,
+       "per_cutoff": {
+        "2021": 0.604,
+        "2022": 0.664
+       },
+       "one_row_per_company": {
+        "n": 39,
+        "auc": 0.66
+       }
+      },
+      "as_used_with_neutral": {
+       "n": 234,
+       "companies": 150,
+       "auc": 0.53,
+       "per_cutoff": {
+        "2021": 0.536,
+        "2022": 0.526
+       },
+       "one_row_per_company": {
+        "n": 150,
+        "auc": 0.539
+       }
+      }
+     },
+     "backer_graduation": {
+      "present_only": {
+       "n": 58,
+       "companies": 43,
+       "auc": 0.41,
+       "per_cutoff": {
+        "2021": 0.448,
+        "2022": 0.355
+       },
+       "one_row_per_company": {
+        "n": 43,
+        "auc": 0.414
+       }
+      },
+      "as_used_with_neutral": {
+       "n": 234,
+       "companies": 150,
+       "auc": 0.484,
+       "per_cutoff": {
+        "2021": 0.504,
+        "2022": 0.46
+       },
+       "one_row_per_company": {
+        "n": 150,
+        "auc": 0.486
+       }
+      }
+     },
+     "insider_follow_on": {
+      "present_only": {
+       "n": 109,
+       "companies": 73,
+       "auc": 0.474,
+       "per_cutoff": {
+        "2021": 0.454,
+        "2022": 0.501
+       },
+       "one_row_per_company": {
+        "n": 73,
+        "auc": 0.491
+       }
+      },
+      "as_used_with_neutral": {
+       "n": 234,
+       "companies": 150,
+       "auc": 0.481,
+       "per_cutoff": {
+        "2021": 0.455,
+        "2022": 0.513
+       },
+       "one_row_per_company": {
+        "n": 150,
+        "auc": 0.499
+       }
+      }
+     },
+     "named_angels": {
+      "present_only": {
+       "n": 49,
+       "companies": 33,
+       "auc": 0.325,
+       "per_cutoff": {
+        "2021": 0.269,
+        "2022": 0.412
+       },
+       "one_row_per_company": {
+        "n": 33,
+        "auc": 0.312
+       }
+      },
+      "as_used_with_neutral": {
+       "n": 234,
+       "companies": 150,
+       "auc": 0.501,
+       "per_cutoff": {
+        "2021": 0.53,
+        "2022": 0.474
+       },
+       "one_row_per_company": {
+        "n": 150,
+        "auc": 0.5
+       }
+      }
+     },
+     "lead_supply": {
+      "present_only": {
+       "n": 234,
+       "companies": 150,
+       "auc": 0.461,
+       "per_cutoff": {
+        "2021": 0.506,
+        "2022": 0.414
+       },
+       "one_row_per_company": {
+        "n": 150,
+        "auc": 0.441
+       }
+      },
+      "as_used_with_neutral": {
+       "n": 234,
+       "companies": 150,
+       "auc": 0.461,
+       "per_cutoff": {
+        "2021": 0.506,
+        "2022": 0.414
+       },
+       "one_row_per_company": {
+        "n": 150,
+        "auc": 0.441
+       }
+      }
+     },
+     "cross_border": {
+      "present_only": {
+       "n": 123,
+       "companies": 80,
+       "auc": 0.554,
+       "per_cutoff": {
+        "2021": 0.542,
+        "2022": 0.562
+       },
+       "one_row_per_company": {
+        "n": 80,
+        "auc": 0.6
+       }
+      },
+      "as_used_with_neutral": {
+       "n": 234,
+       "companies": 150,
+       "auc": 0.516,
+       "per_cutoff": {
+        "2021": 0.52,
+        "2022": 0.509
+       },
+       "one_row_per_company": {
+        "n": 150,
+        "auc": 0.548
+       }
+      }
+     },
+     "step_up": {
+      "present_only": {
+       "n": 110,
+       "companies": 75,
+       "auc": 0.575,
+       "per_cutoff": {
+        "2021": 0.525,
+        "2022": 0.603
+       },
+       "one_row_per_company": {
+        "n": 75,
+        "auc": 0.621
+       }
+      },
+      "as_used_with_neutral": {
+       "n": 234,
+       "companies": 150,
+       "auc": 0.6,
+       "per_cutoff": {
+        "2021": 0.599,
+        "2022": 0.593
+       },
+       "one_row_per_company": {
+        "n": 150,
+        "auc": 0.614
+       }
+      }
+     },
+     "backer_exits": {
+      "present_only": {
+       "n": 44,
+       "companies": 29,
+       "auc": 0.506,
+       "per_cutoff": {
+        "2021": 0.558,
+        "2022": 0.452
+       },
+       "one_row_per_company": {
+        "n": 29,
+        "auc": 0.505
+       }
+      },
+      "as_used_with_neutral": {
+       "n": 234,
+       "companies": 150,
+       "auc": 0.513,
+       "per_cutoff": {
+        "2021": 0.535,
+        "2022": 0.492
+       },
+       "one_row_per_company": {
+        "n": 150,
+        "auc": 0.511
+       }
+      }
+     },
+     "freshness": {
+      "present_only": {
+       "n": 234,
+       "companies": 150,
+       "auc": 0.487,
+       "per_cutoff": {
+        "2021": 0.449,
+        "2022": 0.524
+       },
+       "one_row_per_company": {
+        "n": 150,
+        "auc": 0.495
+       }
+      },
+      "as_used_with_neutral": {
+       "n": 234,
+       "companies": 150,
+       "auc": 0.487,
+       "per_cutoff": {
+        "2021": 0.449,
+        "2022": 0.524
+       },
+       "one_row_per_company": {
+        "n": 150,
+        "auc": 0.495
+       }
+      }
+     },
+     "sector_heat": {
+      "present_only": {
+       "n": 0
+      },
+      "as_used_with_neutral": {
+       "n": 234,
+       "companies": 150,
+       "auc": 0.5,
+       "per_cutoff": {
+        "2021": 0.5,
+        "2022": 0.5
+       },
+       "one_row_per_company": {
+        "n": 150,
+        "auc": 0.5
+       }
+      }
+     }
+    },
+    "not_chosen_candidates_for_transparency": {
+     "default": {
+      "n": 234,
+      "companies": 150,
+      "auc": 0.559,
+      "per_cutoff": {
+       "2021": 0.557,
+       "2022": 0.561
+      },
+      "one_row_per_company": {
+       "n": 150,
+       "auc": 0.592
+      }
+     },
+     "measured_only": {
+      "n": 234,
+      "companies": 150,
+      "auc": 0.566,
+      "per_cutoff": {
+       "2021": 0.565,
+       "2022": 0.569
+      },
+      "one_row_per_company": {
+       "n": 150,
+       "auc": 0.598
+      }
+     }
+    }
+   },
+   "validation": {
+    "signal": {
+     "n": 218,
+     "companies": 124,
+     "auc": 0.619,
+     "per_cutoff": {
+      "2018": 0.539,
+      "2019": 0.699,
+      "2020": 0.627
+     },
+     "one_row_per_company": {
+      "n": 124,
+      "auc": 0.665
+     }
+    }
+   },
+   "held_out_all_companies_inflated_by_coverage": {
+    "n": 562,
+    "companies": 366,
+    "auc": 0.576,
+    "per_cutoff": {
+     "2021": 0.557,
+     "2022": 0.595
+    },
+    "one_row_per_company": {
+     "n": 366,
+     "auc": 0.604
+    },
+    "positives": 97,
+    "base_rate": 0.173,
+    "top_decile_n": 57,
+    "top_decile_rate": 0.333,
+    "lift": 1.931,
+    "share_of_positives_in_top_decile": 0.196,
+    "top_quartile_rate": 0.262,
+    "bottom_quartile_rate": 0.156,
+    "precision_at_50": {
+     "2021": {
+      "precision": 0.3,
+      "base": 0.211,
+      "n": 256
+     },
+     "2022": {
+      "precision": 0.22,
+      "base": 0.141,
+      "n": 306
+     }
+    },
+    "precision_at_100": {
+     "2021": {
+      "precision": 0.26,
+      "base": 0.211,
+      "n": 256
+     },
+     "2022": {
+      "precision": 0.2,
+      "base": 0.141,
+      "n": 306
+     }
+    }
+   }
+  }
+ },
+ "verdict": {
+  "verdict": "weak",
+  "line": "Signal is a transparent summary of Cala's funding record. Held-out backtest: AUC 0.539 on raising again within 24 months, inside the noise band (0.463 to 0.542). Use it to sort and read, not to predict.",
+  "gap_vs_size_alone": {
+   "next_round_24m": -0.012,
+   "graduate_b_plus_36m": 0.003
+  }
+ }
+}

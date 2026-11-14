@@ -1,0 +1,43 @@
+{
+ "version": "signal-1",
+ "chosen_by": "signal_backtest.py: best mean validation AUC (cutoffs 2018 to 2020, full history) of 3 candidates",
+ "candidate": "thesis_max",
+ "validation": {
+  "next_round_24m": 0.566,
+  "graduate_b_plus_36m": 0.619,
+  "mean": 0.592,
+  "n_next": 314,
+  "n_grad": 218
+ },
+ "note": "Difference to the design defaults is within noise (validation mean AUC 0.592 vs 0.584). Held-out verdict: weak. Weights are renormalised to sum 1 on load.",
+ "design_defaults": {
+  "size_for_stage": 0.4,
+  "syndicate_breadth": 0.2,
+  "lead_named": 0.12,
+  "acceleration": 0.05,
+  "backer_graduation": 0.06,
+  "insider_follow_on": 0.03,
+  "named_angels": 0.03,
+  "lead_supply": 0.03,
+  "cross_border": 0.02,
+  "step_up": 0.02,
+  "backer_exits": 0.02,
+  "freshness": 0.02,
+  "sector_heat": 0.0
+ },
+ "weights": {
+  "size_for_stage": 0.3738,
+  "syndicate_breadth": 0.1869,
+  "lead_named": 0.1121,
+  "acceleration": 0.0467,
+  "backer_graduation": 0.1026,
+  "insider_follow_on": 0.0479,
+  "named_angels": 0.0547,
+  "lead_supply": 0.0205,
+  "cross_border": 0.0137,
+  "step_up": 0.0137,
+  "backer_exits": 0.0137,
+  "freshness": 0.0137,
+  "sector_heat": 0.0
+ }
+}
