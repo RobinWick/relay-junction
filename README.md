@@ -85,7 +85,7 @@ Deploy: `modal secret create relay-secrets …` then `modal deploy modal_app.py`
 ## Limits
 
 - Fund level, not partner level. A tie means two funds sat in the same round; ask your investor which partner was on it.
-- About a quarter of seed rounds name no lead in our data. That pushes some funds toward "Mostly follows", so every row shows the unknown count.
+- About a third of seed rounds in our data name no lead. They are left out of the lead ratio, which pushes thinly covered funds toward "Too few rounds", so every row shows how many rounds had no named lead.
 - Coverage is what Cala returned to our questions: mostly European venture rounds from 2021 to 2026. A fund missing here is missing from our snapshot, not necessarily from Cala.
 - Company discovery started from startups that raised more than EUR 2m, so very small rounds are under-represented.
 

@@ -456,12 +456,12 @@ function renderMethod() {
       <section class="panel"><h2>What we tested</h2>
         ${v ? `<table class="simple"><thead><tr><th>Test</th><th>Result</th><th>n</th></tr></thead><tbody>${v.rows.map((r) => `<tr><td>${esc(r.test)}</td><td>${esc(r.result)}</td><td class="num">${esc(r.n)}</td></tr>`).join("")}</tbody></table><p class="muted">${esc(v.note || "")}</p>` : `<p class="muted">Validation numbers are being recomputed on the full data.</p>`}
         ${v?.accuracy?.length ? `<details class="raw"><summary>Every hand check, with its source (${v.accuracy.length})</summary><table class="simple"><thead><tr><th>Round</th><th>Lead in Cala</th><th>Check</th></tr></thead><tbody>${v.accuracy.map((a) => `<tr><td>${esc(a.company)} <span class="faint mono">${esc(a.date)} ${esc(a.stage || "")}</span></td><td>${esc((a.cala_leads || []).join(", "))}</td><td>${esc(a.verdict)}${a.source_url && /^https:\/\//.test(a.source_url) ? ` · <a href="${esc(a.source_url)}" target="_blank" rel="noopener noreferrer">source</a>` : ""}</td></tr>`).join("")}</tbody></table></details>` : ""}
-        <p class="muted"><a href="/static/cala-data-quality.json" download>Data-quality findings we handed to Cala</a> (JSON).</p>
+        <p class="muted"><a href="/static/cala-data-quality.json" download>Data-quality findings we prepared for Cala</a> (JSON).</p>
       </section>
       <section class="panel"><h2>Limits</h2>
         <ul>
           <li>Fund level, not partner level. A tie means two funds sat in the same round; ask which partner was on it.</li>
-          <li>About a quarter of seed rounds name no lead. That pushes some funds toward "Mostly follows"; we show the unknown count on every row.</li>
+          <li>About a third of seed rounds in our data name no lead. Those rounds are left out of the lead ratio, so thinly covered funds show "Too few rounds"; every row shows how many rounds had no named lead.</li>
           <li>Coverage is what Cala returned to our queries: European venture rounds, mostly 2021 to 2026. A fund missing here is missing from our snapshot, not necessarily from Cala.</li>
           <li>Company discovery started from startups that raised over EUR 2m, so very small rounds are under-represented.</li>
           <li>Two query paths can label the same round differently. The record view shows both rows when that happens.</li>
