@@ -22,20 +22,25 @@ SCHEMA = {"type": "OBJECT", "properties": {"funds": {"type": "ARRAY", "items": {
 
 def extract_funds(lines: list[str]) -> dict:
     """Returns {"funds": [...], "model": str, "ms": int} or {"error": str}."""
-    key = os.environ.get("GEMINI_API_KEY")
-    if not key or not lines:
-        return {"error": "Gemini is not configured" if not key else "nothing to read"}
+    keys = [k for k in (os.environ.get("GEMINI_API_KEY"), os.environ.get("GEMINI_API_KEY_FALLBACK")) if k]
+    if not keys or not lines:
+        return {"error": "Gemini is not configured" if not keys else "nothing to read"}
     text = "\n".join(line[:200] for line in lines[:30]).replace("</list>", "")
     body = {"contents": [{"role": "user", "parts": [{"text": PROMPT.format(lines=text)}]}],
             "generationConfig": {"responseMimeType": "application/json", "responseSchema": SCHEMA, "temperature": 0}}
     t0 = time.time()
-    try:
-        resp = requests.post(URL.format(model=MODEL), json=body, timeout=15,
-                             headers={"x-goog-api-key": key, "Content-Type": "application/json"})
-        resp.raise_for_status()
-        data = resp.json()
-        funds = json.loads(data["candidates"][0]["content"]["parts"][0]["text"]).get("funds", [])
-    except (requests.RequestException, KeyError, IndexError, ValueError) as err:
+    err: Exception | None = None
+    for key in keys:  # the event key is deleted after Junction; the fallback keeps the demo working
+        try:
+            resp = requests.post(URL.format(model=MODEL), json=body, timeout=15,
+                                 headers={"x-goog-api-key": key, "Content-Type": "application/json"})
+            resp.raise_for_status()
+            data = resp.json()
+            funds = json.loads(data["candidates"][0]["content"]["parts"][0]["text"]).get("funds", [])
+            break
+        except (requests.RequestException, KeyError, IndexError, ValueError) as e:
+            err = e
+    else:
         return {"error": f"Gemini could not read the list ({type(err).__name__})"}
     clean = []
     for f in funds:
