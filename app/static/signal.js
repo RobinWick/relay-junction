@@ -470,7 +470,7 @@
       const ev = r.evidence && isNum(r.evidence.value) ? r.evidence.value : 0.4;
       const band = r.band || (r.score >= 70 ? "strong" : r.score >= 50 ? "watch" : "low");
       const x = (Math.cos(a) * rr).toFixed(1), y = (Math.sin(a) * rr).toFixed(1);
-      blips += `<a href="${entHref(v, r.id)}" class="sonar__hit" data-tip-name="${esc(r.name)}" data-tip-score="${esc(r.score)}" data-tip-why="${esc(r.why_short ? noDash(r.why_short) : "")}" aria-label="${esc(r.name)}, score ${r.score}"><circle class="sonar__blip sonar__blip--${esc(band)}" cx="${x}" cy="${y}" r="${(2.4 + ev * 4.2).toFixed(1)}"/><circle class="sonar__hitarea" cx="${x}" cy="${y}" r="6"/></a>`;
+      blips += `<a href="${entHref(v, r.id)}" class="sonar__hit" data-tip-name="${esc(r.name)}" data-tip-score="${esc(r.score)}" data-tip-why="${esc(r.why_short ? noDash(r.why_short) : "")}" aria-label="${esc(r.name)}, score ${r.score}"><circle class="sonar__blip sonar__blip--${esc(band)}" cx="${x}" cy="${y}" r="${(2.4 + ev * 4.2).toFixed(1)}"/></a>`;
       if (i < 10) blips += `<text class="sonar__num" x="${(+x + 6).toFixed(1)}" y="${(+y + 2.5).toFixed(1)}">${String(r._pos).padStart(2, "0")}</text>`;
     });
     const rings = [0.25, 0.5, 0.75].map((f) => `<circle class="sonar__ring" r="${(f * R).toFixed(1)}"/>`).join("");
