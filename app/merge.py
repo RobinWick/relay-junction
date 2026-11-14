@@ -164,7 +164,17 @@ SUFFIX_WORDS = {"ventures", "venture", "capital", "vc", "partners", "management"
 
 ALIASES = {"vtt technical research centre of finland": "vtt", "92 ventures 92": "92", "92 ventures / 92 capital": "92",
            "harjavalta oy": "harjavalta", "point 9": "point nine", "creandum ab": "creandum",
-           "european innovation council fund": "eic fund", "illusian founder office": "illusian"}
+           "european innovation council fund": "eic fund", "illusian founder office": "illusian",
+           # one fund, two spellings in Cala's answers (their entity ids agree): without these each half
+           # gets its own row and half the record ('a16z' led 0 of 1 while Andreessen Horowitz led 9 of 14)
+           "k": "kfund", "k fund": "kfund", "a16z": "andreessen horowitz",
+           "htgf": "high tech grunderfonds", "high tech gruenderfonds": "high tech grunderfonds",
+           "eifo denmark s export": "eifo", "export and investment fund of denmark": "eifo",
+           "danmarks eksport og investeringsfond": "eifo", "plural platform": "plural", "nordic ninja": "nordicninja",
+           "plug play": "plug and play", "plug and play tech center": "plug and play", "yc": "y combinator",
+           "ycombinator": "y combinator", "gc": "general catalyst", "finnish industry investment": "tesi",
+           "suomen teollisuussijoitus": "tesi", "tesi finnish industry investment": "tesi",
+           "nea": "new enterprise associates", "nokia growth": "ngp", "entrepreneurs first": "entrepreneur first"}
 
 
 def canon(name: str) -> str:

@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import re
 
-from merge import canon, split_investors
+from merge import ALIASES, canon, split_investors
 
 INLINE = re.compile(r"(?:co-?\s?)?lead (?:investors?|backers?)\**\s*(?:was|were|is|are|:)\**\s*(.+)"
                     r"|\b(?:co-?\s?)?led by:?\s+(.+)", re.I)
@@ -60,7 +60,9 @@ def _scan(lines: list[str], known: set[str], cut: bool) -> set[str] | None:
     return None if (cut and in_list) else out
 
 
-EQUIV = {"european innovation council": "eic fund", "eic": "eic fund"}  # same body, keys merge.canon keeps apart
+# same body under keys merge.canon keeps apart, plus every merge alias, so a snapshot built before an alias was
+# added still compares 'k' and 'kfund' (Symbe) as one fund
+EQUIV = {**ALIASES, "european innovation council": "eic fund", "eic": "eic fund"}
 
 
 def _same(a: str, b: str) -> bool:

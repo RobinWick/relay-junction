@@ -90,6 +90,18 @@ def test_phrases_are_not_names():
     assert split_investors("A Energi, No Limit Capital, Lead Edge Capital") == ["A Energi", "No Limit Capital", "Lead Edge Capital"]
 
 
+def test_aliases_collapse_one_fund():
+    from merge import canon
+    pairs = [("K Fund", "KFund"), ("a16z", "Andreessen Horowitz"), ("HTGF", "High-Tech Gruenderfonds"),
+             ("EIFO (Denmark's Export", "EIFO"), ("Plural Platform", "Plural"), ("Nordic Ninja", "NordicNinja VC"),
+             ("Plug&Play", "Plug and Play"), ("YC", "Y Combinator"), ("GC", "General Catalyst"),
+             ("Finnish Industry Investment", "Tesi"), ("NEA", "New Enterprise Associates")]
+    for a, b in pairs:
+        assert canon(a) == canon(b), (a, b)
+    from dispute import _same
+    assert _same("k", "kfund")
+
+
 if __name__ == "__main__":
     for name, fn in list(globals().items()):
         if name.startswith("test_"):
