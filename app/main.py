@@ -14,6 +14,7 @@ from typing import Optional
 from pydantic import BaseModel, Field
 
 import threading
+import time
 
 import auth
 import gemini
@@ -76,6 +77,8 @@ def merge_live(record_: dict) -> None:
             conn.execute("insert into live_funds(fund, data) values (%s, %s)", (record_["name"], Jsonb(record_)))
             conn.execute("insert into snapshot(version, data) values (%s, %s) on conflict (version) do nothing",
                          (new["version"], Jsonb(new)))
+            conn.execute("delete from snapshot where version not in "
+                         "(select version from snapshot order by created_at desc limit 3)")
             conn.commit()
     except Exception as err:  # the in-memory merge already succeeded; log and keep serving
         print(f"persist live result failed: {type(err).__name__}: {err}")
@@ -84,9 +87,26 @@ def merge_live(record_: dict) -> None:
 OPEN_PATHS = {"/login", "/api/login", "/static/styles.css", "/static/login.js", "/static/favicon.svg"}
 
 
+MAX_BODY = 64 * 1024
+_check_hits: dict[str, list] = {}
+
+
+def _too_many_checks(session: str, per_min: int = 40) -> bool:
+    now = time.time()
+    hits = [t for t in _check_hits.get(session, []) if now - t < 60]
+    hits.append(now)
+    _check_hits[session] = hits
+    if len(_check_hits) > 5000:
+        _check_hits.clear()
+    return len(hits) > per_min
+
+
 @app.middleware("http")
 async def gate(request: Request, call_next):
     path = request.url.path
+    length = request.headers.get("content-length")
+    if request.method in ("POST", "PUT", "PATCH") and (not length or not length.isdigit() or int(length) > MAX_BODY):
+        return JSONResponse({"error": "Request body missing or too large."}, status_code=413)
     if path in OPEN_PATHS or path.startswith("/static/fonts/") or auth.cookie_ok(request.cookies.get(auth.COOKIE)):
         resp = await call_next(request)
     elif path.startswith("/api/"):
@@ -107,11 +127,11 @@ class Login(BaseModel):
 
 @app.post("/api/login")
 def login(body: Login, request: Request):
-    ip = request.headers.get("x-forwarded-for", request.client.host if request.client else "?").split(",")[0].strip()
-    if auth.rate_limited(ip):
-        raise HTTPException(429, "Too many tries. Wait 10 minutes.")
-    auth.record_try(ip)
+    ip = auth.client_ip(request)
+    if auth.blocked(ip):
+        raise HTTPException(429, "Too many wrong tries. Wait 10 minutes.")
     if not auth.passcode_ok(body.passcode):
+        auth.record_failure(ip)
         raise HTTPException(401, "That passcode is not right.")
     resp = JSONResponse({"ok": True})
     resp.set_cookie(auth.COOKIE, auth.make_cookie(), httponly=True, secure=request.url.scheme == "https",
@@ -161,7 +181,9 @@ class Check(BaseModel):
 
 
 @app.post("/api/check")
-def check(body: Check):
+def check(body: Check, request: Request):
+    if _too_many_checks(_session(request)):
+        raise HTTPException(429, "Too many checks in a minute. Wait a moment.")
     s = snap()
     stage = body.stage if body.stage in STAGES else "seed"
     parsed = parse_list(s, body.funds_text)
@@ -173,6 +195,8 @@ def check(body: Check):
             seen = {m["key"] for m in parsed["matched"]}
             found = []
             for name in g["funds"]:
+                if not live.clean_name(name):
+                    continue
                 key = s.match_fund(name)
                 if key and key not in seen:
                     seen.add(key)
@@ -185,7 +209,6 @@ def check(body: Check):
             parsed["unmatched"] = []
         else:
             read_by_gemini = {"error": g["error"]}
-            lookup_candidates = [u for u in parsed["unmatched"] if len(u) <= 60][:12]
     my_inv = [k for k in (s.match_fund(x) for x in body.investors if x.strip()) if k]
     comps = [c.strip()[:80] for c in body.competitors if c.strip()][:3]
     rows = []
@@ -246,12 +269,21 @@ def _session(request: Request) -> str:
 
 @app.post("/api/lookup")
 def lookup_start(body: Lookup, request: Request):
-    names = [re.sub(r"\s+", " ", n).strip()[:80] for n in body.names if n and n.strip()]
+    s = snap()
+    names, seen = [], set()
+    for raw in body.names:
+        n = live.clean_name(raw)
+        k = canon(n) if n else None
+        if not n or k in seen or k in s.fund_keys:
+            continue
+        seen.add(k)
+        names.append(n)
     if not names:
-        raise HTTPException(400, "No fund names to look up.")
+        raise HTTPException(400, "These funds are already in our Cala data, or the names are not valid fund names.")
     sess = _session(request)
-    if live.budget(sess)["global_left"] < 1:
-        raise HTTPException(429, "Live Cala lookups for this demo are used up.")
+    b = live.budget(sess)
+    if b["day_left"] < 1 or b["session_left"] < 1:
+        raise HTTPException(429, "Live Cala lookups for this demo are used up for now.")
     return {**live.start(names, sess, merge_live), "budget": live.budget(sess)}
 
 

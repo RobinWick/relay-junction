@@ -39,7 +39,7 @@
       <div class="row2">
         <div class="field">
           <label for="target">Target raise <span class="hint">EUR m</span></label>
-          <input class="input mono" id="target" inputmode="decimal" placeholder="3">
+          <input class="input" id="target" inputmode="decimal" placeholder="e.g. 3">
         </div>
         <div class="field">
           <label for="company">Your company <span class="hint">optional</span></label>
@@ -100,7 +100,8 @@
     </section>
   </form>
 
-  <section class="results hidden" id="results" aria-live="polite" aria-busy="false"></section>
+  <section class="results hidden" id="results" aria-busy="false" aria-label="Results"></section>
+  <div id="status" class="sr" role="status" aria-live="polite"></div>
 </main>
 
 <main class="wrap hidden" id="view-method"></main>

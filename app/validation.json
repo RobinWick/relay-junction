@@ -1,10 +1,10 @@
 {
- "version": "20261114000317",
+ "version": "20261114000830",
  "rows": [
   {
    "test": "In a round with a named lead, the investor with the stronger earlier lead record is the real lead",
-   "result": "53% vs 37% for a random pick from the same cap table (95% CI 50% to 56%)",
-   "n": 927
+   "result": "50% vs 37% for a random pick from the same cap table (95% CI 47% to 53%)",
+   "n": 1020
   },
   {
    "test": "Cala's named lead matches a public source (random rounds, checked by hand on 14 Nov)",
@@ -24,72 +24,72 @@
   {
    "test": "Seed rounds where Cala names the lead",
    "result": "69%",
-   "n": 996
+   "n": 1044
   },
   {
    "test": "Series A rounds where Cala names the lead",
    "result": "71%",
-   "n": 692
+   "n": 771
   },
   {
    "test": "The lead of a round comes back in the company's next round",
-   "result": "56% came back, 16% led again",
-   "n": 1170
+   "result": "58% came back, 16% led again",
+   "n": 1220
   }
  ],
  "within_round": {
-  "n": 927,
-  "hit": 0.5275440489032722,
-  "random": 0.3720017801328476,
-  "ci_low": 0.4953580129984379,
-  "ci_high": 0.5595027352391426
+  "n": 1020,
+  "hit": 0.5011764705882353,
+  "random": 0.3724316691363897,
+  "ci_low": 0.4705447718389272,
+  "ci_high": 0.5317993407659914
  },
  "coverage": {
   "pre-seed": {
-   "with_lead": 185,
-   "total": 245
+   "with_lead": 191,
+   "total": 257
   },
   "seed": {
-   "with_lead": 686,
-   "total": 996
+   "with_lead": 717,
+   "total": 1044
   },
   "series a": {
-   "with_lead": 491,
-   "total": 692
+   "with_lead": 547,
+   "total": 771
   },
   "series b": {
-   "with_lead": 302,
-   "total": 436
+   "with_lead": 331,
+   "total": 507
   },
   "series c": {
-   "with_lead": 151,
-   "total": 208
+   "with_lead": 172,
+   "total": 250
   },
   "series d": {
-   "with_lead": 77,
-   "total": 111
+   "with_lead": 93,
+   "total": 140
   },
   "unlabelled": {
-   "with_lead": 166,
-   "total": 462
+   "with_lead": 190,
+   "total": 543
   },
   "growth": {
-   "with_lead": 67,
-   "total": 111
+   "with_lead": 71,
+   "total": 116
   },
   "series e": {
-   "with_lead": 26,
-   "total": 34
+   "with_lead": 33,
+   "total": 54
   },
   "series f": {
-   "with_lead": 14,
-   "total": 19
+   "with_lead": 16,
+   "total": 26
   }
  },
  "lead_comes_back": {
-  "cases": 1170,
-  "came_back": 658,
-  "led_again": 189
+  "cases": 1220,
+  "came_back": 710,
+  "led_again": 200
  },
  "accuracy": [
   {
@@ -599,5 +599,5 @@
    "group": "sample_list"
   }
  ],
- "note": "The prediction test ran on the first 289 companies before the investor-first crawl. All other rows are recomputed on every snapshot."
+ "note": "The prediction test ran on the first 289 companies before the investor-first crawl. The other counted rows are recomputed on every data rebuild; hand checks are dated."
 }

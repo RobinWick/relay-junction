@@ -9,18 +9,20 @@ const plural = (n, a, b) => `${n} ${n === 1 ? a : b}`;
 const state = {stage: "seed", investors: [], lead: null, competitors: [], meta: null, last: null};
 
 const SAMPLE = [
-  "Tue 17 Nov  10:30  Maki.vc  (Table 12)",
+  "Wed 10:30  Maki.vc  (Table 12)",
   "Lifeline Ventures",
   "Creandum - partner meeting",
   "Inventure",
   "Speedinvest",
   "Northzone",
-  "Fly Ventures",
+  "Icebreaker.vc",
   "byFounders",
   "Seedcamp",
   "Point Nine",
   "Business Finland",
   "Superhero Capital",
+  "FJ Labs",
+  "Thu 14:00 coffee w/ Anna from Kvanted?",
 ].join("\n");
 
 async function api(path, opts = {}) {
@@ -63,7 +65,7 @@ async function init() {
       const b = e.target.closest("button[data-stage]"); if (!b) return;
       state.stage = b.dataset.stage;
       seg.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", x === b));
-      if (state.last) run();
+      if (activeTab() === "find") { if (state.findDone) runFind(); } else if (state.last) run();
     });
   } catch (err) {
     if (err.message !== "auth") $("#data-chip").textContent = "Could not load data. Reload the page.";
@@ -104,8 +106,9 @@ function setupChips(kind) {
   const show = (rows) => {
     items = rows;
     if (!rows.length) return hide();
-    sug.innerHTML = rows.map((r, i) => `<button type="button" role="option" data-i="${i}" aria-selected="${i === active}"><span>${esc(r.name)}</span><span class="faint mono">${r.rounds} rounds</span></button>`).join("");
+    sug.innerHTML = rows.map((r, i) => `<button type="button" tabindex="-1" role="option" id="opt-${i}" data-i="${i}" aria-selected="${i === active}"><span>${esc(r.name)}</span><span class="faint mono">${r.rounds} rounds</span></button>`).join("");
     sug.classList.remove("hidden"); input.setAttribute("aria-expanded", "true");
+    if (active >= 0) input.setAttribute("aria-activedescendant", `opt-${active}`); else input.removeAttribute("aria-activedescendant");
   };
 
   box.addEventListener("click", (e) => {
@@ -139,10 +142,12 @@ function setupChips(kind) {
 }
 
 /* ---------------- check ---------------- */
+const activeTab = () => ($("#tab-find").getAttribute("aria-selected") === "true" ? "find" : "list");
+function announce(msg) { const st = $("#status"); if (st) { st.textContent = ""; setTimeout(() => { st.textContent = msg; }, 50); } }
 function lineCount() {
   const n = $("#funds").value.split(/\n|;/).filter((l) => l.trim().length > 1).length;
   $("#line-count").textContent = n ? plural(n, "line", "lines") : "";
-  $("#go").textContent = n ? `Check ${plural(n, "fund", "funds")}` : "Check funds";
+  $("#go").textContent = n ? `Check ${plural(n, "line", "lines")}` : "Check funds";
 }
 
 async function run() {
@@ -176,10 +181,10 @@ function skeleton() {
   return `<table class="lc"><thead>${headRow()}</thead><tbody>${row.repeat(6)}</tbody></table>`;
 }
 function headRow() {
-  return `<tr><th scope="col">Fund</th><th scope="col">Verdict</th><th scope="col">Leads</th><th scope="col">Round size it leads</th><th scope="col">Last lead</th><th scope="col">Conflict and tie</th></tr>`;
+  return `<tr><th scope="col">Fund</th><th scope="col">Verdict</th><th scope="col">Lead record</th><th scope="col">Rounds it leads</th><th scope="col">Last lead</th><th scope="col">Conflict and tie</th></tr>`;
 }
 
-const VERDICT_ORDER = {leads: 0, mixed: 1, stale: 2, follows: 3, few: 4, public: 5};
+const VERDICT_ORDER = {leads: 0, leads_size: 1, mixed: 2, stale: 3, follows: 4, few: 5, public: 6};
 
 const REGION_LABEL = {nordics: "the Nordics", baltics: "the Baltics", dach: "DACH", "uk-ie": "the UK and Ireland",
   "france-benelux": "France and Benelux", south: "Southern Europe", cee: "Central and Eastern Europe", "": "Europe"};
@@ -194,6 +199,7 @@ async function runFind() {
                investors: state.investors, competitors: state.competitors};
   try {
     const d = await api("/api/discover", {method: "POST", body: JSON.stringify(req)});
+    state.findDone = true;
     const counts = {};
     d.funds.forEach((f) => { counts[f.verdict] = (counts[f.verdict] || 0) + 1; });
     const sz = d.filters.size ? ` of EUR ${fmtM(d.filters.size[0])} to ${fmtM(d.filters.size[1])}m` : "";
@@ -213,8 +219,9 @@ function summaryLine(d, target) {
   if (d.headline) return d.headline + (d.conflict_count ? ` <b class="conf-led">${d.conflict_count}</b> already led a competitor.` : "");
   const c = d.counts, n = d.rows.length;
   const parts = [];
+  const leaders = (c.leads || 0) + (c.leads_size || 0);
   const fits = d.rows.filter((r) => r.verdict === "leads" && r.size?.fit === "fits").length;
-  parts.push(`<b>${c.leads || 0} of your ${n}</b> ${n === 1 ? "fund" : "funds"} lead ${esc(d.stage)} rounds in Cala's data${target ? `, and <b>${fits}</b> of those lead rounds your size` : ""}`);
+  parts.push(`<b>${leaders} of your ${n}</b> ${n === 1 ? "fund" : "funds"} lead ${esc(d.stage)} rounds in Cala's data${target ? `, and <b>${fits}</b> of those lead rounds your size` : ""}`);
   if (c.follows) parts.push(`<b>${c.follows}</b> mostly ${c.follows === 1 ? "follows" : "follow"}`);
   if (c.stale) parts.push(`<b>${c.stale}</b> ${c.stale === 1 ? "has" : "have"} not led in the last two years`);
   if (d.conflict_count) parts.push(`<b class="conf-led">${d.conflict_count}</b> already led a competitor`);
@@ -261,22 +268,24 @@ function renderResults(d, req) {
   $("#print").onclick = () => window.print();
   $("#csv").onclick = () => copyCsv(sorted);
   out.querySelectorAll("tr.main").forEach((tr) => {
-    tr.addEventListener("click", (e) => { if (!e.target.closest("a,button")) toggleRow(tr, sorted[+tr.dataset.i]); });
-    tr.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.target.closest("a,button")) toggleRow(tr, sorted[+tr.dataset.i]); });
+    tr.addEventListener("click", (e) => { if (e.target.closest("[data-toggle]") || !e.target.closest("a,button")) toggleRow(tr, sorted[+tr.dataset.i]); });
+    tr.addEventListener("keydown", (e) => { if ((e.key === "Enter" || e.key === " ") && !e.target.closest("a,button")) { e.preventDefault(); toggleRow(tr, sorted[+tr.dataset.i]); } });
   });
   out.querySelectorAll("[data-rid]").forEach((a) => a.addEventListener("click", openRecord));
   out.scrollIntoView({behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start"});
+  announce(`${plural(d.rows.length, "fund", "funds")} checked. ${out.querySelector(".summary p")?.textContent || ""}`);
 }
 
 function geminiNote(g) {
   if (!g) return "";
   if (g.error) return `<div class="unmatched"><b>Some lines were not recognised.</b> ${esc(g.error)}.</div>`;
-  return `<div class="ai-note"><span class="pill pill-ai">Read by Gemini</span> ${plural(g.lines, "line", "lines")} our parser could not match went to ${esc(g.model)} (${(g.ms / 1000).toFixed(1)} s). It found ${g.funds.length ? g.funds.map((f) => `<b>${esc(f)}</b>`).join(", ") : "no fund names"}. Gemini only reads the list; every verdict below is counted.</div>`;
+  const notFound = g.funds.filter((f) => !g.matched.includes(f));
+  return `<div class="ai-note"><span class="pill pill-ai">Read by Gemini</span> ${plural(g.lines, "line", "lines")} our parser could not match went to ${esc(g.model)} (${(g.ms / 1000).toFixed(1)} s). ${g.matched.length ? `Matched to our data: ${g.matched.map((f) => `<b>${esc(f)}</b>`).join(", ")}.` : "No fund names matched our data."}${notFound.length ? ` Not in our data: ${notFound.map(esc).join(", ")}.` : ""} Gemini only reads the list; every verdict is counted.</div>`;
 }
 
 function lookupPanel(names) {
   return `<div class="live panel" id="live">
-    <div class="live-head"><div><h3>Not in our Cala snapshot yet</h3><p class="muted">${names.map((n) => `<span class="mono">${esc(n)}</span>`).join(" · ")}</p></div>
+    <div class="live-head"><div><h3>Ask Cala directly about these funds</h3><p class="muted">Not in our snapshot, or only seen from the company side with too few rounds: ${names.map((n) => `<span class="mono">${esc(n)}</span>`).join(" · ")}. One live Cala query per fund, about a minute each.</p></div>
     <button class="btn btn-primary" type="button" id="ask-live">Ask Cala live about ${plural(names.length, "fund", "funds")}</button></div>
     <ol class="ledger hidden" id="ledger" role="status" aria-live="polite"></ol></div>`;
 }
@@ -312,10 +321,10 @@ async function startLookup(names) {
 function rowHtml(r, i) {
   const vClass = `v-${r.verdict}`;
   const leads = r.known
-    ? `<div><span class="big">Led ${r.led}</span> <span class="muted">of ${r.known}</span></div><div class="cell-sub">${r.led_at_stage} at your stage${r.unknown ? ` · lead unknown in ${r.unknown}` : ""}</div>`
-    : `<div class="none">No rounds with a known lead at this stage</div>`;
+    ? `<div><span class="big">Led ${r.led}</span> <span class="muted">of ${r.known} rounds it joined</span></div><div class="cell-sub">${r.led_at_stage} at your exact stage${r.unknown ? ` · ${r.unknown} more with no named lead` : ""}</div>`
+    : `<div class="none">No rounds with a named lead near your stage</div>`;
   const size = r.size
-    ? `<div class="num">EUR ${fmtM(r.size.lo)}${r.size.hi !== r.size.lo ? `–${fmtM(r.size.hi)}` : ""}m${r.size.fit ? ` <span class="fit fit-${r.size.fit}">${r.size.fit === "fits" ? "fits" : r.size.fit === "larger" ? "you are larger" : "you are smaller"}</span>` : ""}</div><div class="cell-sub">from ${plural(r.size.n, "led round", "led rounds")}</div>`
+    ? `<div class="num">EUR ${fmtM(r.size.lo)}${r.size.hi !== r.size.lo ? `–${fmtM(r.size.hi)}` : ""}m${r.size.fit ? ` <span class="fit fit-${r.size.fit}">${r.size.fit === "fits" ? "fits your raise" : r.size.fit === "larger" ? "smaller than yours" : "larger than yours"}</span>` : ""}</div><div class="cell-sub">from ${plural(r.size.n, "led round", "led rounds")}</div>`
     : `<span class="none">No sizes</span>`;
   const last = r.last_lead
     ? `<a href="#" data-rid="${r.last_lead.id}">${esc(r.last_lead.company)}</a><div class="cell-sub">${esc(r.last_lead.stage)} · ${esc(r.last_lead.date)}</div>`
@@ -327,7 +336,7 @@ function rowHtml(r, i) {
     ? `<div class="cell-sub">Tie: your investor <b>${esc(r.tie.investor)}</b> sat with them in <a href="#" data-rid="${r.tie.round.id}">${esc(r.tie.round.company)}</a>'s ${r.tie.round.n_investors}-investor ${esc(r.tie.round.stage.toLowerCase())}, ${esc(r.tie.round.date.split(" ")[1])}</div>`
     : "";
   return `<tr class="main enter" data-i="${i}" tabindex="0" aria-expanded="false">
-    <td data-l="Fund"><div class="fund-name">${esc(r.name)}</div><div class="fund-sub">${esc(r.pasted !== r.name ? r.pasted : "")}</div>${r.like_you ? `<div class="like-you">Led <b>${r.like_you.length}</b> ${r.like_you.length === 1 ? "round" : "rounds"} like yours: ${r.like_you.slice(0, 3).map((x) => `<a href="#" data-rid="${x.id}">${esc(x.company)}</a>`).join(", ")}${r.like_you.length > 3 ? " …" : ""}</div>` : ""}<div class="cell-sub"><span class="pill pill-q" title="Rounds come from Cala /v1/knowledge/query">${r.queried ? "asked Cala about this fund" : "seen in company rounds"}</span>${r.via === "gemini" ? ` <span class="pill pill-ai">name read by Gemini</span>` : ""}</div></td>
+    <td data-l="Fund"><div class="fund-name">${esc(r.name)}</div><div class="fund-sub">${esc(r.pasted !== r.name ? r.pasted : "")}</div>${r.like_you ? `<div class="like-you">Led <b>${r.like_you.length}</b> ${r.like_you.length === 1 ? "round" : "rounds"} like yours: ${r.like_you.slice(0, 3).map((x) => `<a href="#" data-rid="${x.id}">${esc(x.company)}</a>`).join(", ")}${r.like_you.length > 3 ? " …" : ""}</div>` : ""}<button type="button" class="rounds-btn" data-toggle aria-label="Show the rounds behind ${esc(r.name)}"><span class="chev" aria-hidden="true"></span>Show rounds</button><div class="cell-sub"><span class="pill pill-q" title="Rounds come from Cala /v1/knowledge/query">${r.queried ? "asked Cala about this fund" : "seen in company rounds"}</span>${r.via === "gemini" ? ` <span class="pill pill-ai">name read by Gemini</span>` : ""}</div></td>
     <td data-l="Verdict"><span class="verdict ${vClass}"><span class="v-icon" aria-hidden="true"></span>${esc(r.verdict_label)}</span></td>
     <td data-l="Leads">${leads}</td>
     <td data-l="Round size it leads">${size}</td>
@@ -347,8 +356,10 @@ function roundList(rounds, empty, limit = 6) {
 function toggleRow(tr, r) {
   const open = tr.getAttribute("aria-expanded") === "true";
   const next = tr.nextElementSibling;
-  if (open) { tr.setAttribute("aria-expanded", "false"); if (next?.classList.contains("detail")) next.remove(); return; }
+  const btn = tr.querySelector("[data-toggle]");
+  if (open) { tr.setAttribute("aria-expanded", "false"); if (btn) btn.lastChild.textContent = "Show rounds"; if (next?.classList.contains("detail")) next.remove(); return; }
   tr.setAttribute("aria-expanded", "true");
+  if (btn) btn.lastChild.textContent = "Hide rounds";
   const det = document.createElement("tr");
   det.className = "detail";
   det.innerHTML = `<td colspan="6"><div class="detail-in">
@@ -379,8 +390,23 @@ async function openRecord(e) {
   const root = $("#sheet-root");
   const prev = document.activeElement;
   root.innerHTML = `<div class="sheet-backdrop" data-close></div><aside class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-h"><header><div><div class="eyebrow">Cala round record</div><h2 id="sheet-h">Loading</h2></div><button class="x" data-close aria-label="Close">×</button></header><div class="body"><div class="skel"></div></div></aside>`;
-  const close = () => { root.innerHTML = ""; document.removeEventListener("keydown", onKey); prev?.focus(); };
-  const onKey = (ev) => { if (ev.key === "Escape") close(); };
+  const bg = [...document.querySelectorAll("body > header, body > main, body > footer")];
+  bg.forEach((el) => el.setAttribute("inert", ""));
+  document.body.classList.add("no-scroll");
+  const close = () => {
+    root.innerHTML = ""; document.removeEventListener("keydown", onKey);
+    bg.forEach((el) => el.removeAttribute("inert")); document.body.classList.remove("no-scroll"); prev?.focus();
+  };
+  const onKey = (ev) => {
+    if (ev.key === "Escape") return close();
+    if (ev.key === "Tab") {
+      const f = [...root.querySelectorAll("button, a[href], summary, [tabindex='0']")].filter((x) => x.offsetParent !== null);
+      if (!f.length) return;
+      const first = f[0], last = f[f.length - 1];
+      if (ev.shiftKey && document.activeElement === first) { ev.preventDefault(); last.focus(); }
+      else if (!ev.shiftKey && document.activeElement === last) { ev.preventDefault(); first.focus(); }
+    }
+  };
   document.addEventListener("keydown", onKey);
   root.querySelectorAll("[data-close]").forEach((x) => x.addEventListener("click", close));
   $(".sheet .x").focus();
@@ -466,7 +492,7 @@ document.addEventListener("DOMContentLoaded", () => {
   $("#funds").addEventListener("input", lineCount);
   $("#sample").addEventListener("click", () => {
     $("#funds").value = SAMPLE; lineCount();
-    if (!state.investors.length) { state.investors.push("Antler", "Icebreaker.vc"); state.lead = "Antler"; renderChips("investors"); }
+    if (!state.investors.length) { state.investors.push("Lifeline Ventures"); state.lead = "Lifeline Ventures"; renderChips("investors"); }
     if (!state.competitors.length) { state.competitors.push("Lovable"); renderChips("competitors"); }
     if (!$("#target").value) $("#target").value = "3";
     run();
@@ -474,11 +500,20 @@ document.addEventListener("DOMContentLoaded", () => {
   $("#check-form").addEventListener("submit", (e) => { e.preventDefault(); run(); });
   $("#find").addEventListener("click", runFind);
   const tabs = [$("#tab-list"), $("#tab-find")];
-  tabs.forEach((tab) => tab.addEventListener("click", () => {
-    tabs.forEach((x) => x.setAttribute("aria-selected", x === tab));
+  const select = (tab) => {
+    tabs.forEach((x) => { x.setAttribute("aria-selected", x === tab); x.tabIndex = x === tab ? 0 : -1; });
     $("#pane-list").classList.toggle("hidden", tab.id !== "tab-list");
     $("#pane-find").classList.toggle("hidden", tab.id !== "tab-find");
-  }));
-  document.addEventListener("keydown", (e) => { if ((e.metaKey || e.ctrlKey) && e.key === "Enter") run(); });
+  };
+  select(tabs[0]);
+  tabs.forEach((tab, i) => {
+    tab.addEventListener("click", () => select(tab));
+    tab.addEventListener("keydown", (e) => {
+      const k = {ArrowRight: 1, ArrowLeft: -1}[e.key];
+      if (k) { e.preventDefault(); const t = tabs[(i + k + tabs.length) % tabs.length]; select(t); t.focus(); }
+      if (e.key === "Home" || e.key === "End") { e.preventDefault(); const t = tabs[e.key === "Home" ? 0 : tabs.length - 1]; select(t); t.focus(); }
+    });
+  });
+  document.addEventListener("keydown", (e) => { if ((e.metaKey || e.ctrlKey) && e.key === "Enter") (activeTab() === "find" ? runFind : run)(); });
   init();
 });

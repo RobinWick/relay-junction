@@ -1,17 +1,19 @@
-"""Live Cala lookups for funds that are not in the snapshot yet.
+"""Live Cala lookups for funds that are not in the snapshot yet, or that we only saw from the company side.
 
 Each fund gets one investor-first query (plus a dated fallback when Cala says the question is too complex).
-Calls run in background threads inside the single web container, with request starts kept under Cala's
-10 per minute plan limit, a global live budget and a per-session budget. Results are stored in Aiven
-(`live_funds`) and merged into the in-memory snapshot, so the next check shows them.
+Calls run in background threads inside the single web container, with request starts kept under our client
+limit of 10 per minute. Spending is capped per day in Aiven (`live_usage`), so restarts cannot reset it, and
+per session in memory. Results are stored in Aiven (`live_funds`) and merged into the snapshot.
 """
 from __future__ import annotations
 
 import os
+import re
 import threading
 import time
 import uuid
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, timezone
 
 import requests
 
@@ -20,16 +22,61 @@ OPEN_Q = ("List every funding round that {f} invested in, with company name, com
           "round type, amount, lead investor, all participating investors, and whether {f} led the round")
 YEAR_Q = ("Funding rounds {f} invested in during {y}, with company, company country, date, round type, amount, "
           "lead investor, participating investors and whether {f} led")
-GLOBAL_CAP = int(os.environ.get("LIVE_GLOBAL_CAP", "150"))
+DAY_CAP = int(os.environ.get("LIVE_DAY_CAP", "120"))
 SESSION_CAP = int(os.environ.get("LIVE_SESSION_CAP", "15"))
 MIN_INTERVAL_S = 6.2
+SAFE_NAME = re.compile(r"^[\w .,&'+\-]{2,60}$")
 
 _pool = ThreadPoolExecutor(max_workers=8)
 _lock = threading.Lock()
 _last_start = 0.0
-_used_global = 0
 _used_session: dict[str, int] = {}
+_used_memory: dict[str, int] = {}  # fallback when no database (local development)
 JOBS: dict[str, dict] = {}
+
+
+def clean_name(name: str) -> str | None:
+    """Fund names only: letters, digits and a few punctuation marks; nothing that reads like an instruction."""
+    n = re.sub(r"\s+", " ", str(name or "")).strip()
+    return n if SAFE_NAME.match(n) and len(n.split()) <= 6 else None
+
+
+def _db():
+    url = os.environ.get("RELAY_DATABASE_URL")
+    if not url or os.environ.get("RELAY_SNAPSHOT_PATH"):
+        return None
+    import psycopg
+    return psycopg.connect(url, connect_timeout=10)
+
+
+def _charge(n: int) -> bool:
+    """Atomically spend n paid calls from today's cap. Returns False when the cap would be exceeded."""
+    day = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    conn = _db()
+    if conn is None:
+        with _lock:
+            if _used_memory.get(day, 0) + n > DAY_CAP:
+                return False
+            _used_memory[day] = _used_memory.get(day, 0) + n
+            return True
+    with conn:
+        conn.execute("create table if not exists live_usage (day text primary key, used int not null default 0)")
+        conn.execute("insert into live_usage(day, used) values (%s, 0) on conflict (day) do nothing", (day,))
+        row = conn.execute("update live_usage set used = used + %s where day = %s and used + %s <= %s returning used",
+                           (n, day, n, DAY_CAP)).fetchone()
+        conn.commit()
+        return row is not None
+
+
+def day_left() -> int:
+    day = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    conn = _db()
+    if conn is None:
+        return DAY_CAP - _used_memory.get(day, 0)
+    with conn:
+        conn.execute("create table if not exists live_usage (day text primary key, used int not null default 0)")
+        row = conn.execute("select used from live_usage where day = %s", (day,)).fetchone()
+    return DAY_CAP - (row[0] if row else 0)
 
 
 def _slot() -> None:
@@ -48,28 +95,37 @@ def _ask(question: str) -> list[dict]:
         raise RuntimeError("Cala is rate-limiting")
     resp.raise_for_status()
     rows = resp.json().get("results", []) or []
-    return [] if (len(rows) == 1 and "error" in rows[0]) else rows
+    return [] if (len(rows) == 1 and isinstance(rows[0], dict) and "error" in rows[0]) else rows
 
 
 def budget(session: str) -> dict:
-    return {"global_left": max(0, GLOBAL_CAP - _used_global),
-            "session_left": max(0, SESSION_CAP - _used_session.get(session, 0))}
+    return {"day_left": max(0, day_left()), "session_left": max(0, SESSION_CAP - _used_session.get(session, 0))}
+
+
+def _spend_session(session: str, n: int) -> bool:
+    with _lock:
+        if _used_session.get(session, 0) + n > SESSION_CAP:
+            return False
+        _used_session[session] = _used_session.get(session, 0) + n
+        if len(_used_session) > 2000:
+            _used_session.clear()
+        return True
 
 
 def start(names: list[str], session: str, on_result) -> dict:
-    """Queue lookups. on_result(record) is called for each finished fund (merge + persist happens there)."""
-    global _used_global
+    """Queue lookups (names must already be cleaned and de-duplicated). on_result(record) merges and persists."""
     job = {"id": uuid.uuid4().hex[:12], "items": [], "created": time.time()}
-    with _lock:
-        for name in names[:12]:
-            left = min(GLOBAL_CAP - _used_global, SESSION_CAP - _used_session.get(session, 0))
-            if left < 1:
-                job["items"].append({"name": name, "status": "budget", "rows": 0})
-                continue
-            _used_global += 1
-            _used_session[session] = _used_session.get(session, 0) + 1
+    for name in names[:12]:
+        if not _spend_session(session, 1):
+            job["items"].append({"name": name, "status": "budget", "rows": 0})
+        elif not _charge(1):
+            job["items"].append({"name": name, "status": "budget", "rows": 0})
+        else:
             job["items"].append({"name": name, "status": "queued", "rows": 0, "t0": None, "t1": None})
     JOBS[job["id"]] = job
+    if len(JOBS) > 500:
+        for k in list(JOBS)[:250]:
+            JOBS.pop(k, None)
     for item in job["items"]:
         if item["status"] == "queued":
             _pool.submit(_run, item, session, on_result)
@@ -77,20 +133,14 @@ def start(names: list[str], session: str, on_result) -> dict:
 
 
 def _run(item: dict, session: str, on_result) -> None:
-    global _used_global
     item["status"], item["t0"] = "asking", time.time()
     queries = []
     try:
         rows = _ask(OPEN_Q.format(f=item["name"]))
         queries.append({"q": OPEN_Q.format(f=item["name"]), "rows": rows})
-        if not rows:
-            with _lock:
-                ok = GLOBAL_CAP - _used_global >= 1
-                if ok:
-                    _used_global += 1
-            if ok:
-                q = YEAR_Q.format(f=item["name"], y=2025)
-                queries.append({"q": q, "year": 2025, "rows": _ask(q)})
+        if not rows and _spend_session(session, 1) and _charge(1):
+            q = YEAR_Q.format(f=item["name"], y=2025)
+            queries.append({"q": q, "year": 2025, "rows": _ask(q)})
         total = sum(len(q["rows"]) for q in queries)
         item["rows"] = total
         if total:
@@ -98,8 +148,8 @@ def _run(item: dict, session: str, on_result) -> None:
             item["status"] = "done"
         else:
             item["status"] = "empty"
-    except (requests.RequestException, RuntimeError, KeyError, ValueError) as err:
-        item["status"], item["error"] = "error", str(err)[:120]
+    except Exception as err:  # any failure must end the item, or the browser polls forever
+        item["status"], item["error"] = "error", f"{type(err).__name__}"
     finally:
         item["t1"] = time.time()
 

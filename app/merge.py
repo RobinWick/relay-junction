@@ -19,7 +19,11 @@ STAGES = ["pre-seed", "seed", "series a", "series b", "series c", "series d", "s
 
 
 def parse_date(raw: str | None) -> tuple[int, int] | None:
-    """Return (year, month); month defaults to 6 when only a year (or quarter) is known."""
+    """Return (year, month); month defaults to 6 when only a year (or quarter) is known.
+
+    The month is the first month name in the string (not the first in calendar order), and
+    year ranges like '2024-2025' are not read as year-month.
+    """
     if not raw:
         return None
     s = str(raw).lower()
@@ -27,34 +31,46 @@ def parse_date(raw: str | None) -> tuple[int, int] | None:
     if not year:
         return None
     y = int(year.group())
-    iso = re.search(r"(19|20)\d{2}-(\d{1,2})", s)
+    iso = re.search(r"(19|20)\d{2}-(0?[1-9]|1[0-2])(?!\d)", s)
     if iso:
-        return y, max(1, min(12, int(iso.group(2))))
-    for name, num in MONTHS.items():
-        if re.search(rf"\b{name}", s):
-            return y, num
+        return y, int(iso.group(2))
+    hits = [(m.start(), MONTHS[m.group(1)]) for m in re.finditer(r"\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)", s)]
+    if hits:
+        return y, min(hits)[1]
     quarter = re.search(r"q([1-4])", s)
     if quarter:
         return y, int(quarter.group(1)) * 3 - 1
     return y, 6
 
 
+CURRENCY = re.compile(r"(€|eur|\$|usd|£|gbp|sek|nok|dkk|chf)")
+
+
 def parse_amount_eur(raw: str | None) -> float | None:
-    """Parse '$28M', '~€1.2 billion', 'SEK 50m' into EUR millions."""
+    """Parse '$28M', '~€1.2 billion', 'SEK 50m', '€500,000' into EUR millions.
+
+    Uses the first amount in the text and the currency written next to that amount.
+    A bare number of 1,000 or more is read as whole currency units, not millions.
+    """
     if not raw:
         return None
-    s = str(raw).lower().replace(",", "")
-    num = re.search(r"(\d+(?:\.\d+)?)\s*(billion|bn|b\b|million|mn|m\b|k\b|thousand)?", s)
+    s = str(raw).lower()
+    s = re.sub(r"(?<=\d),(?=\d{3}\b)", "", s)
+    num = re.search(r"(\d+(?:\.\d+)?)\s*(billion|bn|b\b|million|mn|mio|m\b|k\b|thousand)?", s)
     if not num:
         return None
     value = float(num.group(1))
-    unit = num.group(2) or "m"
+    unit = num.group(2)
     if unit in ("billion", "bn", "b"):
         value *= 1000
     elif unit in ("k", "thousand"):
         value /= 1000
-    rate = next((r for sym, r in FX_TO_EUR.items() if sym in s), 1.0)
-    return round(value * rate, 2)
+    elif unit is None:
+        value = value / 1e6 if value >= 1000 else value
+    near = s[max(0, num.start() - 5):num.end() + 6]
+    cur = CURRENCY.search(near) or CURRENCY.search(s)
+    rate = FX_TO_EUR.get(cur.group(1), 1.0) if cur else 1.0
+    return round(value * rate, 3)
 
 
 def stage_of(raw: str | None) -> str | None:
@@ -96,6 +112,7 @@ def split_investors(raw) -> list[str]:
         text = str(raw)
         for i, p in enumerate(PROTECTED):
             text = re.sub(re.escape(p), f"__P{i}__", text, flags=re.I)
+        text = re.sub(r"\(.*?\)|\[.*?\]", " ", text)
         parts = [re.sub(r"__P(\d+)__", lambda m: PROTECTED[int(m.group(1))].title(), x)
                  for x in re.split(r",|;|\band\b|&|\+", text)]
     names = []
@@ -114,12 +131,18 @@ TRUTHY = {"true", "yes", "y", "1", "led", "co-led", "lead"}
 NON_EQUITY = re.compile(r"grant|debt|loan|prize|award|ipo|listing|subsid|convertible note|crowdfund", re.I)
 
 
+SUFFIX_WORDS = {"ventures", "venture", "capital", "vc", "partners", "management", "fund", "investments"}
+
+
 def canon(name: str) -> str:
-    """One key per fund: 'Point Nine Capital' and 'Point Nine' collapse; legal suffixes are dropped."""
-    key = investor_key(name)
-    core = re.sub(r"\b(ventures?|venture partners|capital|vc|partners|management)\b", "", key)
-    core = re.sub(r"\s+", " ", core).strip()
-    return core or key
+    """One key per fund: 'Point Nine Capital' and 'Point Nine' collapse.
+
+    Only trailing generic words are dropped, so 'Capital Today' or 'Partners Group' keep their identity.
+    """
+    words = investor_key(name).split()
+    while len(words) > 1 and words[-1] in SUFFIX_WORDS:
+        words.pop()
+    return " ".join(words)
 
 
 def company_key(name: str) -> str:
@@ -162,13 +185,24 @@ class Builder:
         self.names[k][raw.strip()] += 1
         return k
 
-    def _find(self, ckey: str, stage: str | None, t: float) -> int | None:
+    def _find(self, ckey: str, stage: str | None, t: float, amount_m: float | None) -> int | None:
+        """Same round seen twice: same company, compatible stage, close dates, and no clear amount conflict.
+
+        Same named stage allows 4 months (Cala dates differ between answers); otherwise 2 months.
+        """
         best = None
         for idx in self.by_company.get(ckey, []):
             r = self.rounds[idx]
-            if abs(r["t"] - t) <= 0.17 and (stage is None or r["stage"] is None or r["stage"] == stage):
-                if best is None or abs(r["t"] - t) < abs(self.rounds[best]["t"] - t):
-                    best = idx
+            if not (stage is None or r["stage"] is None or r["stage"] == stage):
+                continue
+            window = 0.34 if (stage and r["stage"] == stage) else 0.17
+            if abs(r["t"] - t) > window:
+                continue
+            a, b = amount_m, r.get("amount_eur_m")
+            if a and b and max(a, b) / min(a, b) > 1.6:
+                continue
+            if best is None or abs(r["t"] - t) < abs(self.rounds[best]["t"] - t):
+                best = idx
         return best
 
     def add(self, *, company: str, country, when, type_, amount, leads, parts, path, query, raw) -> int | None:
@@ -181,14 +215,16 @@ class Builder:
         stage = stage_of(type_)
         lead_keys = {self._name(n) for n in leads}
         part_keys = {self._name(n) for n in parts} - lead_keys
-        idx = self._find(ckey, stage, t)
+        amount_m = parse_amount_eur(amount)
+        idx = self._find(ckey, stage, t, amount_m)
         src = {"path": path, "query": query, "row": raw}
         if idx is None:
             self.rounds.append({
                 "id": len(self.rounds), "company": company.strip(), "ckey": ckey, "country": country,
                 "t": round(t, 3), "year": when[0], "month": when[1], "stage": stage, "type": type_,
-                "amount_eur_m": parse_amount_eur(amount), "amount_raw": None if amount is None else str(amount),
+                "amount_eur_m": amount_m, "amount_raw": None if amount is None else str(amount),
                 "leads": sorted(lead_keys), "participants": sorted(part_keys), "sources": [src],
+                "cf_leads": sorted(lead_keys) if path == "company_first" else [],
             })
             self.by_company[ckey].append(len(self.rounds) - 1)
             return len(self.rounds) - 1
@@ -196,8 +232,10 @@ class Builder:
         r["leads"] = sorted(set(r["leads"]) | lead_keys)
         r["participants"] = sorted((set(r["participants"]) | part_keys) - set(r["leads"]))
         r["stage"] = r["stage"] or stage
-        r["amount_eur_m"] = r["amount_eur_m"] or parse_amount_eur(amount)
+        r["amount_eur_m"] = r["amount_eur_m"] or amount_m
         r["country"] = r["country"] or country
+        if path == "company_first":
+            r["cf_leads"] = sorted(set(r.get("cf_leads", [])) | lead_keys)
         r["sources"].append(src)
         return idx
 
@@ -230,7 +268,6 @@ class Builder:
         n = 0
         fund_name = rec["name"]
         if fund_name:
-            fund_name = rec["name"]
             for q in rec["queries"]:
                 for row in q["rows"]:
                     company = _field(row, "company", "company_name", "startup", "name")
@@ -248,11 +285,17 @@ class Builder:
                                    type_=_field(row, "round_type", "type", "round"),
                                    amount=_field(row, "amount", "amount_raised"), leads=leads, parts=parts,
                                    path="investor_first", query=q["q"], raw=row)
-                    if idx is not None and flag is False and canon(fund_name) in self.rounds[idx]["leads"]:
-                        # the fund's own answer says it did not lead: trust the investor-first flag
+                    fk = canon(fund_name)
+                    if idx is not None:
                         r = self.rounds[idx]
-                        r["leads"] = [k for k in r["leads"] if k != canon(fund_name)]
-                        r["participants"] = sorted(set(r["participants"]) | {canon(fund_name)})
+                        cf = r.get("cf_leads") or []
+                        demote = (flag is False and fk in r["leads"]) or \
+                                 (flag is True and cf and fk not in cf)  # company side names another lead
+                        if demote:
+                            r["leads"] = [k for k in r["leads"] if k != fk]
+                            r["participants"] = sorted(set(r["participants"]) | {fk})
+                            if flag is True:
+                                r["disagree"] = True
                     n += 1
         return n
 

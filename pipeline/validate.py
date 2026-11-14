@@ -137,7 +137,7 @@ def main() -> None:
                      "group": a["group"]} for a in accuracy]
     out = {"version": snap["version"], "rows": rows, "within_round": wr, "coverage": cov, "lead_comes_back": lcb,
            "accuracy": accuracy,
-           "note": "The prediction test ran on the first 289 companies before the investor-first crawl. All other rows are recomputed on every snapshot."}
+           "note": "The prediction test ran on the first 289 companies before the investor-first crawl. The other counted rows are recomputed on every data rebuild; hand checks are dated."}
     OUT.write_text(json.dumps(out, indent=1))
     print(json.dumps({"within_round": wr, "lead_comes_back": lcb, "seed": cov.get("seed"), "a": cov.get("series a")}, indent=1))
 

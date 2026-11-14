@@ -15,7 +15,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from difflib import get_close_matches
 
-from merge import canon
+from merge import canon, company_key
 
 STAGES = ["pre-seed", "seed", "series a", "series b", "series c", "series d", "series e", "series f", "growth"]
 STAGE_LABEL = {"pre-seed": "Pre-seed", "seed": "Seed", "series a": "Series A", "series b": "Series B",
@@ -48,6 +48,7 @@ class Snapshot:
     version: str
     by_investor: dict[str, list[int]] = field(default_factory=dict)
     by_company: dict[str, list[int]] = field(default_factory=dict)
+    _compact: dict | None = None
     now_t: float = 2026.87  # 14 Nov 2026
 
     @classmethod
@@ -70,10 +71,16 @@ class Snapshot:
             return None
         if key in self.by_investor:
             return key
-        compact = {k.replace(" ", ""): k for k in self.by_investor}
-        if key.replace(" ", "") in compact:
-            return compact[key.replace(" ", "")]
-        close = get_close_matches(key, list(self.by_investor), n=1, cutoff=0.88)
+        if self._compact is None:
+            self._compact = {k.replace(" ", ""): k for k in self.by_investor}
+        if key.replace(" ", "") in self._compact:
+            return self._compact[key.replace(" ", "")]
+        if len(key) < 5:
+            return None
+        # typo tolerance only among names that share the first word, so 'Inventure' never becomes 'Invenire'
+        first = key.split()[0][:4]
+        pool = [k for k in self.by_investor if k[:4] == first]
+        close = get_close_matches(key, pool, n=1, cutoff=0.9)
         return close[0] if close else None
 
     def suggest(self, q: str, limit: int = 8) -> list[dict]:
@@ -142,19 +149,6 @@ def fund_profile(snap: Snapshot, key: str, stage: str, target_m: float | None) -
     last_lead = max(all_led, key=lambda r: r["t"]) if all_led else None
     sizes = sorted(x["amount_eur_m"] for x in led if x.get("amount_eur_m"))
 
-    if snap.is_hub(key):
-        verdict = ("public", "Public body or programme")
-    elif known < 3:
-        verdict = ("few", "Too few rounds")
-    elif len(led_at_stage) >= 2 and ratio >= 0.30:
-        verdict = ("leads", "Leads at your stage")
-    elif known >= 5 and ratio < 0.15:
-        verdict = ("follows", "Mostly follows")
-    elif last_lead and snap.now_t - last_lead["t"] > 2.0:
-        verdict = ("stale", f"No lead since {month_label(last_lead)}")
-    else:
-        verdict = ("mixed", "Mixed")
-
     size = None
     if sizes:
         lo = sizes[len(sizes) // 4]
@@ -163,6 +157,26 @@ def fund_profile(snap: Snapshot, key: str, stage: str, target_m: float | None) -
         if target_m:
             fit = "fits" if lo * 0.8 <= target_m <= hi * 1.25 else ("larger" if target_m > hi * 1.25 else "smaller")
         size = {"lo": lo, "hi": hi, "n": len(sizes), "fit": fit}
+
+    if snap.is_hub(key):
+        verdict = ("public", "Public body or programme")
+    elif known < 3:
+        verdict = ("few", "Too few rounds")
+    elif len(led_at_stage) >= 2 and ratio >= 0.30:
+        if size and size["fit"] == "fits":
+            verdict = ("leads", "Leads rounds like yours")
+        elif size and size["fit"] == "larger":
+            verdict = ("leads_size", "Leads, but smaller rounds")
+        elif size and size["fit"] == "smaller":
+            verdict = ("leads_size", "Leads, but larger rounds")
+        else:
+            verdict = ("leads", "Leads at your stage")
+    elif known >= 5 and ratio < 0.15:
+        verdict = ("follows", "Mostly follows")
+    elif last_lead and snap.now_t - last_lead["t"] > 2.0:
+        verdict = ("stale", f"No lead since {month_label(last_lead)}")
+    else:
+        verdict = ("mixed", "Mixed")
 
     return {
         "key": key, "name": snap.name(key), "verdict": verdict[0], "verdict_label": verdict[1],
@@ -178,7 +192,7 @@ def fund_profile(snap: Snapshot, key: str, stage: str, target_m: float | None) -
 def conflicts(snap: Snapshot, key: str, competitors: list[str]) -> list[dict]:
     out = []
     for comp in competitors:
-        ckey = re.sub(r"[^a-z0-9]", "", comp.lower())
+        ckey = company_key(comp)
         for rid in snap.by_company.get(ckey, []):
             r = snap.rounds[rid]
             if key in r["leads"]:
@@ -192,14 +206,14 @@ def conflicts(snap: Snapshot, key: str, competitors: list[str]) -> list[dict]:
 def competitor_coverage(snap: Snapshot, competitors: list[str]) -> dict:
     found = {}
     for comp in competitors:
-        ckey = re.sub(r"[^a-z0-9]", "", comp.lower())
+        ckey = company_key(comp)
         found[comp] = len(snap.by_company.get(ckey, []))
     return found
 
 
 def tie(snap: Snapshot, key: str, my_investors: list[str], my_company: str | None) -> dict | None:
     """Strongest small-round tie: a founder's investor and this fund in the same equity round (max 6 investors)."""
-    my_ckey = re.sub(r"[^a-z0-9]", "", (my_company or "").lower())
+    my_ckey = company_key(my_company or "")
     best = None
     for inv in my_investors:
         if inv == key or snap.is_hub(inv) or snap.is_hub(key):
@@ -209,6 +223,8 @@ def tie(snap: Snapshot, key: str, my_investors: list[str], my_company: str | Non
             r = snap.rounds[rid]
             n = len(r["leads"]) + len(r["participants"])
             if r["ckey"] == my_ckey or n > 6 or n < 2 or snap.now_t - r["t"] > WINDOW_YEARS:
+                continue
+            if r.get("amount_eur_m") and r["amount_eur_m"] > 50:  # a large round is not a small cap table
                 continue
             weight = 1 / (n - 1)
             if best is None or (weight, r["t"]) > (best["weight"], best["round"]["t"]):
@@ -301,7 +317,9 @@ def discover(snap: Snapshot, stage: str, target_m: float | None, region: str | N
         for k in r["leads"]:
             if not snap.is_hub(k) and not snap.is_crossover(k):
                 counts[k].append(r)
-    ranked = sorted(counts.items(), key=lambda kv: (-len(kv[1]), -max(x["t"] for x in kv[1])))[:limit]
+    # a fund needs some history to be recommended: 2+ matching led rounds, or 1 plus 5+ rounds overall
+    eligible = {k: rs for k, rs in counts.items() if len(rs) >= 2 or len(snap.by_investor.get(k, [])) >= 5}
+    ranked = sorted(eligible.items(), key=lambda kv: (-len(kv[1]), -max(x["t"] for x in kv[1])))[:limit]
     funds = []
     for k, rs in ranked:
         prof = fund_profile(snap, k, stage, target_m)

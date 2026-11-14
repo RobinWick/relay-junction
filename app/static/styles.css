@@ -6,7 +6,7 @@
 
 :root{
   --bg:#F5F6F8; --panel:#FFFFFF; --line:#E4E7EC; --line-strong:#C9CED6;
-  --ink:#12161C; --ink-soft:#2A2F38; --muted:#5A626D; --faint:#8A929D;
+  --ink:#12161C; --ink-soft:#2A2F38; --muted:#545C67; --faint:#69717C;
   --accent:#003580; --accent-soft:#E8EEF8; --accent-line:#B9C9E4;
   --conflict:#B91C1C; --conflict-bg:#FDECEC;
   --thin:#B45309; --thin-bg:#FFF6E0; --thin-line:#D9A441; --prior:#6D28D9;
@@ -110,7 +110,11 @@ h3{font-size:13px;font-weight:600;margin:0;letter-spacing:.01em}
 .kbd{font-family:var(--mono);font-size:11px;border:1px solid var(--line-strong);border-bottom-width:2px;border-radius:4px;padding:0 5px;color:var(--muted)}
 
 /* ---------- results ---------- */
-.results{margin-top:26px}
+.results{margin-top:26px;scroll-margin-top:72px}
+body.no-scroll{overflow:hidden}
+.rounds-btn{display:inline-flex;align-items:center;gap:5px;border:0;background:transparent;color:var(--accent);font-size:12px;padding:3px 0;cursor:pointer;margin-top:2px}
+.rounds-btn .chev{width:6px;height:6px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(-45deg);transition:transform .15s}
+tr.main[aria-expanded="true"] .rounds-btn .chev{transform:rotate(45deg)}
 .summary{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:12px}
 .summary p{margin:0;font-size:16px;line-height:1.45;max-width:780px}
 .summary b{font-weight:600}
@@ -143,6 +147,9 @@ table.lc tbody tr.main[aria-expanded="true"]{background:var(--accent-soft)}
 .v-leads{color:var(--lead)}
 .v-leads .v-icon{background:var(--lead);border-radius:50%}
 .v-leads .v-icon::after{content:"";position:absolute;left:5px;top:3px;width:4px;height:8px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
+.v-leads_size{color:var(--lead)}
+.v-leads_size .v-icon{border:2px solid var(--lead);border-radius:50%}
+.v-leads_size .v-icon::after{content:"";position:absolute;left:4px;top:1px;width:3px;height:7px;border:solid var(--lead);border-width:0 2px 2px 0;transform:rotate(45deg)}
 .v-follows{color:var(--follow)}
 .v-follows .v-icon{border:2px solid var(--follow);border-radius:50%}
 .v-mixed{color:var(--ink-soft)}
@@ -241,6 +248,7 @@ footer.foot{max-width:1180px;margin:0 auto;padding:0 24px 40px;color:var(--faint
 /* ---------- responsive ---------- */
 @media (max-width:900px){
   .grid-form,.method{grid-template-columns:1fr}
+  .grid-form > section:nth-child(2){order:-1}
   .detail-in{grid-template-columns:1fr}
   h1{font-size:24px}
   .chip-data{display:none}
@@ -266,7 +274,12 @@ footer.foot{max-width:1180px;margin:0 auto;padding:0 24px 40px;color:var(--faint
 
 /* ---------- print: one A4 sheet ---------- */
 @media print{
+  @page{size:A4;margin:10mm}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   :root{--bg:#fff;--panel:#fff}
+  .results{margin-top:0}
+  .rounds-btn,.pill,.fund-sub,.counting,.cards-top,.unmatched,.ai-note,.live{display:none !important}
+  .summary p{font-size:12px}
   .top,.grid-form,.hero,.actions,.btn,.sheet,.sheet-backdrop,footer.foot,tr.detail,.cards-top .note-thin{display:none !important}
   body{font-size:10.5px}
   .panel{box-shadow:none;border:0}
