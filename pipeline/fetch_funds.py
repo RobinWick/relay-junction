@@ -101,8 +101,8 @@ def main(budget: int, top_n: int) -> None:
         for fut in as_completed(futures):
             try:
                 rec = fut.result()
-            except RuntimeError as err:
-                print(f"fund FAIL {futures[fut]}: {err}", flush=True)
+            except Exception as err:  # one fund failing must not stop the crawl
+                print(f"fund FAIL {futures[fut]}: {type(err).__name__}: {err}", flush=True)
                 continue
             if rec is None:
                 continue

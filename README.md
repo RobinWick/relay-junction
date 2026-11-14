@@ -8,12 +8,12 @@ Built at Junction 2026 (Espoo, 13 to 15 November 2026) for Cala's "Make Unicorns
 
 ## The need
 
-A seed or Series A founder going to Slush books a dozen 25-minute meetings out of thousands of investors. The question that matters is simple: which of these funds will lead my round, and which will only follow once someone else does? Fund websites list portfolio companies, not who led which round. That is the gap Lead Check fills, for the list the founder already has.
+A seed or Series A founder going to Slush books a dozen 25-minute meetings out of thousands of investors. The question that matters is simple: which of these funds actually leads rounds like mine, and which only follows once someone else does? Fund websites list portfolio companies, not who led which round. That is the gap Lead Check fills, for the list the founder already has.
 
 ## What it does
 
-- **Check my meeting list.** Paste the list in any format (times, tables, partner names, typos). Every fund gets:
-  - a verdict: *Leads at your stage*, *Mixed*, *Mostly follows*, *No lead since {date}*, *Too few rounds* or *Public body or programme*;
+- **Check my meeting list.** Paste the list as you have it: times, table numbers and notes are stripped, typos are matched, and lines our parser cannot read go to Gemini. Every fund gets:
+  - a verdict: *Leads rounds like yours*, *Leads, but larger rounds*, *Leads, but smaller rounds*, *Mixed*, *Mostly follows*, *No lead since {date}*, *Too few rounds* or *Public body or programme*;
   - **Led X of Y** known rounds, with the number of rounds where Cala names no lead;
   - the size of rounds it leads, against your target raise;
   - its last lead (company, stage, date);

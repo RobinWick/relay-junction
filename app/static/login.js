@@ -6,7 +6,7 @@ document.getElementById("login").addEventListener("submit", async (e) => {
     method: "POST", headers: {"Content-Type": "application/json"},
     body: JSON.stringify({passcode: document.getElementById("pc").value}),
   });
-  if (res.ok) { location.href = "/"; return; }
+  if (res.ok) { location.href = "/" + (location.hash === "#demo" ? "#demo" : ""); return; }
   const body = await res.json().catch(() => ({}));
   err.textContent = body.detail || "Could not sign in.";
 });

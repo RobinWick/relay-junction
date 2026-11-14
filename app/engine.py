@@ -77,10 +77,9 @@ class Snapshot:
             return self._compact[key.replace(" ", "")]
         if len(key) < 5:
             return None
-        # typo tolerance only among names that share the first word, so 'Inventure' never becomes 'Invenire'
-        first = key.split()[0][:4]
-        pool = [k for k in self.by_investor if k[:4] == first]
-        close = get_close_matches(key, pool, n=1, cutoff=0.9)
+        # typo tolerance ('Kreandum'), but only towards funds with real history and similar length
+        pool = [k for k in self.by_investor if abs(len(k) - len(key)) <= 3 and len(self.by_investor[k]) >= 3]
+        close = get_close_matches(key, pool, n=1, cutoff=0.84)
         return close[0] if close else None
 
     def suggest(self, q: str, limit: int = 8) -> list[dict]:
@@ -147,7 +146,9 @@ def fund_profile(snap: Snapshot, key: str, stage: str, target_m: float | None) -
     known = len(joined_known)
     ratio = len(led) / known if known else None
     last_lead = max(all_led, key=lambda r: r["t"]) if all_led else None
-    sizes = sorted(x["amount_eur_m"] for x in led if x.get("amount_eur_m"))
+    exact = sorted(x["amount_eur_m"] for x in led_at_stage if x.get("amount_eur_m"))
+    band_sizes = sorted(x["amount_eur_m"] for x in led if x.get("amount_eur_m"))
+    sizes, size_basis = (exact, "exact") if len(exact) >= 2 else (band_sizes, "band")
 
     size = None
     if sizes:
@@ -156,7 +157,7 @@ def fund_profile(snap: Snapshot, key: str, stage: str, target_m: float | None) -
         fit = None
         if target_m:
             fit = "fits" if lo * 0.8 <= target_m <= hi * 1.25 else ("larger" if target_m > hi * 1.25 else "smaller")
-        size = {"lo": lo, "hi": hi, "n": len(sizes), "fit": fit}
+        size = {"lo": lo, "hi": hi, "n": len(sizes), "fit": fit, "basis": size_basis}
 
     if snap.is_hub(key):
         verdict = ("public", "Public body or programme")
@@ -181,7 +182,7 @@ def fund_profile(snap: Snapshot, key: str, stage: str, target_m: float | None) -
     return {
         "key": key, "name": snap.name(key), "verdict": verdict[0], "verdict_label": verdict[1],
         "led": len(led), "known": known, "unknown": len(unknown), "led_at_stage": len(led_at_stage),
-        "size": size, "last_lead": round_brief(snap, last_lead) if last_lead else None,
+        "size": size, "last_lead": round_brief(snap, last_lead) if last_lead and not snap.is_hub(key) else None,
         "queried": key in snap.fund_keys, "total_rounds": len(ids),
         "rounds_led": [round_brief(snap, r) for r in sorted(led, key=lambda r: -r["t"])],
         "rounds_joined": [round_brief(snap, r) for r in sorted(joined_known, key=lambda r: -r["t"]) if key not in r["leads"]],

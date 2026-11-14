@@ -1,823 +1,824 @@
 {
-  "title": "Cala data-quality notes from Team Wicflow (Junction 2026)",
-  "generated": "2026-11-14 01:50",
-  "context": "Lead Check counts, per fund, how often it led a round. We asked Cala /v1/knowledge/query two ways: company-first (round history of each company) and investor-first (every round fund X invested in and whether X led it). Below is what we had to clean up to count leads reliably, offered as a thank-you. Some drift comes from our own free-form prompts; we flag it because a fixed schema would help every user.",
-  "inputs": {
-    "histories.jsonl": {
-      "companies": 421,
-      "rows": 1816,
-      "query": "List every funding round of {company} with announcement date, round type, amount, lead investor and all participating investors"
-    },
-    "funds.jsonl": {
-      "funds": 43,
-      "rows": 1200,
-      "query": "List every funding round that {X} invested in ... and whether {X} led the round (some funds queried per year)",
-      "note": "file was still growing during analysis; counts reflect this snapshot"
-    },
-    "snapshot.json": {
-      "version": "20261113234852",
-      "merged_rounds": 2258
-    }
+ "title": "Cala data-quality notes from Team Wicflow (Junction 2026)",
+ "generated": "2026-11-14 01:50 (findings); counts as of snapshot build 14 Nov ~03:00",
+ "context": "Lead Check counts, per fund, how often it led a round. We asked Cala /v1/knowledge/query two ways: company-first (round history of each company) and investor-first (every round fund X invested in and whether X led it). Below is what we had to clean up to count leads reliably, offered as a thank-you. Some drift comes from our own free-form prompts; we flag it because a fixed schema would help every user.",
+ "inputs": {
+  "histories.jsonl": {
+   "companies": 421,
+   "rows": 1816,
+   "query": "List every funding round of {company} with announcement date, round type, amount, lead investor and all participating investors"
   },
-  "method": "Python over the raw JSON answers; dates parsed to year-month, stages mapped from labels (pre-seed, seed, series a-f, growth), cross-path matches = same company name and dates within 2 months. No LLM was used to judge.",
-  "positives": [
-    "Answers include entities[] with stable-looking IDs and the mention text, which made most of this checkable.",
-    "Ambiguous queries are refused with an explanation (company 'Elmo') rather than answered with a guess."
-  ],
-  "findings": [
-    {
-      "type": "field_name_drift",
-      "severity": "medium",
-      "description": "The same question template returns the same concept under different field names from answer to answer. Across 3016 rows we saw 91 distinct field sets. Our prompts did not fix a schema, so some drift is expected, but a fixed output schema (or a documented canonical name per concept) would remove a whole class of silent data loss: a parser that misses one alias silently drops the date or the co-investors for that row.",
-      "count": 91,
-      "field_variants": {
-        "date": {
-          "announcement_date": 1534,
-          "date": 1435,
-          "announced": 36,
-          "announcement": 10
-        },
-        "lead": {
-          "lead_investor": 2963,
-          "lead_investors": 51
-        },
-        "other_investors": {
-          "participating_investors": 2527,
-          "other_investors": 92,
-          "investors": 61,
-          "participants": 196,
-          "other_participating_investors": 20,
-          "participating_investor": 7,
-          "co_investors": 48,
-          "all_participating_investors": 63
-        },
-        "round_label": {
-          "round_type": 2864,
-          "round": 171,
-          "type": 31,
-          "round_name": 92,
-          "round_number": 6
-        },
-        "company (investor-first)": {
-          "company": 1031,
-          "company_name": 96,
-          "name": 73
-        },
-        "country (investor-first)": {
-          "country": 1072,
-          "company_country": 128
-        }
-      },
-      "examples": [
-        {
-          "company": "Proxima Fusion",
-          "query_path": "company_first",
-          "raw_row": {
-            "announcement": "30 May 2023",
-            "round_type": "Pre-Seed",
-            "lead_investor": "Plural, UVC Partners"
-          },
-          "note": "Date under 'announcement' (10 rows use this key), next to 'announcement_date', 'date' and 'announced' elsewhere."
-        },
-        {
-          "company": "Kemaro",
-          "query_path": "company_first",
-          "raw_row": {
-            "round_type": "Series A",
-            "announcement_date": "2020-07-13",
-            "amount": null,
-            "lead_investor": "Spicehaus Partners",
-            "participating_investor": "Spicehaus Partners"
-          },
-          "note": "Singular 'participating_investor' instead of 'participating_investors'."
-        },
-        {
-          "company": "Algorithmiq",
-          "query_path": "investor_first",
-          "raw_row": {
-            "company_name": "Algorithmiq",
-            "company_country": "Finland",
-            "announcement_date": "May 11, 2026",
-            "round_type": "Other",
-            "lead_investor": null,
-            "inventure_led": "No"
-          },
-          "queried_fund": "Inventure",
-          "note": "Investor-first answers use 'company' or 'company_name', 'country' or 'company_country', 'date' or 'announcement_date'."
-        }
-      ]
+  "funds.jsonl": {
+   "funds": 43,
+   "rows": 1200,
+   "query": "List every funding round that {X} invested in ... and whether {X} led the round (some funds queried per year)",
+   "note": "file was still growing during analysis; counts reflect this snapshot"
+  },
+  "snapshot.json": {
+   "version": "20261113234852",
+   "merged_rounds": 2258
+  }
+ },
+ "method": "Python over the raw JSON answers; dates parsed to year-month, stages mapped from labels (pre-seed, seed, series a-f, growth), cross-path matches = same company name and dates within 2 months. No LLM was used to judge.",
+ "positives": [
+  "Answers include entities[] with stable-looking IDs and the mention text, which made most of this checkable.",
+  "Ambiguous queries are refused with an explanation (company 'Elmo') rather than answered with a guess."
+ ],
+ "findings": [
+  {
+   "type": "field_name_drift",
+   "severity": "medium",
+   "description": "The same question template returns the same concept under different field names from answer to answer. Across 3016 rows we saw 91 distinct field sets. Our prompts did not fix a schema, so some drift is expected, but a fixed output schema (or a documented canonical name per concept) would remove a whole class of silent data loss: a parser that misses one alias silently drops the date or the co-investors for that row.",
+   "count": 91,
+   "field_variants": {
+    "date": {
+     "announcement_date": 1534,
+     "date": 1435,
+     "announced": 36,
+     "announcement": 10
     },
-    {
-      "type": "led_flag_type_and_name_drift",
-      "severity": "medium",
-      "description": "The 'did fund X lead?' flag comes back as a JSON boolean in some answers and as free text in others: 642 of 1167 flag values are strings ('Yes', 'No', 'Yes (co-lead)', 'Co-led', 'Not confirmed', 'Unknown', 'Likely co-led', 'Details limited'). The key name also varies for one fund ('lifeline_led' and 'lifeline_ventures_led' for Lifeline Ventures) and is abbreviated for another ('cv_led' for Contrarian Ventures). A tri-state boolean plus a separate co_lead flag would make this field directly countable.",
-      "count": 642,
-      "value_distribution": {
-        "bool": 432,
-        "string:No": 310,
-        "string:Yes": 203,
-        "null": 93,
-        "string:Yes (co-lead)": 39,
-        "string:Not confirmed": 26,
-        "string:Unknown": 17,
-        "string:Not disclosed": 13,
-        "string:Yes (co-led)": 7,
-        "string:Co-led": 7,
-        "string:No (participated)": 4,
-        "string:No (participant)": 3,
-        "string:Likely co-led": 1,
-        "string:No (angel participation via co-founder)": 1,
-        "string:Details limited": 1,
-        "string:No \u2014 co-investor": 1,
-        "string:No \u2014 participated via partner Alexander Aghassipour as co-investor": 1,
-        "string:Yes (co-lead with Emblem)": 1,
-        "string:Unclear": 1,
-        "string:Yes (early backer)": 1,
-        "string:No (co-investor)": 1,
-        "string:Co-led (together with Aidiom)": 1,
-        "string:Yes (sole investor noted)": 1,
-        "string:Investor": 1,
-        "string:Participant": 1
-      },
-      "examples": [
-        {
-          "company": "Starship Technologies",
-          "query_path": "investor_first",
-          "raw_row": {
-            "company": "Starship Technologies",
-            "date": "Feb 6, 2024",
-            "lead_investor": "Plural & Iconical (co-led)",
-            "plural_led": "Yes (co-led)"
-          },
-          "queried_fund": "Plural",
-          "note": "String 'Yes (co-led)' where other answers use true."
-        },
-        {
-          "company": "Arbonics",
-          "query_path": "investor_first",
-          "raw_row": {
-            "company": "Arbonics",
-            "date": "June 2023",
-            "lead_investor": null,
-            "nordicninja_led": "Likely co-led"
-          },
-          "queried_fund": "NordicNinja",
-          "note": "'Likely co-led' with lead_investor null."
-        },
-        {
-          "fund": "Lifeline Ventures",
-          "note": "Two key names for the same flag across yearly queries of the same fund",
-          "keys": {
-            "lifeline_led": 19,
-            "lifeline_ventures_led": 23
-          }
-        }
-      ]
+    "lead": {
+     "lead_investor": 2963,
+     "lead_investors": 51
     },
-    {
-      "type": "led_flag_contradicts_lead_investor",
-      "severity": "high",
-      "description": "The investor-first answer's '<fund>_led' flag sometimes contradicts the lead_investor field: in the company-first answer for the same round (5 contradictions among rounds we could match across both paths), or in the same row (10 rows have the flag true while lead_investor is null). One row also names the lead with a typo ('Voita Ventures' for Voima Ventures, Iiwari seed). For anyone counting who leads, this is the most important field.",
-      "count": 15,
-      "breakdown": {
-        "cross_path_contradictions": 5,
-        "flag_true_lead_null_same_row": 10
-      },
-      "examples": [
-        {
-          "company": "Algorithmiq",
-          "round": "June 2023",
-          "investor_first": {
-            "company_name": "Algorithmiq",
-            "company_country": "Finland",
-            "announcement_date": "Jun 28, 2023",
-            "round_type": "Series A",
-            "amount": "€14M",
-            "lead_investor": null,
-            "participating_investors": "Inventure, Presidio Ventures, Tesi, Thames Trust, existing backers",
-            "inventure_led": "No"
-          },
-          "company_first": {
-            "round_type": "Series A",
-            "announcement_date": "27 June 2023",
-            "amount": "€14 million (~$15 million)",
-            "lead_investor": "Inventure VC",
-            "participating_investors": "Tesi (Finnish state-owned investment company); Presidio Ventures (corporate VC arm of Sumitomo Corporation); Thames Trust; existing backers; European Investment Bank (co-financing facility)"
-          },
-          "note": "investor-first says inventure_led 'No'; company-first names 'Inventure VC' as lead."
-        },
-        {
-          "company": "Marble Cognition",
-          "round": "November 2026",
-          "investor_first": {
-            "name": "Marble Cognition",
-            "country": null,
-            "date": "Nov 2, 2026",
-            "round_type": "Pre-Seed",
-            "amount": "$3.75M",
-            "lead_investor": null,
-            "participants": "Heartcore Capital, undisclosed angels",
-            "seedcamp_led": false
-          },
-          "company_first": {
-            "announcement_date": "November 2, 2026",
-            "round_type": "Pre-Seed",
-            "amount": "$3.75 million (€3.35 million)",
-            "lead_investor": "Heartcore Capital, Seedcamp",
-            "participating_investors": "A board member of Datadog; a founder of Personio; executives from McKinsey; Mistral AI; Lovable"
-          },
-          "note": "investor-first says seedcamp_led false; company-first lists Seedcamp as co-lead with Heartcore Capital."
-        },
-        {
-          "company": "Iiwari",
-          "query_path": "investor_first",
-          "raw_row": {
-            "company": "Iiwari",
-            "country": "Finland",
-            "date": null,
-            "round_type": "Seed",
-            "amount": "~€1.5M",
-            "lead_investor": "Voita Ventures",
-            "co_investors": "UK and US angels",
-            "voima_led": "Yes"
-          },
-          "queried_fund": "Voima Ventures",
-          "note": "voima_led 'Yes' but lead_investor spelled 'Voita Ventures'; date is also null."
-        }
-      ]
+    "other_investors": {
+     "participating_investors": 2527,
+     "other_investors": 92,
+     "investors": 61,
+     "participants": 196,
+     "other_participating_investors": 20,
+     "participating_investor": 7,
+     "co_investors": 48,
+     "all_participating_investors": 63
     },
-    {
-      "type": "round_label_disagrees_between_query_paths",
-      "severity": "high",
-      "description": "We matched 98 rounds that appear in both an investor-first and a company-first answer (same company, dates within 2 months). In 23 of them the labels disagree: 13 map to two different stages (for example Series C vs Series D, Seed vs Series A) and 10 give a stage in one answer and a generic label ('Other', 'Funding Round', 'Undisclosed', 'Equity + Debt') in the other. Stage is what founders filter on, so a single canonical label per round (with the raw label kept alongside) would help.",
-      "count": 23,
-      "matched_rounds": 98,
-      "breakdown": {
-        "different_stages": 13,
-        "stage_vs_generic_label": 10
-      },
-      "examples": [
-        {
-          "company": "Einride",
-          "investor_first": {
-            "company": "Einride",
-            "country": "Sweden",
-            "date": "Oct 2025",
-            "round_type": "Series C",
-            "amount": "$100M",
-            "lead_investor": null,
-            "participating_investors": "EQT Ventures and others",
-            "eqt_ventures_led": "No"
-          },
-          "company_first": {
-            "round_type": "Series D",
-            "announcement_date": "1 October 2025",
-            "amount": "$100M",
-            "lead_investor": "EQT Ventures, IonQ",
-            "participating_investors": "West Coast-based global asset manager (undisclosed)"
-          }
-        },
-        {
-          "company": "Eneba",
-          "investor_first": {
-            "company": "Eneba",
-            "country": "Lithuania",
-            "announcement_date": "Dec 2020",
-            "round_type": "Seed",
-            "amount": "$8M",
-            "lead_investor": "Practica Capital, InReach Ventures (co-lead)",
-            "participating_investors": "FJ Labs, Mantas Mikuckas (angel), others",
-            "practica_led": true
-          },
-          "company_first": {
-            "announcement_date": "21 December 2020",
-            "round_type": "Series A",
-            "amount": "$8 million",
-            "lead_investor": "Practica Capital, InReach Ventures",
-            "participating_investors": "FJ Labs, Mantas Mikuckas (angel investor, COO of Vinted), Motieka Fund Management"
-          }
-        },
-        {
-          "company": "Reduciner",
-          "investor_first": {
-            "company": "Reduciner",
-            "country": "Finland",
-            "date": "May 5, 2026",
-            "round_type": "Series A",
-            "amount": null,
-            "lead_investor": null,
-            "co_investors": "Lifeline Ventures + others",
-            "voima_led": "No"
-          },
-          "company_first": {
-            "round_type": "Seed",
-            "announcement_date": "5 May 2026",
-            "amount": "€3.6 million (~$3.9–4.3M USD equivalent)",
-            "lead_investor": null,
-            "participating_investors": "Voima Ventures, Lifeline Ventures, Mikko Kodisoja Foundation, VTT Technical Research Centre of Finland"
-          }
-        }
-      ]
+    "round_label": {
+     "round_type": 2864,
+     "round": 171,
+     "type": 31,
+     "round_name": 92,
+     "round_number": 6
     },
-    {
-      "type": "investor_spelling_variants",
-      "severity": "medium",
-      "description": "The same investor appears under several spellings in the free-text investor fields, sometimes with acronyms, legal suffixes or renames in brackets. For five investors we checked by pattern there are 43 distinct strings. The entities[] list helps (it resolves mentions to IDs), but the round fields themselves carry only text, so counting needs fuzzy matching. Returning entity IDs inline in lead_investor and participating_investors would solve this.",
-      "count": 43,
-      "examples": [
-        {
-          "investor": "aws Gründerfonds",
-          "spellings_with_row_counts": {
-            "aws Gründerfonds": 13,
-            "Austria Wirtschaftsservice (aws)": 2,
-            "Austria Wirtschaftsservice (AWS)": 1,
-            "Austria Wirtschaftsservice (aws Gründerfonds)": 1,
-            "aws Gründungsfonds": 1
-          }
-        },
-        {
-          "investor": "NordicNinja",
-          "spellings_with_row_counts": {
-            "NordicNinja VC": 21,
-            "NordicNinja": 13,
-            "Nordic Ninja": 3,
-            "NordicNinja (co-leads)": 1,
-            "NordicNinja (Nordic Ninja)": 1
-          }
-        },
-        {
-          "investor": "High-Tech Gründerfonds",
-          "spellings_with_row_counts": {
-            "High-Tech Gründerfonds (HTGF)": 8,
-            "HTGF": 8,
-            "HTGF (High-Tech Gründerfonds)": 3,
-            "High-Tech Gründerfonds": 3,
-            "HTGF (existing investor)": 1
-          }
-        }
-      ],
-      "more": {
-        "VNV Global (formerly Vostok New Ventures), rename carried as bracketed text": {
-          "VNV Global": 16,
-          "Vostok New Ventures (VNV Global)": 2,
-          "VNV Global (then Vostok New Ventures)": 1,
-          "VNV Global AB (publ)": 1,
-          "Vostok New Ventures (now VNV Global)": 1,
-          "Vostok New Ventures": 1
-        },
-        "European Innovation Council (Fund and Accelerator mixed)": {
-          "EIC Fund": 23,
-          "European Innovation Council (EIC)": 9,
-          "European Innovation Council": 9,
-          "European Innovation Council (EIC) Fund": 9,
-          "EIC Fund (European Innovation Council)": 4,
-          "EIC Accelerator": 3,
-          "European Innovation Council Fund": 3,
-          "EIC Fund (European Innovation Council Fund)": 2,
-          "European Innovation Council (EIC) Accelerator": 2,
-          "European Innovation Council Fund (EIC Fund)": 1
-        }
-      }
+    "company (investor-first)": {
+     "company": 1031,
+     "company_name": 96,
+     "name": 73
     },
-    {
-      "type": "same_name_several_entity_ids",
-      "severity": "medium",
-      "description": "49 exact names (case-insensitive) of companies, organisations or people resolve to more than one entity ID across answers. Some may be genuinely different legal entities sharing a name; we have not verified each one. For investors such as Global Founders Capital or Target Global this splits one fund into several graph nodes.",
-      "count": 49,
-      "examples": [
-        {
-          "name": "Global Founders Capital",
-          "entity_ids": [
-            {
-              "id": "59e25aed-1a88-4b17-840d-045180bf78c6",
-              "entity_type": "Organization",
-              "seen_in": [
-                "company query: Aibidia",
-                "company query: Flipdish",
-                "company query: Tink"
-              ]
-            },
-            {
-              "id": "68a934f8-4cf8-476f-b966-3c4b9f0cb391",
-              "entity_type": "Organization",
-              "seen_in": [
-                "company query: Thermondo"
-              ]
-            },
-            {
-              "id": "cc0cd701-240f-47c0-9bc4-73902c281340",
-              "entity_type": "Organization",
-              "seen_in": [
-                "company query: Anyfin",
-                "company query: Climeworks",
-                "fund query: Icebreaker.vc"
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Target Global",
-          "entity_ids": [
-            {
-              "id": "3a809e72-d42d-49d8-be6f-00e67c8f1bda",
-              "entity_type": "Organization",
-              "seen_in": [
-                "company query: DocPlanner",
-                "company query: TravelPerk",
-                "company query: Wefox"
-              ]
-            },
-            {
-              "id": "c454964d-a18c-4004-aced-5461287e06aa",
-              "entity_type": "Organization",
-              "seen_in": [
-                "company query: Robovision",
-                "fund query: Northzone",
-                "fund query: Seedcamp"
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Fredrik Hjelm",
-          "entity_ids": [
-            {
-              "id": "125fe9a0-a134-4ca4-9ba4-7dbc3ad5cd84",
-              "entity_type": "Person",
-              "seen_in": [
-                "fund query: byFounders"
-              ]
-            },
-            {
-              "id": "2c328649-f1be-5bdd-b445-dfa7582093ed",
-              "entity_type": "Person",
-              "seen_in": [
-                "fund query: Icebreaker.vc",
-                "fund query: byFounders"
-              ]
-            },
-            {
-              "id": "b4f664ef-b924-57bd-8fd3-a26db46cf1e5",
-              "entity_type": "Person",
-              "seen_in": [
-                "company query: imagiLabs"
-              ]
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "type": "entity_type_inconsistent",
-      "severity": "low",
-      "description": "17 exact names carry different entity_type values in different answers (mostly Company vs Organization; EIT InnoEnergy is Organization in one answer and EducationalInstitution in another). Investor typing (fund, angel, corporate, public body) is not available.",
-      "count": 17,
-      "examples": [
-        {
-          "name": "EIT InnoEnergy",
-          "entity_types_seen": {
-            "EducationalInstitution": 1,
-            "Organization": 1
-          }
-        },
-        {
-          "name": "Founders Fund",
-          "entity_types_seen": {
-            "Organization": 2,
-            "Company": 1
-          }
-        },
-        {
-          "name": "Quadrille Capital",
-          "entity_types_seen": {
-            "Organization": 1,
-            "Company": 1
-          }
-        }
-      ]
-    },
-    {
-      "type": "same_company_several_names",
-      "severity": "medium",
-      "description": "The same company asked under two names (both names are in common use) returns two different round histories. In investor-first answers, aliases are carried inside the company string ('Verda (DataCrunch)', 'Verda (fka DataCrunch)', 'Riff (fka Databutton)', 'Riff (formerly Databutton)'), 49 distinct company strings carry an alias, a bracketed note or a slash. A company entity ID per row would let consumers merge these safely.",
-      "count": 49,
-      "examples": [
-        {
-          "company": "IQM vs IQM Quantum Computers",
-          "round": "July 2022",
-          "answer_for_IQM": [
-            {
-              "date": "July 2022",
-              "round_type": "EIC Fund (Early VC)",
-              "amount": "€10 million",
-              "lead_investor": "EIC Fund",
-              "participating_investors": null
-            },
-            {
-              "date": "July 22, 2022",
-              "round_type": "Series A Extension (A2)",
-              "amount": "€128 million (~$128 million)",
-              "lead_investor": "World Fund",
-              "participating_investors": "MIG Capital (MIG Fonds), Tesi, OpenOcean, Maki.vc, Vsquared Ventures, Salvia, Santo Venture Capital, Tencent, Matadero QED, Varma Mutual Pension Insurance, OurCrowd, EIC Fund, Bayern Kapital, QuIC SPV (QCI Group), Tofino Capital, Changer Club"
-            }
-          ],
-          "answer_for_IQM_Quantum_Computers": [
-            {
-              "round_type": "Series A Extension (Series A2)",
-              "announced": "22 July 2022",
-              "amount": "€128 million (~$128M)",
-              "lead_investor": "World Fund",
-              "participating_investors": "Bayern Kapital, EIC Fund (European Innovation Council), OurCrowd, QCI SPV, Tofino, Varma Mutual Pension Insurance, Maki.vc, Matadero QED, MIG Fonds, OpenOcean, Salvia GmbH, Santo Venture Capital, Tencent, Tesi, Vsquared Ventures"
-            }
-          ],
-          "note": "Same company, same month: EUR 10M EIC Fund round vs EUR 128M Series A2."
-        },
-        {
-          "company": "Voi vs VOI Technology",
-          "round": "November 2018",
-          "answer_for_Voi": [
-            {
-              "announcement_date": "November 2018",
-              "round_type": "Series A (1st close)",
-              "amount": "$48–50 million",
-              "lead_investor": "Vostok New Ventures (VNV Global)",
-              "participating_investors": "Balderton Capital, LocalGlobe, Raine Ventures, Cristina Stenbeck (Kinnevik), Justin Mateen (co-founder of Tinder), Keith Richman (Grubhub board member), Jeff Wilke (Amazon), Sujay Jaswa (WndrCo), Sujay Tyle (Frontier Car Group), Diego Piacentini (former Amazon), Christian Leone (Luxor Capital), Spencer Rascoff (ex-CEO of Zillow)"
-            }
-          ],
-          "answer_for_VOI_Technology": [
-            {
-              "round_name": "Series A",
-              "announcement_date": "November 2018",
-              "round_type": "Series A",
-              "amount": "$50 million",
-              "lead_investor": "Balderton Capital",
-              "participating_investors": "LocalGlobe, The Raine Group (Raine Ventures), VNV Global, Cristina Stenbeck, Jeff Wilke, Justin Mateen, Nicolas Brusson, Sebastian Knutsson, Spencer Rascoff, Keith Richman"
-            }
-          ],
-          "note": "Same Series A, different lead (Vostok New Ventures vs Balderton)."
-        },
-        {
-          "company": "Verda / DataCrunch",
-          "strings_seen": [
-            "DataCrunch (now Verda)",
-            "Verda (DataCrunch)",
-            "Verda (fka DataCrunch)",
-            "Verda (formerly DataCrunch)"
-          ]
-        }
-      ]
-    },
-    {
-      "type": "tranches_and_split_rounds",
-      "severity": "medium",
-      "description": "26 pairs of rows in company-first answers share a stage and fall within 3 months of each other. Many are real tranches or extensions, which is correct to report, but there is no parent-round key, and some totals include the earlier tranche, so summing rows double counts. One answer split a single round into one row per co-investor. A round_group_id plus a flag for \"amount is cumulative\" would fix both.",
-      "count": 26,
-      "examples": [
-        {
-          "company": "Oura",
-          "rows": [
-            {
-              "round_type": "Series D (Tranche 1 \u2014 Dexcom Strategic)",
-              "announcement_date": "November 19, 2024",
-              "amount": "$75 million",
-              "lead_investor": "Dexcom",
-              "other_investors": ""
-            },
-            {
-              "round_type": "Series D (Close)",
-              "announcement_date": "December 19, 2024",
-              "amount": "$200 million (total, inclusive of the $75 million Dexcom tranche)",
-              "lead_investor": "Dexcom, Fidelity Management & Research Company",
-              "other_investors": "Temasek, Andreessen Horowitz"
-            }
-          ],
-          "note": "Second row amount includes the first: summing gives USD 275M instead of 200M."
-        },
-        {
-          "company": "Showpad",
-          "rows": [
-            {
-              "name": "Showpad",
-              "announcement_date": "25 Jun 2019",
-              "round_type": "Series D (equity)",
-              "amount": "$70 M (combined equity + debt)",
-              "lead_investor": "Dawn Capital, Insight Partners (co-leads)",
-              "participating_investors": "Hummingbird Ventures, Korelya Capital"
-            },
-            {
-              "name": "Showpad",
-              "announcement_date": "25 Jun 2019",
-              "round_type": "Conventional Debt (part of Series D)",
-              "amount": "included in the $70 M above",
-              "lead_investor": "\u2014",
-              "participating_investors": "Silicon Valley Bank (SVB)"
-            }
-          ],
-          "note": "Debt row refers to the other row in text ('included in the $70 M above')."
-        },
-        {
-          "company": "Kemaro",
-          "rows": [
-            {
-              "round_type": "Series A Extension",
-              "announcement_date": "2022-12-20",
-              "amount": "~CHF 5 million",
-              "lead_investor": "Spicehaus Partners",
-              "participating_investor": "Spicehaus Partners"
-            },
-            {
-              "round_type": "Series A Extension",
-              "announcement_date": "2022-12-20",
-              "amount": "~CHF 5 million",
-              "lead_investor": "Spicehaus Partners",
-              "participating_investor": "W+P Beteiligungen AG"
-            },
-            {
-              "round_type": "Series A Extension",
-              "announcement_date": "2022-12-20",
-              "amount": "~CHF 5 million",
-              "lead_investor": "Spicehaus Partners",
-              "participating_investor": "Obayashi Corporation"
-            }
-          ],
-          "note": "One Series A extension returned as three rows, one per participating investor."
-        }
-      ]
-    },
-    {
-      "type": "placeholders_in_investor_fields",
-      "severity": "medium",
-      "description": "Investor fields often hold placeholder text instead of null: 120 lead fields and 386 participant fields contain phrases such as 'Not publicly disclosed', 'Undisclosed', 'and others', '+ 10 others' or 'Not Practica'. A naive parser turns these into investors called 'Undisclosed' or 'others'. Suggest null plus separate fields such as lead_disclosed=false and additional_investor_count.",
-      "count": 506,
-      "breakdown": {
-        "lead_fields": 120,
-        "participant_fields": 386
-      },
-      "examples": [
-        {
-          "company": "Donna",
-          "query_path": "company_first",
-          "raw_row": {
-            "company": "Donna (Ghent, Belgium)",
-            "announcement_date": "19 Jun 2024",
-            "round_type": "Pre-Seed",
-            "amount": "$1.6M",
-            "lead_investor": "Pitchdrive (+ 3 others)",
-            "participating_investors": "Jorn Vanysacker + 10 others"
-          }
-        },
-        {
-          "company": "Sintra",
-          "query_path": "investor_first",
-          "raw_row": {
-            "company": "Sintra",
-            "country": "Lithuania",
-            "announcement_date": "Jun 2025",
-            "round_type": "Seed",
-            "amount": "$17M (~€14.9M)",
-            "lead_investor": "Not Practica",
-            "participating_investors": "Practica Capital participated",
-            "practica_led": false
-          },
-          "queried_fund": "Practica Capital"
-        },
-        {
-          "company": "Planet42",
-          "query_path": "company_first",
-          "raw_row": {
-            "announcement_date": "Jun 19, 2020",
-            "round_type": "Angel",
-            "amount": "$590,000",
-            "lead_investor": "Undisclosed",
-            "participating_investors": "Undisclosed"
-          }
-        }
-      ]
-    },
-    {
-      "type": "people_and_prose_in_investor_fields",
-      "severity": "low",
-      "description": "Investor fields mix funds, angels and explanatory prose in one string. 114 rows carry a person role or note inside an investor name (e.g. '(Bolt co-founder)', '(led by Founding Partner ...)', or a sentence after a dash), and 146 rows carry a status in brackets ('(co-lead)', '(existing investor)', '(returning)'). Angels are often correct investors, but without a type the consumer cannot tell a fund from a person (391 Person entity IDs appeared in answers). Structured fields (investor_type, is_follow_on, note) would keep the names clean.",
-      "count": 260,
-      "breakdown": {
-        "role_or_prose_annotations": 114,
-        "status_annotations": 146
-      },
-      "examples": [
-        {
-          "company": "Planet42",
-          "query_path": "company_first",
-          "raw_row": {
-            "announcement_date": "Jun 16, 2020",
-            "round_type": "Seed",
-            "amount": "€2.2 million (~$2.4M)",
-            "lead_investor": "Change Ventures",
-            "participating_investors": "Martin Villig (Bolt co-founder), Ragnar Sass (Pipedrive co-founder), Marko Virkebau (MeetFrank), Kristjan Vilosius (Katana MRP), and other Estonian tech angel investors"
-          }
-        },
-        {
-          "company": "ValueGrain",
-          "query_path": "company_first",
-          "raw_row": {
-            "round_name": "Seed Round",
-            "announcement_date": "3 July 2026",
-            "round_type": "Seed",
-            "amount": "Up to €3.3 million (~$3.6 million); post-money valuation €10.3 million",
-            "lead_investor": "Bernhard Schadeberg (managing partner of Krombacher Brewery) \u2014 multi-stage investment package of up to €3 million",
-            "participating_investors": "Joachim Friedsch / Fristam Pumpen (€300,000 follow-on), Jeff Maisel (existing investor)"
-          }
-        },
-        {
-          "company": "LiveEO",
-          "query_path": "investor_first",
-          "raw_row": {
-            "company": "LiveEO",
-            "date": "May 6, 2026",
-            "round_type": "Late VC / Series C",
-            "lead_investor": "Not disclosed as sole lead; DTCF, NordicNinja, Greencode, and Segenia Capital were key investors",
-            "nordicninja_led": "No"
-          },
-          "queried_fund": "NordicNinja"
-        }
-      ]
-    },
-    {
-      "type": "truncated_and_mixed_dates",
-      "severity": "medium",
-      "description": "7 date values are truncated so the year is lost (for example \"11 June 5\" and \"July 17, 5...\"); 2 of them also contain a zero-width space inside the year (\"23 July 5<U+200B>025\"). Separately, 237 dates are ranges, alternatives or annotated (\"May 3, 2018 (CB Insights) / October 1, 2018 (Tracxn)\", \"~Apr–May 2020\"), and formats mix ISO, \"Month D, YYYY\", \"D Month YYYY\" and \"Mon YYYY\". In 11 investor-first rows the date field holds a stage instead of a date ('Early-stage', 'Multiple rounds', 'Growth'). An ISO date plus a precision field (day, month, quarter, year) and an optional note would make these machine-safe.",
-      "count": 18,
-      "breakdown": {
-        "truncated_year": 7,
-        "non_date_text_in_date_field": 11,
-        "ranges_or_annotated_dates_not_counted_above": 237
-      },
-      "non_date_values": {
-        "Early-stage": 9,
-        "Multiple rounds": 1,
-        "Growth": 1
-      },
-      "examples": [
-        {
-          "company": "Proxima Fusion",
-          "query_path": "company_first",
-          "raw_row": {
-            "announcement": "11 June 5",
-            "round_type": "Series A",
-            "amount": "€130 million (~$148 million)",
-            "lead_investor": "Balderton Capital, Cherry Ventures"
-          }
-        },
-        {
-          "company": "Vivla",
-          "query_path": "company_first",
-          "raw_row": {
-            "round": "Series A",
-            "date": "23 July 5​025",
-            "amount": "€8 million (~$9.4 M)"
-          },
-          "note": "Contains U+200B (zero-width space) between \"5\" and \"025\"."
-        },
-        {
-          "company": "Etsy",
-          "query_path": "investor_first",
-          "raw_row": {
-            "company": "Etsy",
-            "country": "US",
-            "announcement_date": "Early-stage",
-            "round_type": null,
-            "amount": null,
-            "lead_investor": null,
-            "participating_investors": null,
-            "accel_led": "No"
-          },
-          "queried_fund": "Accel",
-          "note": "Stage text in the date field; all other round fields null."
-        }
-      ]
-    },
-    {
-      "type": "country_field_drift",
-      "severity": "low",
-      "description": "In investor-first rows the country is null in 224 of 1200 rows, and 87 values carry a city or a second country ('Sweden (Stockholm)', 'UK (London)' next to 'United Kingdom (London)', 'Estonia (HQ Los Angeles)', 'South Africa / Estonia'). An ISO country code plus an hq_city field would fix this.",
-      "count": 311,
-      "breakdown": {
-        "null": 224,
-        "annotated_or_multiple": 87
-      },
-      "examples": [
-        {
-          "value": "Sweden (Stockholm)",
-          "rows": 6
-        },
-        {
-          "value": "United Kingdom (London)",
-          "rows": 6
-        },
-        {
-          "value": "UK (London)",
-          "rows": 4
-        }
-      ]
+    "country (investor-first)": {
+     "country": 1072,
+     "company_country": 128
     }
-  ]
+   },
+   "examples": [
+    {
+     "company": "Proxima Fusion",
+     "query_path": "company_first",
+     "raw_row": {
+      "announcement": "30 May 2023",
+      "round_type": "Pre-Seed",
+      "lead_investor": "Plural, UVC Partners"
+     },
+     "note": "Date under 'announcement' (10 rows use this key), next to 'announcement_date', 'date' and 'announced' elsewhere."
+    },
+    {
+     "company": "Kemaro",
+     "query_path": "company_first",
+     "raw_row": {
+      "round_type": "Series A",
+      "announcement_date": "2020-07-13",
+      "amount": null,
+      "lead_investor": "Spicehaus Partners",
+      "participating_investor": "Spicehaus Partners"
+     },
+     "note": "Singular 'participating_investor' instead of 'participating_investors'."
+    },
+    {
+     "company": "Algorithmiq",
+     "query_path": "investor_first",
+     "raw_row": {
+      "company_name": "Algorithmiq",
+      "company_country": "Finland",
+      "announcement_date": "May 11, 2026",
+      "round_type": "Other",
+      "lead_investor": null,
+      "inventure_led": "No"
+     },
+     "queried_fund": "Inventure",
+     "note": "Investor-first answers use 'company' or 'company_name', 'country' or 'company_country', 'date' or 'announcement_date'."
+    }
+   ]
+  },
+  {
+   "type": "led_flag_type_and_name_drift",
+   "severity": "medium",
+   "description": "The 'did fund X lead?' flag comes back as a JSON boolean in some answers and as free text in others: 642 of 1167 flag values are strings ('Yes', 'No', 'Yes (co-lead)', 'Co-led', 'Not confirmed', 'Unknown', 'Likely co-led', 'Details limited'). The key name also varies for one fund ('lifeline_led' and 'lifeline_ventures_led' for Lifeline Ventures) and is abbreviated for another ('cv_led' for Contrarian Ventures). A tri-state boolean plus a separate co_lead flag would make this field directly countable.",
+   "count": 642,
+   "value_distribution": {
+    "bool": 432,
+    "string:No": 310,
+    "string:Yes": 203,
+    "null": 93,
+    "string:Yes (co-lead)": 39,
+    "string:Not confirmed": 26,
+    "string:Unknown": 17,
+    "string:Not disclosed": 13,
+    "string:Yes (co-led)": 7,
+    "string:Co-led": 7,
+    "string:No (participated)": 4,
+    "string:No (participant)": 3,
+    "string:Likely co-led": 1,
+    "string:No (angel participation via co-founder)": 1,
+    "string:Details limited": 1,
+    "string:No — co-investor": 1,
+    "string:No — participated via partner Alexander Aghassipour as co-investor": 1,
+    "string:Yes (co-lead with Emblem)": 1,
+    "string:Unclear": 1,
+    "string:Yes (early backer)": 1,
+    "string:No (co-investor)": 1,
+    "string:Co-led (together with Aidiom)": 1,
+    "string:Yes (sole investor noted)": 1,
+    "string:Investor": 1,
+    "string:Participant": 1
+   },
+   "examples": [
+    {
+     "company": "Starship Technologies",
+     "query_path": "investor_first",
+     "raw_row": {
+      "company": "Starship Technologies",
+      "date": "Feb 6, 2024",
+      "lead_investor": "Plural & Iconical (co-led)",
+      "plural_led": "Yes (co-led)"
+     },
+     "queried_fund": "Plural",
+     "note": "String 'Yes (co-led)' where other answers use true."
+    },
+    {
+     "company": "Arbonics",
+     "query_path": "investor_first",
+     "raw_row": {
+      "company": "Arbonics",
+      "date": "June 2023",
+      "lead_investor": null,
+      "nordicninja_led": "Likely co-led"
+     },
+     "queried_fund": "NordicNinja",
+     "note": "'Likely co-led' with lead_investor null."
+    },
+    {
+     "fund": "Lifeline Ventures",
+     "note": "Two key names for the same flag across yearly queries of the same fund",
+     "keys": {
+      "lifeline_led": 19,
+      "lifeline_ventures_led": 23
+     }
+    }
+   ]
+  },
+  {
+   "type": "led_flag_contradicts_lead_investor",
+   "severity": "high",
+   "description": "The investor-first answer's '<fund>_led' flag sometimes contradicts the lead_investor field: in the company-first answer for the same round (5 contradictions among rounds we could match across both paths), or in the same row (10 rows have the flag true while lead_investor is null). One row also names the lead with a typo ('Voita Ventures' for Voima Ventures, Iiwari seed). For anyone counting who leads, this is the most important field.",
+   "count": 15,
+   "breakdown": {
+    "cross_path_contradictions": 5,
+    "flag_true_lead_null_same_row": 10
+   },
+   "examples": [
+    {
+     "company": "Algorithmiq",
+     "round": "June 2023",
+     "investor_first": {
+      "company_name": "Algorithmiq",
+      "company_country": "Finland",
+      "announcement_date": "Jun 28, 2023",
+      "round_type": "Series A",
+      "amount": "€14M",
+      "lead_investor": null,
+      "participating_investors": "Inventure, Presidio Ventures, Tesi, Thames Trust, existing backers",
+      "inventure_led": "No"
+     },
+     "company_first": {
+      "round_type": "Series A",
+      "announcement_date": "27 June 2023",
+      "amount": "€14 million (~$15 million)",
+      "lead_investor": "Inventure VC",
+      "participating_investors": "Tesi (Finnish state-owned investment company); Presidio Ventures (corporate VC arm of Sumitomo Corporation); Thames Trust; existing backers; European Investment Bank (co-financing facility)"
+     },
+     "note": "investor-first says inventure_led 'No'; company-first names 'Inventure VC' as lead."
+    },
+    {
+     "company": "Marble Cognition",
+     "round": "November 2026",
+     "investor_first": {
+      "name": "Marble Cognition",
+      "country": null,
+      "date": "Nov 2, 2026",
+      "round_type": "Pre-Seed",
+      "amount": "$3.75M",
+      "lead_investor": null,
+      "participants": "Heartcore Capital, undisclosed angels",
+      "seedcamp_led": false
+     },
+     "company_first": {
+      "announcement_date": "November 2, 2026",
+      "round_type": "Pre-Seed",
+      "amount": "$3.75 million (€3.35 million)",
+      "lead_investor": "Heartcore Capital, Seedcamp",
+      "participating_investors": "A board member of Datadog; a founder of Personio; executives from McKinsey; Mistral AI; Lovable"
+     },
+     "note": "investor-first says seedcamp_led false; company-first lists Seedcamp as co-lead with Heartcore Capital."
+    },
+    {
+     "company": "Iiwari",
+     "query_path": "investor_first",
+     "raw_row": {
+      "company": "Iiwari",
+      "country": "Finland",
+      "date": null,
+      "round_type": "Seed",
+      "amount": "~€1.5M",
+      "lead_investor": "Voita Ventures",
+      "co_investors": "UK and US angels",
+      "voima_led": "Yes"
+     },
+     "queried_fund": "Voima Ventures",
+     "note": "voima_led 'Yes' but lead_investor spelled 'Voita Ventures'; date is also null."
+    }
+   ]
+  },
+  {
+   "type": "round_label_disagrees_between_query_paths",
+   "severity": "high",
+   "description": "We matched 98 rounds that appear in both an investor-first and a company-first answer (same company, dates within 2 months). In 23 of them the labels disagree: 13 map to two different stages (for example Series C vs Series D, Seed vs Series A) and 10 give a stage in one answer and a generic label ('Other', 'Funding Round', 'Undisclosed', 'Equity + Debt') in the other. Stage is what founders filter on, so a single canonical label per round (with the raw label kept alongside) would help.",
+   "count": 23,
+   "matched_rounds": 98,
+   "breakdown": {
+    "different_stages": 13,
+    "stage_vs_generic_label": 10
+   },
+   "examples": [
+    {
+     "company": "Einride",
+     "investor_first": {
+      "company": "Einride",
+      "country": "Sweden",
+      "date": "Oct 2025",
+      "round_type": "Series C",
+      "amount": "$100M",
+      "lead_investor": null,
+      "participating_investors": "EQT Ventures and others",
+      "eqt_ventures_led": "No"
+     },
+     "company_first": {
+      "round_type": "Series D",
+      "announcement_date": "1 October 2025",
+      "amount": "$100M",
+      "lead_investor": "EQT Ventures, IonQ",
+      "participating_investors": "West Coast-based global asset manager (undisclosed)"
+     }
+    },
+    {
+     "company": "Eneba",
+     "investor_first": {
+      "company": "Eneba",
+      "country": "Lithuania",
+      "announcement_date": "Dec 2020",
+      "round_type": "Seed",
+      "amount": "$8M",
+      "lead_investor": "Practica Capital, InReach Ventures (co-lead)",
+      "participating_investors": "FJ Labs, Mantas Mikuckas (angel), others",
+      "practica_led": true
+     },
+     "company_first": {
+      "announcement_date": "21 December 2020",
+      "round_type": "Series A",
+      "amount": "$8 million",
+      "lead_investor": "Practica Capital, InReach Ventures",
+      "participating_investors": "FJ Labs, Mantas Mikuckas (angel investor, COO of Vinted), Motieka Fund Management"
+     }
+    },
+    {
+     "company": "Reduciner",
+     "investor_first": {
+      "company": "Reduciner",
+      "country": "Finland",
+      "date": "May 5, 2026",
+      "round_type": "Series A",
+      "amount": null,
+      "lead_investor": null,
+      "co_investors": "Lifeline Ventures + others",
+      "voima_led": "No"
+     },
+     "company_first": {
+      "round_type": "Seed",
+      "announcement_date": "5 May 2026",
+      "amount": "€3.6 million (~$3.9–4.3M USD equivalent)",
+      "lead_investor": null,
+      "participating_investors": "Voima Ventures, Lifeline Ventures, Mikko Kodisoja Foundation, VTT Technical Research Centre of Finland"
+     }
+    }
+   ]
+  },
+  {
+   "type": "investor_spelling_variants",
+   "severity": "medium",
+   "description": "The same investor appears under several spellings in the free-text investor fields, sometimes with acronyms, legal suffixes or renames in brackets. For five investors we checked by pattern there are 43 distinct strings. The entities[] list helps (it resolves mentions to IDs), but the round fields themselves carry only text, so counting needs fuzzy matching. Returning entity IDs inline in lead_investor and participating_investors would solve this.",
+   "count": 43,
+   "examples": [
+    {
+     "investor": "aws Gründerfonds",
+     "spellings_with_row_counts": {
+      "aws Gründerfonds": 13,
+      "Austria Wirtschaftsservice (aws)": 2,
+      "Austria Wirtschaftsservice (AWS)": 1,
+      "Austria Wirtschaftsservice (aws Gründerfonds)": 1,
+      "aws Gründungsfonds": 1
+     }
+    },
+    {
+     "investor": "NordicNinja",
+     "spellings_with_row_counts": {
+      "NordicNinja VC": 21,
+      "NordicNinja": 13,
+      "Nordic Ninja": 3,
+      "NordicNinja (co-leads)": 1,
+      "NordicNinja (Nordic Ninja)": 1
+     }
+    },
+    {
+     "investor": "High-Tech Gründerfonds",
+     "spellings_with_row_counts": {
+      "High-Tech Gründerfonds (HTGF)": 8,
+      "HTGF": 8,
+      "HTGF (High-Tech Gründerfonds)": 3,
+      "High-Tech Gründerfonds": 3,
+      "HTGF (existing investor)": 1
+     }
+    }
+   ],
+   "more": {
+    "VNV Global (formerly Vostok New Ventures), rename carried as bracketed text": {
+     "VNV Global": 16,
+     "Vostok New Ventures (VNV Global)": 2,
+     "VNV Global (then Vostok New Ventures)": 1,
+     "VNV Global AB (publ)": 1,
+     "Vostok New Ventures (now VNV Global)": 1,
+     "Vostok New Ventures": 1
+    },
+    "European Innovation Council (Fund and Accelerator mixed)": {
+     "EIC Fund": 23,
+     "European Innovation Council (EIC)": 9,
+     "European Innovation Council": 9,
+     "European Innovation Council (EIC) Fund": 9,
+     "EIC Fund (European Innovation Council)": 4,
+     "EIC Accelerator": 3,
+     "European Innovation Council Fund": 3,
+     "EIC Fund (European Innovation Council Fund)": 2,
+     "European Innovation Council (EIC) Accelerator": 2,
+     "European Innovation Council Fund (EIC Fund)": 1
+    }
+   }
+  },
+  {
+   "type": "same_name_several_entity_ids",
+   "severity": "medium",
+   "description": "49 exact names (case-insensitive) of companies, organisations or people resolve to more than one entity ID across answers. Some may be genuinely different legal entities sharing a name; we have not verified each one. For investors such as Global Founders Capital or Target Global this splits one fund into several graph nodes.",
+   "count": 49,
+   "examples": [
+    {
+     "name": "Global Founders Capital",
+     "entity_ids": [
+      {
+       "id": "59e25aed-1a88-4b17-840d-045180bf78c6",
+       "entity_type": "Organization",
+       "seen_in": [
+        "company query: Aibidia",
+        "company query: Flipdish",
+        "company query: Tink"
+       ]
+      },
+      {
+       "id": "68a934f8-4cf8-476f-b966-3c4b9f0cb391",
+       "entity_type": "Organization",
+       "seen_in": [
+        "company query: Thermondo"
+       ]
+      },
+      {
+       "id": "cc0cd701-240f-47c0-9bc4-73902c281340",
+       "entity_type": "Organization",
+       "seen_in": [
+        "company query: Anyfin",
+        "company query: Climeworks",
+        "fund query: Icebreaker.vc"
+       ]
+      }
+     ]
+    },
+    {
+     "name": "Target Global",
+     "entity_ids": [
+      {
+       "id": "3a809e72-d42d-49d8-be6f-00e67c8f1bda",
+       "entity_type": "Organization",
+       "seen_in": [
+        "company query: DocPlanner",
+        "company query: TravelPerk",
+        "company query: Wefox"
+       ]
+      },
+      {
+       "id": "c454964d-a18c-4004-aced-5461287e06aa",
+       "entity_type": "Organization",
+       "seen_in": [
+        "company query: Robovision",
+        "fund query: Northzone",
+        "fund query: Seedcamp"
+       ]
+      }
+     ]
+    },
+    {
+     "name": "Fredrik Hjelm",
+     "entity_ids": [
+      {
+       "id": "125fe9a0-a134-4ca4-9ba4-7dbc3ad5cd84",
+       "entity_type": "Person",
+       "seen_in": [
+        "fund query: byFounders"
+       ]
+      },
+      {
+       "id": "2c328649-f1be-5bdd-b445-dfa7582093ed",
+       "entity_type": "Person",
+       "seen_in": [
+        "fund query: Icebreaker.vc",
+        "fund query: byFounders"
+       ]
+      },
+      {
+       "id": "b4f664ef-b924-57bd-8fd3-a26db46cf1e5",
+       "entity_type": "Person",
+       "seen_in": [
+        "company query: imagiLabs"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "type": "entity_type_inconsistent",
+   "severity": "low",
+   "description": "17 exact names carry different entity_type values in different answers (mostly Company vs Organization; EIT InnoEnergy is Organization in one answer and EducationalInstitution in another). Investor typing (fund, angel, corporate, public body) is not available.",
+   "count": 17,
+   "examples": [
+    {
+     "name": "EIT InnoEnergy",
+     "entity_types_seen": {
+      "EducationalInstitution": 1,
+      "Organization": 1
+     }
+    },
+    {
+     "name": "Founders Fund",
+     "entity_types_seen": {
+      "Organization": 2,
+      "Company": 1
+     }
+    },
+    {
+     "name": "Quadrille Capital",
+     "entity_types_seen": {
+      "Organization": 1,
+      "Company": 1
+     }
+    }
+   ]
+  },
+  {
+   "type": "same_company_several_names",
+   "severity": "medium",
+   "description": "The same company asked under two names (both names are in common use) returns two different round histories. In investor-first answers, aliases are carried inside the company string ('Verda (DataCrunch)', 'Verda (fka DataCrunch)', 'Riff (fka Databutton)', 'Riff (formerly Databutton)'), 49 distinct company strings carry an alias, a bracketed note or a slash. A company entity ID per row would let consumers merge these safely.",
+   "count": 49,
+   "examples": [
+    {
+     "company": "IQM vs IQM Quantum Computers",
+     "round": "July 2022",
+     "answer_for_IQM": [
+      {
+       "date": "July 2022",
+       "round_type": "EIC Fund (Early VC)",
+       "amount": "€10 million",
+       "lead_investor": "EIC Fund",
+       "participating_investors": null
+      },
+      {
+       "date": "July 22, 2022",
+       "round_type": "Series A Extension (A2)",
+       "amount": "€128 million (~$128 million)",
+       "lead_investor": "World Fund",
+       "participating_investors": "MIG Capital (MIG Fonds), Tesi, OpenOcean, Maki.vc, Vsquared Ventures, Salvia, Santo Venture Capital, Tencent, Matadero QED, Varma Mutual Pension Insurance, OurCrowd, EIC Fund, Bayern Kapital, QuIC SPV (QCI Group), Tofino Capital, Changer Club"
+      }
+     ],
+     "answer_for_IQM_Quantum_Computers": [
+      {
+       "round_type": "Series A Extension (Series A2)",
+       "announced": "22 July 2022",
+       "amount": "€128 million (~$128M)",
+       "lead_investor": "World Fund",
+       "participating_investors": "Bayern Kapital, EIC Fund (European Innovation Council), OurCrowd, QCI SPV, Tofino, Varma Mutual Pension Insurance, Maki.vc, Matadero QED, MIG Fonds, OpenOcean, Salvia GmbH, Santo Venture Capital, Tencent, Tesi, Vsquared Ventures"
+      }
+     ],
+     "note": "Same company, same month: EUR 10M EIC Fund round vs EUR 128M Series A2."
+    },
+    {
+     "company": "Voi vs VOI Technology",
+     "round": "November 2018",
+     "answer_for_Voi": [
+      {
+       "announcement_date": "November 2018",
+       "round_type": "Series A (1st close)",
+       "amount": "$48–50 million",
+       "lead_investor": "Vostok New Ventures (VNV Global)",
+       "participating_investors": "Balderton Capital, LocalGlobe, Raine Ventures, Cristina Stenbeck (Kinnevik), Justin Mateen (co-founder of Tinder), Keith Richman (Grubhub board member), Jeff Wilke (Amazon), Sujay Jaswa (WndrCo), Sujay Tyle (Frontier Car Group), Diego Piacentini (former Amazon), Christian Leone (Luxor Capital), Spencer Rascoff (ex-CEO of Zillow)"
+      }
+     ],
+     "answer_for_VOI_Technology": [
+      {
+       "round_name": "Series A",
+       "announcement_date": "November 2018",
+       "round_type": "Series A",
+       "amount": "$50 million",
+       "lead_investor": "Balderton Capital",
+       "participating_investors": "LocalGlobe, The Raine Group (Raine Ventures), VNV Global, Cristina Stenbeck, Jeff Wilke, Justin Mateen, Nicolas Brusson, Sebastian Knutsson, Spencer Rascoff, Keith Richman"
+      }
+     ],
+     "note": "Same Series A, different lead (Vostok New Ventures vs Balderton)."
+    },
+    {
+     "company": "Verda / DataCrunch",
+     "strings_seen": [
+      "DataCrunch (now Verda)",
+      "Verda (DataCrunch)",
+      "Verda (fka DataCrunch)",
+      "Verda (formerly DataCrunch)"
+     ]
+    }
+   ]
+  },
+  {
+   "type": "tranches_and_split_rounds",
+   "severity": "medium",
+   "description": "26 pairs of rows in company-first answers share a stage and fall within 3 months of each other. Many are real tranches or extensions, which is correct to report, but there is no parent-round key, and some totals include the earlier tranche, so summing rows double counts. One answer split a single round into one row per co-investor. A round_group_id plus a flag for \"amount is cumulative\" would fix both.",
+   "count": 26,
+   "examples": [
+    {
+     "company": "Oura",
+     "rows": [
+      {
+       "round_type": "Series D (Tranche 1 — Dexcom Strategic)",
+       "announcement_date": "November 19, 2024",
+       "amount": "$75 million",
+       "lead_investor": "Dexcom",
+       "other_investors": ""
+      },
+      {
+       "round_type": "Series D (Close)",
+       "announcement_date": "December 19, 2024",
+       "amount": "$200 million (total, inclusive of the $75 million Dexcom tranche)",
+       "lead_investor": "Dexcom, Fidelity Management & Research Company",
+       "other_investors": "Temasek, Andreessen Horowitz"
+      }
+     ],
+     "note": "Second row amount includes the first: summing gives USD 275M instead of 200M."
+    },
+    {
+     "company": "Showpad",
+     "rows": [
+      {
+       "name": "Showpad",
+       "announcement_date": "25 Jun 2019",
+       "round_type": "Series D (equity)",
+       "amount": "$70 M (combined equity + debt)",
+       "lead_investor": "Dawn Capital, Insight Partners (co-leads)",
+       "participating_investors": "Hummingbird Ventures, Korelya Capital"
+      },
+      {
+       "name": "Showpad",
+       "announcement_date": "25 Jun 2019",
+       "round_type": "Conventional Debt (part of Series D)",
+       "amount": "included in the $70 M above",
+       "lead_investor": "—",
+       "participating_investors": "Silicon Valley Bank (SVB)"
+      }
+     ],
+     "note": "Debt row refers to the other row in text ('included in the $70 M above')."
+    },
+    {
+     "company": "Kemaro",
+     "rows": [
+      {
+       "round_type": "Series A Extension",
+       "announcement_date": "2022-12-20",
+       "amount": "~CHF 5 million",
+       "lead_investor": "Spicehaus Partners",
+       "participating_investor": "Spicehaus Partners"
+      },
+      {
+       "round_type": "Series A Extension",
+       "announcement_date": "2022-12-20",
+       "amount": "~CHF 5 million",
+       "lead_investor": "Spicehaus Partners",
+       "participating_investor": "W+P Beteiligungen AG"
+      },
+      {
+       "round_type": "Series A Extension",
+       "announcement_date": "2022-12-20",
+       "amount": "~CHF 5 million",
+       "lead_investor": "Spicehaus Partners",
+       "participating_investor": "Obayashi Corporation"
+      }
+     ],
+     "note": "One Series A extension returned as three rows, one per participating investor."
+    }
+   ]
+  },
+  {
+   "type": "placeholders_in_investor_fields",
+   "severity": "medium",
+   "description": "Investor fields often hold placeholder text instead of null: 120 lead fields and 386 participant fields contain phrases such as 'Not publicly disclosed', 'Undisclosed', 'and others', '+ 10 others' or 'Not Practica'. A naive parser turns these into investors called 'Undisclosed' or 'others'. Suggest null plus separate fields such as lead_disclosed=false and additional_investor_count.",
+   "count": 506,
+   "breakdown": {
+    "lead_fields": 120,
+    "participant_fields": 386
+   },
+   "examples": [
+    {
+     "company": "Donna",
+     "query_path": "company_first",
+     "raw_row": {
+      "company": "Donna (Ghent, Belgium)",
+      "announcement_date": "19 Jun 2024",
+      "round_type": "Pre-Seed",
+      "amount": "$1.6M",
+      "lead_investor": "Pitchdrive (+ 3 others)",
+      "participating_investors": "Jorn Vanysacker + 10 others"
+     }
+    },
+    {
+     "company": "Sintra",
+     "query_path": "investor_first",
+     "raw_row": {
+      "company": "Sintra",
+      "country": "Lithuania",
+      "announcement_date": "Jun 2025",
+      "round_type": "Seed",
+      "amount": "$17M (~€14.9M)",
+      "lead_investor": "Not Practica",
+      "participating_investors": "Practica Capital participated",
+      "practica_led": false
+     },
+     "queried_fund": "Practica Capital"
+    },
+    {
+     "company": "Planet42",
+     "query_path": "company_first",
+     "raw_row": {
+      "announcement_date": "Jun 19, 2020",
+      "round_type": "Angel",
+      "amount": "$590,000",
+      "lead_investor": "Undisclosed",
+      "participating_investors": "Undisclosed"
+     }
+    }
+   ]
+  },
+  {
+   "type": "people_and_prose_in_investor_fields",
+   "severity": "low",
+   "description": "Investor fields mix funds, angels and explanatory prose in one string. 114 rows carry a person role or note inside an investor name (e.g. '(Bolt co-founder)', '(led by Founding Partner ...)', or a sentence after a dash), and 146 rows carry a status in brackets ('(co-lead)', '(existing investor)', '(returning)'). Angels are often correct investors, but without a type the consumer cannot tell a fund from a person (391 Person entity IDs appeared in answers). Structured fields (investor_type, is_follow_on, note) would keep the names clean.",
+   "count": 260,
+   "breakdown": {
+    "role_or_prose_annotations": 114,
+    "status_annotations": 146
+   },
+   "examples": [
+    {
+     "company": "Planet42",
+     "query_path": "company_first",
+     "raw_row": {
+      "announcement_date": "Jun 16, 2020",
+      "round_type": "Seed",
+      "amount": "€2.2 million (~$2.4M)",
+      "lead_investor": "Change Ventures",
+      "participating_investors": "Martin Villig (Bolt co-founder), Ragnar Sass (Pipedrive co-founder), Marko Virkebau (MeetFrank), Kristjan Vilosius (Katana MRP), and other Estonian tech angel investors"
+     }
+    },
+    {
+     "company": "ValueGrain",
+     "query_path": "company_first",
+     "raw_row": {
+      "round_name": "Seed Round",
+      "announcement_date": "3 July 2026",
+      "round_type": "Seed",
+      "amount": "Up to €3.3 million (~$3.6 million); post-money valuation €10.3 million",
+      "lead_investor": "Bernhard Schadeberg (managing partner of Krombacher Brewery) — multi-stage investment package of up to €3 million",
+      "participating_investors": "Joachim Friedsch / Fristam Pumpen (€300,000 follow-on), Jeff Maisel (existing investor)"
+     }
+    },
+    {
+     "company": "LiveEO",
+     "query_path": "investor_first",
+     "raw_row": {
+      "company": "LiveEO",
+      "date": "May 6, 2026",
+      "round_type": "Late VC / Series C",
+      "lead_investor": "Not disclosed as sole lead; DTCF, NordicNinja, Greencode, and Segenia Capital were key investors",
+      "nordicninja_led": "No"
+     },
+     "queried_fund": "NordicNinja"
+    }
+   ]
+  },
+  {
+   "type": "truncated_and_mixed_dates",
+   "severity": "medium",
+   "description": "7 date values are truncated so the year is lost (for example \"11 June 5\" and \"July 17, 5...\"); 2 of them also contain a zero-width space inside the year (\"23 July 5<U+200B>025\"). Separately, 237 dates are ranges, alternatives or annotated (\"May 3, 2018 (CB Insights) / October 1, 2018 (Tracxn)\", \"~Apr–May 2020\"), and formats mix ISO, \"Month D, YYYY\", \"D Month YYYY\" and \"Mon YYYY\". In 11 investor-first rows the date field holds a stage instead of a date ('Early-stage', 'Multiple rounds', 'Growth'). An ISO date plus a precision field (day, month, quarter, year) and an optional note would make these machine-safe.",
+   "count": 18,
+   "breakdown": {
+    "truncated_year": 7,
+    "non_date_text_in_date_field": 11,
+    "ranges_or_annotated_dates_not_counted_above": 237
+   },
+   "non_date_values": {
+    "Early-stage": 9,
+    "Multiple rounds": 1,
+    "Growth": 1
+   },
+   "examples": [
+    {
+     "company": "Proxima Fusion",
+     "query_path": "company_first",
+     "raw_row": {
+      "announcement": "11 June 5",
+      "round_type": "Series A",
+      "amount": "€130 million (~$148 million)",
+      "lead_investor": "Balderton Capital, Cherry Ventures"
+     }
+    },
+    {
+     "company": "Vivla",
+     "query_path": "company_first",
+     "raw_row": {
+      "round": "Series A",
+      "date": "23 July 5​025",
+      "amount": "€8 million (~$9.4 M)"
+     },
+     "note": "Contains U+200B (zero-width space) between \"5\" and \"025\"."
+    },
+    {
+     "company": "Etsy",
+     "query_path": "investor_first",
+     "raw_row": {
+      "company": "Etsy",
+      "country": "US",
+      "announcement_date": "Early-stage",
+      "round_type": null,
+      "amount": null,
+      "lead_investor": null,
+      "participating_investors": null,
+      "accel_led": "No"
+     },
+     "queried_fund": "Accel",
+     "note": "Stage text in the date field; all other round fields null."
+    }
+   ]
+  },
+  {
+   "type": "country_field_drift",
+   "severity": "low",
+   "description": "In investor-first rows the country is null in 224 of 1200 rows, and 87 values carry a city or a second country ('Sweden (Stockholm)', 'UK (London)' next to 'United Kingdom (London)', 'Estonia (HQ Los Angeles)', 'South Africa / Estonia'). An ISO country code plus an hq_city field would fix this.",
+   "count": 311,
+   "breakdown": {
+    "null": 224,
+    "annotated_or_multiple": 87
+   },
+   "examples": [
+    {
+     "value": "Sweden (Stockholm)",
+     "rows": 6
+    },
+    {
+     "value": "United Kingdom (London)",
+     "rows": 6
+    },
+    {
+     "value": "UK (London)",
+     "rows": 4
+    }
+   ]
+  }
+ ],
+ "note_on_counts": "The example counts in each finding were measured on the snapshot available when the finding was written (about 43 funds asked investor-first). The patterns hold on the larger final snapshot; the live app shows current totals."
 }

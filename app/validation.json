@@ -1,10 +1,10 @@
 {
- "version": "20261114000830",
+ "version": "20261114003647",
  "rows": [
   {
    "test": "In a round with a named lead, the investor with the stronger earlier lead record is the real lead",
-   "result": "50% vs 37% for a random pick from the same cap table (95% CI 47% to 53%)",
-   "n": 1020
+   "result": "50% vs 36% for a random pick from the same cap table (95% CI 47% to 52%)",
+   "n": 1427
   },
   {
    "test": "Cala's named lead matches a public source (random rounds, checked by hand on 14 Nov)",
@@ -23,73 +23,73 @@
   },
   {
    "test": "Seed rounds where Cala names the lead",
-   "result": "69%",
-   "n": 1044
+   "result": "68%",
+   "n": 1309
   },
   {
    "test": "Series A rounds where Cala names the lead",
-   "result": "71%",
-   "n": 771
+   "result": "70%",
+   "n": 992
   },
   {
    "test": "The lead of a round comes back in the company's next round",
-   "result": "58% came back, 16% led again",
-   "n": 1220
+   "result": "60% came back, 17% led again",
+   "n": 1404
   }
  ],
  "within_round": {
-  "n": 1020,
-  "hit": 0.5011764705882353,
-  "random": 0.3724316691363897,
-  "ci_low": 0.4705447718389272,
-  "ci_high": 0.5317993407659914
+  "n": 1427,
+  "hit": 0.4983064704508294,
+  "random": 0.3622337876051897,
+  "ci_low": 0.47240337981032116,
+  "ci_high": 0.5242186548486284
  },
  "coverage": {
   "pre-seed": {
-   "with_lead": 191,
-   "total": 257
+   "with_lead": 237,
+   "total": 326
   },
   "seed": {
-   "with_lead": 717,
-   "total": 1044
+   "with_lead": 891,
+   "total": 1309
   },
   "series a": {
-   "with_lead": 547,
-   "total": 771
+   "with_lead": 698,
+   "total": 992
   },
   "series b": {
-   "with_lead": 331,
-   "total": 507
+   "with_lead": 433,
+   "total": 657
   },
   "series c": {
-   "with_lead": 172,
-   "total": 250
+   "with_lead": 236,
+   "total": 336
   },
   "series d": {
-   "with_lead": 93,
-   "total": 140
+   "with_lead": 124,
+   "total": 180
   },
   "unlabelled": {
-   "with_lead": 190,
-   "total": 543
+   "with_lead": 251,
+   "total": 720
   },
   "growth": {
-   "with_lead": 71,
-   "total": 116
+   "with_lead": 83,
+   "total": 138
   },
   "series e": {
-   "with_lead": 33,
-   "total": 54
+   "with_lead": 48,
+   "total": 81
   },
   "series f": {
-   "with_lead": 16,
-   "total": 26
+   "with_lead": 24,
+   "total": 41
   }
  },
  "lead_comes_back": {
-  "cases": 1220,
-  "came_back": 710,
-  "led_again": 200
+  "cases": 1404,
+  "came_back": 841,
+  "led_again": 232
  },
  "accuracy": [
   {

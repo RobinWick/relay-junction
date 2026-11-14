@@ -98,7 +98,8 @@ def investor_key(name: str) -> str:
 NOT_A_NAME = re.compile(r"\b(not|un)\s*(publicly\s+)?(disclosed|confirmed|known|available|specified|named|reported)\b|"
                         r"\bno lead\b|\bn/?a\b|^(unknown|none|tbd|null|others?|other investors)$|"
                         r"\bexisting (investors|shareholders)\b|^\d+\s+(others?|more|additional)\b|\bname undisclosed\b|"
-                        r"\bundisclosed\b", re.I)
+                        r"\bundisclosed\b|^not\b|\bno (formal |disclosed |named )?lead\b|\bnot (explicitly|separately)\b|"
+                        r"^(seed|led seed|first round|round ?\d+|pre-?seed|series [a-f]|lead|leads|co-?lead)$", re.I)
 PROTECTED = ("plug and play", "johnson & johnson", "johnson and johnson", "procter & gamble", "black & white")
 
 
@@ -114,7 +115,18 @@ def split_investors(raw) -> list[str]:
             text = re.sub(re.escape(p), f"__P{i}__", text, flags=re.I)
         text = re.sub(r"\(.*?\)|\[.*?\]", " ", text)
         parts = [re.sub(r"__P(\d+)__", lambda m: PROTECTED[int(m.group(1))].title(), x)
-                 for x in re.split(r",|;|\band\b|&|\+", text)]
+                 for x in re.split(r",|;|\band\b|\+", text)]
+    fundish = re.compile(r"\b(ventures?|capital|partners|vc|fund|invest\w*|holdings?|labs)\b", re.I)
+    expanded = []
+    for part in parts:
+        if isinstance(part, str) and "&" in part:
+            sides = [x.strip() for x in part.split("&")]
+            # 'Lifeline Ventures & Kvanted' is two funds; 'Larsen & Toubro Group' is one firm
+            if len(sides) == 2 and (fundish.search(sides[0]) or fundish.search(sides[1])) and all(len(x) > 2 for x in sides):
+                expanded.extend(sides)
+                continue
+        expanded.append(part)
+    parts = expanded
     names = []
     for part in parts:
         if isinstance(part, dict):
@@ -134,15 +146,24 @@ NON_EQUITY = re.compile(r"grant|debt|loan|prize|award|ipo|listing|subsid|convert
 SUFFIX_WORDS = {"ventures", "venture", "capital", "vc", "partners", "management", "fund", "investments"}
 
 
+ALIASES = {"vtt technical research centre of finland": "vtt", "92 ventures 92": "92", "92 ventures / 92 capital": "92",
+           "harjavalta oy": "harjavalta", "point 9": "point nine", "creandum ab": "creandum",
+           "european innovation council fund": "eic fund", "illusian founder office": "illusian"}
+
+
 def canon(name: str) -> str:
     """One key per fund: 'Point Nine Capital' and 'Point Nine' collapse.
 
     Only trailing generic words are dropped, so 'Capital Today' or 'Partners Group' keep their identity.
     """
-    words = investor_key(name).split()
+    key = investor_key(name)
+    if key in ALIASES:
+        return ALIASES[key]
+    words = key.split()
     while len(words) > 1 and words[-1] in SUFFIX_WORDS:
         words.pop()
-    return " ".join(words)
+    out = " ".join(words)
+    return ALIASES.get(out, out)
 
 
 def company_key(name: str) -> str:
@@ -178,6 +199,7 @@ class Builder:
     def __init__(self) -> None:
         self.rounds: list[dict] = []
         self.by_company: dict[str, list[int]] = defaultdict(list)
+        self.by_prefix: dict[str, dict[str, list[int]]] = defaultdict(lambda: defaultdict(list))
         self.names: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
 
     def _name(self, raw: str) -> str:
@@ -185,14 +207,37 @@ class Builder:
         self.names[k][raw.strip()] += 1
         return k
 
+    def _candidates(self, ckey: str) -> list[int]:
+        """Rounds of the same company, also under a longer or shorter name ('Marble' / 'Marble Cognition')."""
+        out = list(self.by_company.get(ckey, []))
+        if len(ckey) >= 5:
+            for other, idxs in self.by_prefix.get(ckey[:5], {}).items():
+                if other != ckey and (other.startswith(ckey) or ckey.startswith(other)):
+                    out.extend(idxs)
+        return out
+
     def _find(self, ckey: str, stage: str | None, t: float, amount_m: float | None) -> int | None:
         """Same round seen twice: same company, compatible stage, close dates, and no clear amount conflict.
 
         Same named stage allows 4 months (Cala dates differ between answers); otherwise 2 months.
         """
         best = None
-        for idx in self.by_company.get(ckey, []):
+        for idx in self._candidates(ckey):
             r = self.rounds[idx]
+            b = r.get("amount_eur_m")
+            same_money = bool(amount_m and b and max(amount_m, b) / min(amount_m, b) <= 1.15)
+            if same_money and abs(r["t"] - t) <= 0.5:  # same amount within 6 months: one round, labels differ
+                if best is None or abs(r["t"] - t) < abs(self.rounds[best]["t"] - t):
+                    best = idx
+                continue
+            if r["ckey"] != ckey:
+                continue
+            new_leads = getattr(self, "_pending_leads", set())
+            if new_leads and set(r["leads"]) == new_leads and abs(r["t"] - t) <= 0.17:
+                # same company, same month, same named lead: one round with two stage labels (Roleo)
+                if best is None or abs(r["t"] - t) < abs(self.rounds[best]["t"] - t):
+                    best = idx
+                continue
             if not (stage is None or r["stage"] is None or r["stage"] == stage):
                 continue
             window = 0.34 if (stage and r["stage"] == stage) else 0.17
@@ -216,17 +261,20 @@ class Builder:
         lead_keys = {self._name(n) for n in leads}
         part_keys = {self._name(n) for n in parts} - lead_keys
         amount_m = parse_amount_eur(amount)
+        self._pending_leads = lead_keys
         idx = self._find(ckey, stage, t, amount_m)
         src = {"path": path, "query": query, "row": raw}
         if idx is None:
             self.rounds.append({
-                "id": len(self.rounds), "company": company.strip(), "ckey": ckey, "country": country,
+                "id": len(self.rounds), "company": re.sub(r"\s*\(.*?\)", "", company).strip() or company.strip(),
+                "ckey": ckey, "country": country,
                 "t": round(t, 3), "year": when[0], "month": when[1], "stage": stage, "type": type_,
                 "amount_eur_m": amount_m, "amount_raw": None if amount is None else str(amount),
                 "leads": sorted(lead_keys), "participants": sorted(part_keys), "sources": [src],
                 "cf_leads": sorted(lead_keys) if path == "company_first" else [],
             })
             self.by_company[ckey].append(len(self.rounds) - 1)
+            self.by_prefix[ckey[:5]][ckey].append(len(self.rounds) - 1)
             return len(self.rounds) - 1
         r = self.rounds[idx]
         r["leads"] = sorted(set(r["leads"]) | lead_keys)
@@ -289,7 +337,7 @@ class Builder:
                     if idx is not None:
                         r = self.rounds[idx]
                         cf = r.get("cf_leads") or []
-                        demote = (flag is False and fk in r["leads"]) or \
+                        demote = (flag is False and fk in r["leads"] and fk not in cf) or \
                                  (flag is True and cf and fk not in cf)  # company side names another lead
                         if demote:
                             r["leads"] = [k for k in r["leads"] if k != fk]
@@ -306,6 +354,7 @@ class Builder:
         b.rounds = snap["rounds"]
         for r in b.rounds:
             b.by_company[r["ckey"]].append(r["id"])
+            b.by_prefix[r["ckey"][:5]][r["ckey"]].append(r["id"])
         for key, name in snap["investor_names"].items():
             b.names[key][name] += 1
         return b

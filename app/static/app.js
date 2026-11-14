@@ -10,7 +10,7 @@ const state = {stage: "seed", investors: [], lead: null, competitors: [], meta: 
 
 const SAMPLE = [
   "Wed 10:30  Maki.vc  (Table 12)",
-  "Lifeline Ventures",
+  "Voima Ventures",
   "Creandum - partner meeting",
   "Inventure",
   "Speedinvest",
@@ -206,7 +206,7 @@ async function runFind() {
     const view = {mode: "discover", stage: d.filters.stage, rows: d.funds, counts, unmatched: [], competitors: {},
       conflict_count: d.funds.filter((f) => f.conflicts.some((c) => c.level === "led")).length,
       headline: d.funds.length
-        ? `In <b>${d.rounds_matched}</b> ${esc(d.filters.stage)} rounds${sz} in ${esc(REGION_LABEL[req.region || ""])} over the last 30 months, these <b>${d.funds.length}</b> funds led most often.`
+        ? `In the <b>${d.rounds_matched}</b> ${esc(d.filters.stage)} rounds${sz} in ${esc(REGION_LABEL[req.region || ""])} from the last 30 months that we pulled from Cala, these <b>${d.funds.length}</b> funds led most often.`
         : `No ${esc(d.filters.stage)} rounds${sz} in ${esc(REGION_LABEL[req.region || ""])} over the last 30 months in our data. Widen the region or clear the target raise.`};
     state.last = null;
     renderResults(view, req);
@@ -235,7 +235,7 @@ function renderResults(d, req) {
   const cards = [];
   if (d.lead_back) {
     const l = d.lead_back;
-    cards.push(`<div class="note note-accent"><h3>Will your lead come back?</h3>In Cala's data, <b>${esc(l.lead)}</b> led ${plural(l.cases, "round", "rounds")} whose company raised again. It came back in the next round in <b>${l.came_back} of ${l.cases}</b> and led it in <b>${l.led_again}</b>. This is what your next investors will see in your cap table.</div>`);
+    cards.push(`<div class="note note-accent"><h3>Will your lead come back?</h3>In Cala's data, <b>${esc(l.lead)}</b> led ${plural(l.cases, "round", "rounds")} whose company raised again. It came back in the next round in <b>${l.came_back} of ${l.cases}</b> and led it in <b>${l.led_again}</b>.</div>`);
   }
   if (d.timing) {
     const t = d.timing;
@@ -324,7 +324,7 @@ function rowHtml(r, i) {
     ? `<div><span class="big">Led ${r.led}</span> <span class="muted">of ${r.known} rounds it joined</span></div><div class="cell-sub">${r.led_at_stage} at your exact stage${r.unknown ? ` · ${r.unknown} more with no named lead` : ""}</div>`
     : `<div class="none">No rounds with a named lead near your stage</div>`;
   const size = r.size
-    ? `<div class="num">EUR ${fmtM(r.size.lo)}${r.size.hi !== r.size.lo ? `–${fmtM(r.size.hi)}` : ""}m${r.size.fit ? ` <span class="fit fit-${r.size.fit}">${r.size.fit === "fits" ? "fits your raise" : r.size.fit === "larger" ? "smaller than yours" : "larger than yours"}</span>` : ""}</div><div class="cell-sub">from ${plural(r.size.n, "led round", "led rounds")}</div>`
+    ? `<div class="num">EUR ${fmtM(r.size.lo)}${r.size.hi !== r.size.lo ? `–${fmtM(r.size.hi)}` : ""}m${r.size.fit ? ` <span class="fit fit-${r.size.fit}">${r.size.fit === "fits" ? "fits your raise" : r.size.fit === "larger" ? "smaller than yours" : "larger than yours"}</span>` : ""}</div><div class="cell-sub">from ${plural(r.size.n, "led round", "led rounds")}${r.size.basis === "exact" ? ` at ${esc(state.last?.stage || "your stage")}` : " near your stage"}</div>`
     : `<span class="none">No sizes</span>`;
   const last = r.last_lead
     ? `<a href="#" data-rid="${r.last_lead.id}">${esc(r.last_lead.company)}</a><div class="cell-sub">${esc(r.last_lead.stage)} · ${esc(r.last_lead.date)}</div>`
@@ -445,7 +445,8 @@ function renderMethod() {
       <section class="panel"><h2>Verdict rules</h2>
         <p class="muted">Counted over the last four years, at your stage and the stages next to it. A round counts as "known" when Cala names its lead.</p>
         <ul class="rules">
-          <li><span class="verdict v-leads"><span class="v-icon"></span>Leads at your stage</span><span>Led 2 or more rounds at your stage, and led at least 30% of the known rounds it joined.</span></li>
+          <li><span class="verdict v-leads"><span class="v-icon"></span>Leads rounds like yours</span><span>Led 2 or more rounds at your stage, led at least 30% of the rounds it joined where Cala names the lead, and your target raise sits inside the range of rounds it led (the middle half of its led round sizes, from 0.8x the low end to 1.25x the high end).</span></li>
+          <li><span class="verdict v-leads_size"><span class="v-icon"></span>Leads, but larger or smaller rounds</span><span>Leads at your stage, but your target is outside that size range. Sizes come from its leads at your exact stage when there are at least 2, otherwise from the stages next to it (the row says which).</span></li>
           <li><span class="verdict v-follows"><span class="v-icon"></span>Mostly follows</span><span>5 or more known rounds, and led fewer than 15% of them.</span></li>
           <li><span class="verdict v-stale"><span class="v-icon"></span>No lead since …</span><span>Has led before, but not in the last 24 months.</span></li>
           <li><span class="verdict v-mixed"><span class="v-icon"></span>Mixed</span><span>Everything in between.</span></li>
@@ -515,5 +516,5 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
   document.addEventListener("keydown", (e) => { if ((e.metaKey || e.ctrlKey) && e.key === "Enter") (activeTab() === "find" ? runFind : run)(); });
-  init();
+  init().then(() => { if (location.hash === "#demo") $("#sample").click(); });
 });

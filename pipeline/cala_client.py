@@ -56,12 +56,16 @@ def post(path: str, body: dict, retries: int = 4) -> dict:
         _reserve_slot()
         with _lock:
             live_calls += 1
-        resp = requests.post(
-            f"{API}{path}",
-            headers={"X-API-KEY": _key(), "Content-Type": "application/json"},
-            json=body,
-            timeout=120,
-        )
+        try:
+            resp = requests.post(
+                f"{API}{path}",
+                headers={"X-API-KEY": _key(), "Content-Type": "application/json"},
+                json=body,
+                timeout=150,
+            )
+        except (requests.Timeout, requests.ConnectionError):
+            time.sleep(10 * (attempt + 1))
+            continue
         if resp.status_code == 429 or resp.status_code >= 500:
             time.sleep(15 * (attempt + 1))
             continue
