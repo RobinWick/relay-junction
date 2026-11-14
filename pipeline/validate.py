@@ -121,8 +121,13 @@ def main() -> None:
         {"test": "In a round with a named lead, the investor with the stronger earlier lead record is the real lead",
          "result": f"{pct(wr['hit'])} vs {pct(wr['random'])} for a random pick from the same cap table "
                    f"(95% CI {pct(wr['ci_low'])} to {pct(wr['ci_high'])})", "n": wr["n"]},
-        {"test": "Predicting the next round's new lead from earlier rounds (top 5)",
-         "result": "1.4%, the same as chance. So Recount reports what funds did, not odds.", "n": 140},
+        # from research/prediction/RESULTS.md (harness.py, 558 company-first rounds 2021 to 2026, 8 methods)
+        {"test": "Predicting who leads a company's next round from earlier rounds only, current investors allowed (top 5)",
+         "result": "26 to 27% for the best methods, almost all of it from current investors; "
+                   "the previous round's lead alone leads again in 17%", "n": 558},
+        {"test": "Predicting a new outside fund as the next lead (top 5)",
+         "result": "4 to 5%, against 0.15% for a random pick. Too weak to rank funds by, "
+                   "so Recount reports what funds did, not odds.", "n": 462},
         {"test": "Seed rounds where Cala names the lead",
          "result": pct(cov.get("seed", {}).get("with_lead", 0) / max(1, cov.get("seed", {}).get("total", 1))),
          "n": cov.get("seed", {}).get("total", 0)},
@@ -162,7 +167,8 @@ def main() -> None:
                         "n": g["sample"]})
     out = {"version": snap["version"], "rows": rows, "graph_check": graph, "within_round": wr, "coverage": cov, "lead_comes_back": lcb,
            "accuracy": accuracy,
-           "note": "The prediction test ran on the first 289 companies before the investor-first crawl. The other counted rows are recomputed on every data rebuild; hand checks are dated."}
+           "note": "The two prediction rows come from research/prediction/harness.py (see RESULTS.md) and are not rerun on every "
+                   "rebuild. The other counted rows are recomputed on every data rebuild; hand checks are dated."}
     OUT.write_text(json.dumps(out, indent=1))
     print(json.dumps({"within_round": wr, "lead_comes_back": lcb, "seed": cov.get("seed"), "a": cov.get("series a")}, indent=1))
 

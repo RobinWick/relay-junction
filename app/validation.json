@@ -1,10 +1,10 @@
 {
- "version": "20261114013628",
+ "version": "20261114102039",
  "rows": [
   {
    "test": "In a round with a named lead, the investor with the stronger earlier lead record is the real lead",
    "result": "50% vs 36% for a random pick from the same cap table (95% CI 47% to 52%)",
-   "n": 1598
+   "n": 1599
   },
   {
    "test": "Cala's entity graph (FundingRound entities with is_lead) checked against our merged lead, random rounds with a named lead",
@@ -22,14 +22,19 @@
    "n": 11
   },
   {
-   "test": "Predicting the next round's new lead from earlier rounds (top 5)",
-   "result": "1.4%, the same as chance. So Recount reports what funds did, not odds.",
-   "n": 140
+   "test": "Predicting who leads a company's next round from earlier rounds only, current investors allowed (top 5)",
+   "result": "26 to 27% for the best methods, almost all of it from current investors; the previous round's lead alone leads again in 17%",
+   "n": 558
+  },
+  {
+   "test": "Predicting a new outside fund as the next lead (top 5)",
+   "result": "4 to 5%, against 0.15% for a random pick. Too weak to rank funds by, so Recount reports what funds did, not odds.",
+   "n": 462
   },
   {
    "test": "Seed rounds where Cala names the lead",
    "result": "68%",
-   "n": 1417
+   "n": 1418
   },
   {
    "test": "Series A rounds where Cala names the lead",
@@ -39,7 +44,7 @@
   {
    "test": "The lead of a round comes back in the company's next round",
    "result": "60% came back, 17% led again",
-   "n": 1488
+   "n": 1489
   }
  ],
  "graph_check": {
@@ -50,11 +55,11 @@
   "differs": []
  },
  "within_round": {
-  "n": 1598,
-  "hit": 0.4952023362536505,
-  "random": 0.3596206517545635,
-  "ci_low": 0.4707290543262794,
-  "ci_high": 0.5196986300756409
+  "n": 1599,
+  "hit": 0.4958307275380447,
+  "random": 0.3595632636939647,
+  "ci_low": 0.47136329625660334,
+  "ci_high": 0.5203181441718625
  },
  "coverage": {
   "pre-seed": {
@@ -62,8 +67,8 @@
    "total": 386
   },
   "seed": {
-   "with_lead": 963,
-   "total": 1417
+   "with_lead": 964,
+   "total": 1418
   },
   "series a": {
    "with_lead": 761,
@@ -74,8 +79,8 @@
    "total": 706
   },
   "series c": {
-   "with_lead": 252,
-   "total": 357
+   "with_lead": 251,
+   "total": 356
   },
   "series d": {
    "with_lead": 126,
@@ -99,9 +104,9 @@
   }
  },
  "lead_comes_back": {
-  "cases": 1488,
-  "came_back": 892,
-  "led_again": 251
+  "cases": 1489,
+  "came_back": 893,
+  "led_again": 252
  },
  "accuracy": [
   {
@@ -611,5 +616,5 @@
    "group": "sample_list"
   }
  ],
- "note": "The prediction test ran on the first 289 companies before the investor-first crawl. The other counted rows are recomputed on every data rebuild; hand checks are dated."
+ "note": "The two prediction rows come from research/prediction/harness.py (see RESULTS.md) and are not rerun on every rebuild. The other counted rows are recomputed on every data rebuild; hand checks are dated."
 }

@@ -6,7 +6,7 @@ Key facts:
 - Data: 5,200 rounds, 3,393 companies, 195 funds asked investor-first, 4,406 Cala entity IDs. Cala is the only data source.
 - Cala layers used: POST /v1/knowledge/query (investor-first and company-first), POST /v1/knowledge/search (source documents), /v1/entities (FundingRound entities with is_lead, as a cross-check).
 - Validation: stronger earlier lead record picks the real lead 50% vs 36% random in 1,598 rounds (95% CI 47 to 52%); hand check against press 22 of 26 correct; entity graph agrees 6 of 6 where it marks a lead.
-- Prediction tested honestly on 558 held-out rounds with 8 methods and a leakage audit: the existing lead is the best predictor (1 in 4); a new outside lead is only 4 to 5% in the top 5, so the product shows evidence, not odds.
+- Prediction tested honestly on 558 held-out rounds with 8 methods and a leakage audit: a current investor leads about 1 in 4 next rounds and the previous round's lead itself about 1 in 6 (17%); a new outside lead is only 4 to 5% in the top 5, so the product shows evidence, not odds.
 - Stack: Cala, Aiven for PostgreSQL (system of record and spending caps), Modal (FastAPI app and background live lookups), Gemini only for parsing messy pasted lines.
 
 ## Start here

@@ -57,7 +57,7 @@ The same investor-first question runs live from the app for funds a founder past
 | 30 random rounds checked by hand against press | 22 of 26 sourced rounds correct, 2 partly, 2 wrong. Sample-fund last leads 9 of 11 correct |
 | Both query paths name a lead for the same round | They agree in 172 of 191 rounds |
 | Cala entity graph cross-check (60 random rounds) | Round present 7 times; where the graph marks a lead, it agrees with ours 6 of 6 |
-| Predict who leads a company's next round (558 held-out rounds, only earlier data used, 8 methods) | Real lead in the top 5: **27%**, almost all of it from current investors (the previous lead alone gets 25%) |
+| Predict who leads a company's next round (558 held-out rounds, only earlier data used, 8 methods) | Real lead in the top 5: **27%**, almost all of it from current investors (a current investor leads about 1 in 4 next rounds; the previous round's lead itself about 1 in 6, 17%) |
 | Predict which **new outside** fund leads | Top 5: **4 to 5%**, top 20: 11 to 12% (random: 0.15%). Too weak to promise |
 
 We first set out to predict who would lead a founder's next round. We tested it before building and then again on the full data with 8 methods and an adversarial leakage audit ([`research/prediction/RESULTS.md`](research/prediction/RESULTS.md)). The strongest signal is the company's own cap table: 1 in 4 next rounds is led by an existing investor. A new outside lead cannot be predicted from round data with useful accuracy, so Recount shows the evidence (who leads rounds like yours, and who can introduce you) instead of odds.
