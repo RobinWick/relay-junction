@@ -188,7 +188,8 @@ def _field(row: dict, *names: str):
 
 
 LEAD_FIELDS = ("lead_investor", "lead_investors", "lead")
-PART_FIELDS = ("participating_investors", "all_participating_investors", "investors", "other_investors", "co_investors")
+PART_FIELDS = ("participating_investors", "all_participating_investors", "investors", "other_investors", "co_investors",
+               "participants")
 
 
 OPEN_LIST = re.compile(r"(?:,|\band\b|\+|\bplus\b|\bamong\b|\bincluding\b)\s*(\d+\s+)?(others?|more)\b|\betc\b|"
@@ -400,6 +401,43 @@ class Builder:
                     n += 1
         return n
 
+    def fold_duplicates(self) -> int:
+        """Fold rounds that are one round seen twice, so no round is counted twice. Returns rounds folded away.
+
+        Same company (or one name a prefix of the other, 4+ letters) and compatible stage, and either
+          A. the same named leads and the same amount (within 15% inside 6 months, else within 6%), up to 3 years
+             apart: Cala dated one round twice
+             (ConfidentialMind Nov 2023 and Apr 2026, Zenniz 'End of 2024' and Mar 2025, Solu and Solu Genomics), or
+          B. one side names no lead, is within 2 months, and every investor it names is in the other round
+             (Camphouse Jun 2026 told twice). A side with no lead and no amount in the same month may also carry
+             a different stage label (Reduciner's 'Series A' row next to its May 2026 first round).
+        The round with the more precise date survives (then more investors, then the later date).
+        """
+        by_family: dict[str, list[int]] = defaultdict(list)
+        for r in self.rounds:
+            by_family[r["ckey"][:4]].append(r["id"])
+        gone: set[int] = set()
+        for ids in by_family.values():
+            for i in ids:
+                for j in ids:
+                    if i >= j or i in gone or j in gone:
+                        continue
+                    a, b = self.rounds[i], self.rounds[j]
+                    if not _same_round(a, b):
+                        continue
+                    keep, drop = sorted((a, b), key=_survivor_rank, reverse=True)
+                    _absorb(keep, drop)
+                    gone.add(drop["id"])
+        if not gone:
+            return 0
+        self.rounds = [r for r in self.rounds if r["id"] not in gone]
+        self.by_company, self.by_prefix = defaultdict(list), defaultdict(lambda: defaultdict(list))
+        for i, r in enumerate(self.rounds):
+            r["id"] = i
+            self.by_company[r["ckey"]].append(i)
+            self.by_prefix[r["ckey"][:5]][r["ckey"]].append(i)
+        return len(gone)
+
     @classmethod
     def from_snapshot(cls, snap: dict) -> "Builder":
         """Rebuild a Builder from a stored snapshot so live Cala answers can be merged in the running app."""
@@ -414,6 +452,11 @@ class Builder:
         return b
 
     def snapshot(self, fund_keys: set[str]) -> dict:
+        folded = self.fold_duplicates()
+        for r in self.rounds:
+            reason = r.get("not_led") or not_led_reason(r)
+            if reason:
+                mark_not_led(r, reason)
         names = {k: max(v.items(), key=lambda kv: kv[1])[0] for k, v in self.names.items()}
         for r in self.rounds:
             paths = {s["path"] for s in r["sources"]}
@@ -426,10 +469,108 @@ class Builder:
             "retrieved": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
             "rounds": self.rounds, "investor_names": names, "fund_keys": sorted(fund_keys), "entities": entities,
             "stats": {"rounds": len(self.rounds), "companies": companies, "funds_queried": len(fund_keys),
-                      "investors": len(names), "entity_ids": len(entities)},
+                      "investors": len(names), "entity_ids": len(entities), "folded_duplicates": folded,
+                      "not_led_rounds": sum(1 for r in self.rounds if r.get("not_led"))},
         }
 
 
+
+
+DAY = re.compile(r"\b\d{1,2}(st|nd|rd|th)?\.?\s+(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)|"
+                 r"\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\.?\s+\d{1,2}\b(?!\d)|\b(19|20)\d\d-\d\d-\d\d\b", re.I)
+VAGUE = re.compile(r"approx|~|\bend of\b|\bearly\b|\blate\b|\bmid\b|\bq[1-4]\b|\bh[12]\b|\baround\b|\bc\.", re.I)
+
+
+def _date_precision(r: dict) -> int:
+    """3 = day given, 2 = month, 1 = year, quarter or 'approximate', 0 = no date text."""
+    best = 0
+    for s in r.get("sources", []):
+        row = s.get("row") or {}
+        raw = str(_field(row, "date", "announcement_date", "announced", "year") or "")
+        if not raw:
+            continue
+        if VAGUE.search(raw):
+            p = 1
+        elif DAY.search(raw):
+            p = 3
+        elif parse_date(raw) and (re.search(r"\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)", raw, re.I)
+                                  or re.search(r"(19|20)\d\d-\d\d", raw)):
+            p = 2
+        else:
+            p = 1
+        best = max(best, p)
+    return best
+
+
+def _same_family(a: str, b: str) -> bool:
+    return a == b or (min(len(a), len(b)) >= 4 and (a.startswith(b) or b.startswith(a)))
+
+
+def _same_round(a: dict, b: dict) -> bool:
+    if not _same_family(a["ckey"], b["ckey"]):
+        return False
+    dt = abs(a["t"] - b["t"])
+    x, y = a.get("amount_eur_m"), b.get("amount_eur_m")
+    if a["stage"] and b["stage"] and a["stage"] != b["stage"]:
+        # only a bare echo (no lead, no amount, same month) may carry a wrong stage label: Reduciner May 2026
+        bare = a if not (a["leads"] or x) else b if not (b["leads"] or y) else None
+        if bare is None or dt > 0.09:
+            return False
+    if a["leads"] and b["leads"]:
+        # months apart: the amount must be the same figure (FX rounding only); years apart: still one Cala text
+        tolerance = 1.15 if dt <= 0.5 else 1.06
+        return (set(a["leads"]) == set(b["leads"]) and bool(x and y) and max(x, y) / min(x, y) <= tolerance
+                and dt <= 3.0)
+    if dt > 0.17:
+        return False
+    for bare, full in ((a, b), (b, a)):
+        named = set(bare["participants"])
+        if not bare["leads"] and named and named <= set(full["leads"]) | set(full["participants"]):
+            return True
+    return False
+
+
+def _survivor_rank(r: dict) -> tuple:
+    return bool(r["leads"]), _date_precision(r), len(r["leads"]) + len(r["participants"]), r["t"]
+
+
+def _absorb(keep: dict, drop: dict) -> None:
+    keep["leads"] = sorted(set(keep["leads"]) | set(drop["leads"]))
+    keep["participants"] = sorted((set(keep["participants"]) | set(drop["participants"])) - set(keep["leads"]))
+    keep["cf_leads"] = sorted(set(keep.get("cf_leads", [])) | set(drop.get("cf_leads", [])))
+    for f in ("stage", "amount_eur_m", "amount_raw", "country", "type"):
+        if keep.get(f) in (None, ""):
+            keep[f] = drop.get(f)
+    keep["sources"] = keep["sources"] + drop["sources"]
+    keep["disagree"] = keep.get("disagree") or drop.get("disagree")
+    if not keep.get("disagree"):
+        keep.pop("disagree", None)
+
+
+PROGRAMME = re.compile(r"\baccelerator\b|\bincubat|support program|\bprogramme\b", re.I)
+LISTED_ISSUE = re.compile(r"\bpipe\b|directed (share )?issues?|rights issues?|\bspac\b|public offering", re.I)
+
+
+def not_led_reason(r: dict) -> str | None:
+    """A round no fund 'leads' in the sense a founder means: an accelerator or support programme cheque, or a share
+    issue by a listed company. Only when every source row's round type says so; a round that one source calls a
+    seed keeps counting."""
+    types = [str(_field(s.get("row") or {}, "round_type", "type", "round") or "") for s in r.get("sources", [])]
+    types = [t for t in types if t.strip()] or [str(r.get("type") or "")]
+    if all(PROGRAMME.search(t) for t in types):
+        return "Accelerator or support programme, not a led round"
+    if all(LISTED_ISSUE.search(t) for t in types):
+        return "Share issue by a listed company (PIPE, directed or rights issue), not a led round"
+    return None
+
+
+def mark_not_led(r: dict, reason: str) -> None:
+    """Keep the round on record but out of every lead count: named leads move to the investor list."""
+    r["not_led"] = reason
+    if r["leads"]:
+        r["named_leads"] = sorted(set(r.get("named_leads", [])) | set(r["leads"]))
+        r["participants"] = sorted(set(r["participants"]) | set(r["leads"]))
+        r["leads"] = []
 
 
 def round_key(r: dict) -> str:

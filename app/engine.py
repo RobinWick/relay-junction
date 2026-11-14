@@ -9,6 +9,8 @@ Verdict rules (shown verbatim on the Method page):
   No lead since {date}     : it has led before, but not in the last 24 months.
   Mixed                    : everything else.
 Rounds whose own Cala source text names a different lead (dispute.py) are left out of every count and listed apart.
+Accelerator or support programme cheques, share issues by listed companies (PIPE, directed or rights issue) and
+hand-checked non-equity rounds (merge.not_led_reason, pipeline/corrections.json) are not led rounds: counted nowhere.
 """
 from __future__ import annotations
 
@@ -125,7 +127,7 @@ def round_brief(snap: Snapshot, r: dict) -> dict:
             "amount_eur_m": r["amount_eur_m"], "amount_raw": r.get("amount_raw"),
             "n_investors": len(r["leads"]) + len(r["participants"]),
             "leads": [snap.name(k) for k in r["leads"]], "path": r.get("query_path"), "sourced": bool(r.get("source")),
-            "disputed": r.get("disputed")}
+            "disputed": r.get("disputed"), "not_led": r.get("not_led")}
 
 
 def fund_profile(snap: Snapshot, key: str, stage: str, target_m: float | None) -> dict:
@@ -133,7 +135,7 @@ def fund_profile(snap: Snapshot, key: str, stage: str, target_m: float | None) -
     ids = snap.by_investor.get(key, [])
     since = snap.now_t - WINDOW_YEARS
     band = stage_band(stage)
-    led, joined_known, unknown, led_at_stage, disputed = [], [], [], [], []
+    led, joined_known, unknown, led_at_stage, disputed, not_led = [], [], [], [], [], []
     all_led = []
     first_t: dict[str, float] = {}
     for rid in ids:  # when did this fund first appear in each company?
@@ -147,6 +149,10 @@ def fund_profile(snap: Snapshot, key: str, stage: str, target_m: float | None) -
         if r.get("disputed"):  # its own source names another lead: counted nowhere, shown apart
             if in_window:
                 disputed.append(r)
+            continue
+        if r.get("not_led"):  # accelerator cheque, listed-company share issue, or a hand-checked non-equity round
+            if in_window:
+                not_led.append(r)
             continue
         if is_lead:
             all_led.append(r)
@@ -205,13 +211,14 @@ def fund_profile(snap: Snapshot, key: str, stage: str, target_m: float | None) -
     return {
         "key": key, "name": snap.name(key), "verdict": verdict[0], "verdict_label": verdict[1],
         "led": len(led), "known": known, "unknown": len(unknown), "led_at_stage": len(led_at_stage),
-        "follow_ons": len(follow_ons), "disputed": len(disputed),
+        "follow_ons": len(follow_ons), "disputed": len(disputed), "not_led": len(not_led),
         "size": size, "last_lead": round_brief(snap, last_lead) if last_lead and not snap.is_hub(key) else None,
         "queried": key in snap.fund_keys, "total_rounds": len(ids),
         "rounds_led": [round_brief(snap, r) for r in sorted(led, key=lambda r: -r["t"])],
         "rounds_joined": [round_brief(snap, r) for r in sorted(joined_known, key=lambda r: -r["t"]) if key not in r["leads"]],
         "rounds_unknown": [round_brief(snap, r) for r in sorted(unknown, key=lambda r: -r["t"])],
         "rounds_disputed": [round_brief(snap, r) for r in sorted(disputed, key=lambda r: -r["t"])],
+        "rounds_not_led": [round_brief(snap, r) for r in sorted(not_led, key=lambda r: -r["t"])],
     }
 
 
@@ -305,7 +312,7 @@ def lead_comes_back(snap: Snapshot, lead_key: str) -> dict | None:
         r = snap.rounds[rid]
         if lead_key not in r["leads"]:
             continue
-        rs = [snap.rounds[i] for i in snap.by_company[r["ckey"]]]
+        rs = [snap.rounds[i] for i in snap.by_company[r["ckey"]] if not snap.rounds[i].get("not_led")]
         if not any(s["path"] == "company_first" for x in rs for s in x["sources"]):
             continue
         later = sorted((x for x in rs if x["t"] > r["t"] + 0.17
@@ -398,5 +405,6 @@ def record(snap: Snapshot, rid: int) -> dict | None:
             "participants": [snap.name(k) for k in r["participants"]],
             "sources": [{"path": s["path"], "query": s["query"], "row": s["row"]} for s in r["sources"]],
             "source": r.get("source"), "graph": r.get("graph"), "disputed": r.get("disputed"),
+            "named_leads": [snap.name(k) for k in r.get("named_leads", [])],
             "entity_ids": {"company": snap.entities.get("c:" + r["ckey"]),
                            "leads": [{"name": snap.name(k), "id": snap.entities.get("i:" + k)} for k in r["leads"]]}}

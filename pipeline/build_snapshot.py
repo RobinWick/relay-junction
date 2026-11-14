@@ -14,7 +14,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "app"))
 from dispute import dispute  # noqa: E402
-from merge import Builder, canon, round_key, summarize_search  # noqa: E402
+from merge import Builder, canon, mark_not_led, round_key, summarize_search  # noqa: E402
 
 DATA = Path(os.environ.get("RELAY_DATA_DIR", Path(__file__).resolve().parents[2] / "cala" / "data"))
 
@@ -93,6 +93,30 @@ def attach_graph(snap: dict) -> int:
     return n
 
 
+CORRECTIONS = Path(__file__).resolve().parent / "corrections.json"
+
+
+def apply_corrections(snap: dict) -> int:
+    """Hand corrections checked against press (pipeline/corrections.json). Each must match exactly one round."""
+    if not CORRECTIONS.exists():
+        return 0
+    n = 0
+    for c in json.loads(CORRECTIONS.read_text()):
+        m = c["match"]
+        hits = [r for r in snap["rounds"] if all(str(r.get(k)) == str(v) for k, v in m.items())]
+        if len(hits) != 1:
+            raise SystemExit(f"correction {m} matches {len(hits)} rounds, expected 1")
+        r = hits[0]
+        if c.get("set"):
+            r.update(c["set"])
+            r["t"] = round(r["year"] + (r["month"] - 1) / 12, 3)
+        if c.get("not_led"):
+            mark_not_led(r, c["not_led"])
+        r["corrected"] = c.get("evidence", "")
+        n += 1
+    return n
+
+
 def build() -> dict:
     b = Builder()
     b.company_first(DATA)
@@ -104,6 +128,8 @@ def build() -> dict:
         b.add_fund_record(rec)
         fund_keys.add(canon(rec["name"]))
     snap = b.snapshot(fund_keys)
+    snap["stats"]["corrected_rounds"] = apply_corrections(snap)
+    snap["stats"]["not_led_rounds"] = sum(1 for r in snap["rounds"] if r.get("not_led"))
     snap["stats"]["sourced_rounds"] = attach_sources(snap)
     snap["stats"]["disputed_rounds"] = flag_disputes(snap)
     snap["stats"]["graph_checked"] = attach_graph(snap)
