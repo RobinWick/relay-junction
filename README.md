@@ -108,7 +108,7 @@ Cala /v1/knowledge/query ──> crawl (pipeline/) ──> Aiven Postgres ──
 
 - **Cala**: investor-first and company-first round data, source documents, entity cross-check, live lookups.
 - **Aiven for PostgreSQL**: system of record. Stores every Cala answer looked up live (`live_funds`), the merged snapshot the app serves (`snapshot`), and the normalised rounds and investors (`companies`, `rounds`, `round_investors`, `investors`).
-- **Modal**: serves the app (`modal_app.py`, FastAPI) and runs the live Cala lookups in the background within Cala's rate limit and a per-session budget.
+- **Modal**: serves the app (`modal_app.py`, FastAPI) and runs the live Cala lookups in the background, under our own client limit of 10 requests a minute, with a per-session budget and a daily cap.
 - **Gemini**: reads messy pasted lines, nothing else.
 - **Browser**: reads the LinkedIn connections file and matches it locally.
 

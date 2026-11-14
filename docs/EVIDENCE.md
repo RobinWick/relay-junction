@@ -59,6 +59,6 @@ Full write-up: `research/prediction/RESULTS.md`. Harness: `research/prediction/h
 
 ## Security and cost controls
 
-- Live Cala lookups are capped per visitor session and per day in Postgres (`app/live.py`, `live_usage` table), so a restart cannot reset the cap.
+- Live Cala lookups are capped per day in Postgres (`app/live.py`, `live_usage` table), so a restart cannot reset the daily cap, and per visitor session in memory.
 - Request bodies are capped at 64 KB, strict Content-Security-Policy and security headers, fund names validated before any paid call (`app/main.py`, `app/live.py`).
 - No secrets in the repository; configuration comes from environment variables (Modal secret `relay-secrets`).

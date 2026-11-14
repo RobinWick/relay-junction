@@ -915,7 +915,7 @@ function renderMethod() {
     <h1>Method and limits</h1>
     <p class="lede">How ${esc(APP())} turns Cala round records into a verdict per fund, what we tested, and where it can be wrong.</p>
     <section class="ai-box"><h2>Counting, not AI</h2>
-      <p>Verdicts, counts, intro paths and conflicts are plain counting over Cala round records. The same input always gives the same list, and every number opens the rounds behind it. No language model ranks or judges a fund. Gemini only reads pasted lines our parser cannot match, and only picks out fund names.</p></section>
+      <p>Verdicts, counts, ties and conflicts are plain counting over Cala round records. The same input always gives the same list, and every number opens the rounds behind it. No language model ranks or judges a fund. Gemini only reads pasted lines our parser cannot match, and only picks out fund names.</p></section>
     <section><h2>Verdict rules</h2>
       <p>Counted over the last four years, at your stage and the stages next to it. A round counts as known when Cala names its lead. Follow-on rounds in a fund's own companies are not counted as new investments.</p>
       <p>Answers to "which rounds did this fund invest in" name the rounds a fund led more often than the rounds it only joined, so the lead share is an upper bound. Every row shows how many of its rounds had no named lead. When a round's own Cala source text names a different lead, the round is marked disputed and left out of every fund's lead count.</p>
@@ -939,9 +939,9 @@ function renderMethod() {
       <p><a href="/static/cala-data-quality.json" download>Data quality findings we prepared for Cala</a> (JSON).</p></section>
     <section><h2>Limits</h2>
       <ul>
-        <li>Fund level, not partner level. An intro path means two funds sat in the same round; ask which partner was on it.</li>
+        <li>Fund level, not partner level. A tie means two funds sat in the same round; ask your investor which partner was on it.</li>
         <li>About a third of seed rounds in our data name no lead. Those rounds are left out of the lead ratio, so thinly covered funds show "Too little data"; every fund shows how many rounds had no named lead.</li>
-        <li>Coverage is what Cala returned to our questions: European venture rounds, mostly 2021 to 2026. A fund missing here is missing from our snapshot, not necessarily from Cala.</li>
+        <li>Coverage is what Cala returned to our questions: mostly European venture rounds from 2021 to 2026. A fund missing here is missing from our snapshot, not necessarily from Cala.</li>
         <li>Company discovery started from startups that raised over EUR 2m, so very small rounds are under-represented.</li>
         <li>Two ways of asking can label the same round differently. The round record shows both raw rows when that happens.</li>
       </ul></section>
