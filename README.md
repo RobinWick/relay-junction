@@ -1,31 +1,60 @@
 # Recount
 
-**Funds say they lead. Cala shows whether they did.**
+**The right investors for founders, the right companies for investors, all from Cala.**
 
-Recount checks the funds a founder plans to pitch against Cala's funding-round records. For each fund it counts how many rounds it led at your stage, out of those where Cala names a lead, what size those rounds were, when it last led, and whether it backed a competitor. Then it looks for a way in: one of your investors who sat with that fund in a small round, or a LinkedIn connection at a company the fund backed, matched in your browser. Every number opens the Cala record behind it. Counting, not AI.
+Recount counts Cala's funding-round, M&A and people records. Founders see which funds actually lead rounds like theirs, how each fund led year by year, who bought the companies it backed, and a way in. Investors get a quick, sourced background check on any fund, company or founder. Every number opens the Cala record behind it.
 
-Built at Junction 2026 (Espoo, 13 to 15 November 2026) for Cala's "Make Unicorns Real" challenge.
+Built at Junction 2026 (Espoo, 13 to 15 November 2026) for Cala's "Make Unicorns Real" challenge, by team Wicflow.
 
-- **Live demo:** https://robin-81988--recount.us-east.modal.run (no login; add `#demo` to load the sample)
-- **Evidence for every number below:** [`docs/EVIDENCE.md`](docs/EVIDENCE.md)
-- **Machine-readable summary:** [`llms.txt`](llms.txt)
+## Links
+
+| What | Where |
+|---|---|
+| Recount (fund check, receipts, Explore) | https://robin-81988--recount.us-east.modal.run (no login; "Try a sample", or add `#demo`) |
+| Explore (funds, companies, founders) | https://robin-81988--recount.us-east.modal.run/explore |
+| Recount Signal (company ranking + Lab) | https://robin-81988--recount-signal.us-east.modal.run/signal (Lab tab: `#/lab`) |
+| Pitch video and deck | Link and PDF in the Junction submission |
+| Evidence for every number | [`docs/EVIDENCE.md`](docs/EVIDENCE.md) |
+| Plain-text summary for AI readers | [`llms.txt`](llms.txt), also served at `/llms.txt` on both apps |
+| Code | `main` = Recount. Branch [`feat/signal`](https://github.com/RobinWick/relay-junction/tree/feat/signal) = `main` plus Recount Signal |
+
+## How it maps to the judging criteria
+
+| Criterion | What we did | Numbers (each traceable to a file in this repo) |
+|---|---|---|
+| **Real need** | Every priced round needs a lead, and a fund's name does not say whether it leads. Fund sites list portfolios, not who led, and not how a fund behaved in the downturn. The question comes back before every raise. | Of the 47 most active Nordic pre-seed/seed investors we could judge (2023 to 2026), 24 led under half their rounds; 308 of 1,042 named seats (30%) were leads (`research/need/SCARCITY.md`). A round's lead came back in the next round 60% of the time but led it only 15% (1,405 cases, `app/validation.json`). |
+| **Execution** | Deployed end to end: Cala crawl, merge, Aiven Postgres, FastAPI on Modal, live Cala lookups with spending caps. Fund check, three receipts (lead pace, who bought its companies, intro path), Explore, founder pages, and Signal with its Lab. Tests run before every deploy. | 5,146 rounds, 3,390 companies, 194 funds asked investor-first. 20 acquisitions across 13 funds (17 with a disclosed value). Hand check of 80 random Cala lead calls against press: right lead fund 66 of 74 (89%), exactly right 55 of 74 (74%) (`research/accuracy/`). |
+| **Originality** | We tried to build a "magic score" and tested it on years the model never saw. One signal held up, so Signal ranks on that one only and the Lab tab shows every signal that failed. Everything else is a receipt you can open: lead share at your stage year by year, acquisitions with their source, founder careers with their coverage stated. | 35 signals tested, 1 kept (round size for stage), 26 noise, 8 not testable (`app/signal_lab.json`, on `feat/signal`). Next outside lead in the top 5: 4 to 5% vs 0.15% random (462 rounds), so Recount shows evidence, not odds (`research/prediction/RESULTS.md`). |
+| **Use of Cala as the core** | Cala is the only data source: `/v1/knowledge/query` (investor-first and company-first), `/v1/knowledge/search` (source documents), `/v1/entities` (INVESTED_IN, CorporateEvent MNA_COMPLETED, FOUNDED/WORKS_AT/IS_CEO_OF/IS_CTO_OF). We wrote up data-quality findings for Cala. | Where both query paths name a lead they agree in 176 of 192 rounds. Source documents for 209 rounds; 9 disputed rounds left out of every count. 19 data-quality findings (`data_quality/cala-data-quality.json`). |
 
 ## Check us in 60 seconds
 
 1. **Open the demo and click "Try a sample"** (or open it with `#demo`). The sample is a seed founder raising EUR 3m, with Lifeline Ventures as an investor, Lovable as a competitor and 14 pasted lines.
-2. **Read the summary line:** "8 of 14 mostly lead Seed rounds, 5 of them at a size like your EUR 3m. 2 lead, but a different size. 2 backed Lovable. You have a way in to 2." The funds sit in three groups: "Pitch first", "Leads, but a different size" and "Mostly follows or sometimes leads". (The last pasted line is messy and goes to Gemini for the fund name. If Gemini is unavailable, that line shows as not recognised and the summary reads 7 of 13, 4 at your size, way in to 1.)
-3. **Click "Try with a sample network".** A made-up file of 9 connections, every match marked "Sample", is matched in your browser: "way in to 2" becomes "way in to 8". Click **Map** to see the same ways in as lines from you, through your investor or a contact, to each fund, in the list's groups and order. Hover Voima Ventures for the rounds behind its two lines.
+2. **Read the summary line:** "8 of 14 mostly lead Seed rounds, 5 of them at a size like your EUR 3m. 2 lead, but a different size. 2 backed Lovable. You have a way in to 2." (The last pasted line is messy and goes to Gemini for the fund name. If Gemini is unavailable, that line shows as not recognised and the summary reads 7 of 13, 4 at your size, way in to 1.)
+3. **Click "Try with a sample network".** A made-up file of 9 connections, every match marked "Sample", is matched in your browser: "way in to 2" becomes "way in to 8". Click **Map** to see the ways in as lines from you, through your investor or a contact, to each fund.
 4. **Open Voima Ventures.** It "Led 13 of 13" rounds with a named lead near your stage, and the pane says 7 more had no named lead. Under "How to get in": your investor Lifeline Ventures and Voima Ventures were both in Reduciner's round of May 2026, with 4 investors in total.
-5. **Click Reduciner** to open the round record: "Found by: Asking about the fund and about the company, both agree", the Cala entity IDs, the source documents from Cala search, and the raw Cala rows. Every count in the app opens a record like this.
+5. **Click Reduciner** to open the round record: how it was found ("both agree"), the Cala entity IDs, the source documents from Cala search, and the raw Cala rows.
+6. **Open Signal and click the Lab tab** to see all 35 tested signals, the one that held up, and the rule used to decide.
 
-## At a glance (Cala's judging criteria)
+## Receipts, Explore and founder pages
 
-| Criterion | What we did | One number | Proof |
-|---|---|---|---|
-| **Real need** | A round needs a lead, and the last lead rarely leads again, so most founders must find a new lead each round. Fund sites list portfolios, not who led. Recount answers "does this fund lead rounds like mine, and how do I get in" for any list, before any raise. | The lead of a round came back in the company's next round 60% of the time but led it again only 15% (1,405 cases) | `app/validation.json`, [Need](#the-need) |
-| **Execution** | Deployed end to end: crawl, merge, Postgres, API, UI, live Cala lookups with spending caps. Wrong amounts are left out; rounds whose own source text names a different lead are flagged and left out of counts (10 of the first 12 flagged confirmed by press). | 5,146 rounds, 3,390 companies, 194 funds; hand check against press: lead exactly right in 55 of 74 random rounds (74%) | [`docs/EVIDENCE.md`](docs/EVIDENCE.md), `pipeline/validate.py` |
-| **Originality** | A lead count at your stage and size with its denominator and the rounds behind it, plus a way in from the same round records and your LinkedIn export, read in the browser. We tested prediction honestly and published that it does not work for outside funds. | Next outside lead in the top 5: 4 to 5% vs 0.15% random (462 rounds), so Recount shows evidence, not odds | [`research/prediction/RESULTS.md`](research/prediction/RESULTS.md), [How this differs](#how-this-differs-from-existing-tools) |
-| **Use of Cala as the core** | Cala is the only data source, through three layers: `/v1/knowledge/query` (investor-first and company-first), `/v1/knowledge/search` (source documents) and `/v1/entities` (FundingRound entities, as a cross-check). We wrote up 19 data-quality findings for Cala. | Where both query paths name a lead, they share it in 176 of 192 rounds | [How Cala is used](#how-cala-is-used), `data_quality/cala-data-quality.json` |
+- **Receipt 1, lead pace.** Per fund and year, 2019 to 2026: led, joined under another lead, lead unknown. Unknowns are shown, never hidden. (`app/receipt_pace.py`)
+- **Receipt 2, who bought its companies.** Completed acquisitions of companies the fund backed (Cala `INVESTED_IN` edge, then `CorporateEvent` `MNA_COMPLETED` with role `TARGET`): buyer, deal value, date and source. Example: Zettle, bought by PayPal for 2.2B USD in 2018. Values are labelled "deal value, not return". 20 acquisitions across 13 funds in this build. (`app/receipt_exits.py`, `app/exits.json`)
+- **Receipt 3, intro path.** A fund that leads at your next stage and sat with one of your investors in a small round (2 to 6 investors, at most EUR 50m, last 4 years). Here is the round; ask your investor. (`app/receipt_intro.py`)
+- **Explore.** Filters for funds, companies and founders. Type a sentence and Gemini sets filters from fixed lists; each filter it set is marked and editable. A request to rank or score people gets a plain refusal line. (`app/explore_api.py`, `app/explore_views.py`)
+- **Founder pages.** Careers from Cala people data with the coverage stated on screen: 22 founders fetched, 2 with a dated role, 1 with a role outside their own company. Thin, and the page says so. (`app/people.py`, `app/people.json`)
+
+## Recount Signal
+
+Signal lists companies, funds and founders from Cala's funding record and ranks the companies. Before choosing what to rank on, we tested 35 candidate signals, including a learned model, on held-out years (2021 to 2023) after tuning on 2018 to 2020, with multiple-test correction.
+
+- **Kept:** 1 signal, round size for stage (percentile of the last sized round among rounds of the same stage in nearby years). Next round within 24 months: AUC 0.55 (90% CI 0.505 to 0.598, n = 571). It held up, but only just.
+- **Failed:** 26 were noise, 8 had too few rows to test. The 13-part "thesis mix" showed no measured lift over size for stage alone.
+- **So:** the default ranking uses size for stage only, and says so on screen. The Lab tab lists every signal, its result and the rule.
+- 2,662 of 3,390 companies have a sized, staged round and are ranked; the others have no rank.
+- Gemini can turn a typed sentence into filters. It never sees company rows and never produces a company, number or score; the server validates its answer against the filter catalogue, and a keyword parser answers when Gemini is unavailable. (`app/signal_chat.py`)
+
+Code on branch `feat/signal`: `app/signal_*.py`, `app/static/signal.*`, `modal_signal.py`. Lab data: `app/signal_lab.json`.
 
 ## The need
 
@@ -88,6 +117,8 @@ A round seen from both sides is merged when company, stage and date agree, and t
 - `POST /v1/knowledge/search` gives the documents behind 209 rounds, fetched ahead of time for each queried fund's last lead; any other round can ask live from its record. The cached source text is also how 9 of those 209 rounds were found to be disputed (`app/dispute.py`, no extra Cala call).
 - `/v1/entities` was checked for 90 rounds; Cala's graph had 12 of them. 4,414 Cala entity IDs are attached to records.
 - The same investor-first question runs live from the app for funds a founder pastes that are not in the snapshot yet.
+- **M&A:** `/v1/entities` fund `INVESTED_IN` edges, then `CorporateEvent` `MNA_COMPLETED` with role `TARGET`: acquirer, value, date and source URL (`pipeline/fetch_exits.py`, `app/receipt_exits.py`).
+- **People:** `/v1/entities` `FOUNDED`, `WORKS_AT`, `IS_CEO_OF` and `IS_CTO_OF` edges with dates and sources, plus background cohorts from `/v1/knowledge/query` (`pipeline/fetch_people.py`, `app/people.py`).
 
 ## What we tested
 
@@ -105,53 +136,59 @@ We first set out to predict who would lead a founder's next round. We tested it 
 
 ## Where AI is used, and where it is not
 
-- **Verdicts, counts, ties and conflicts are plain counting** over Cala round records. Same input, same list. No language model ranks or judges a fund.
-- **Gemini** (`gemini-3.5-flash-lite`) has one job: reading pasted lines our deterministic parser could not match (for example "lunch with the Lifeline guys at Kämp") and returning firm names, with a fixed JSON schema. The pasted text is not stored, and the UI marks every fund name Gemini read.
+- **Verdicts, counts, lead pace, receipts, ties, timelines and the Signal ranking are plain counting** over Cala records. Same input, same output. No language model ranks or judges a fund, company or person.
+- **Gemini** (`gemini-3.5-flash-lite`) has two bounded jobs, both under a fixed JSON schema: (1) reading pasted lines our deterministic parser could not match (for example "lunch with the Lifeline guys at Kämp") and returning firm names; (2) in Explore and Signal, turning a typed sentence into filter values from fixed lists. Our code re-checks every value against those lists, the UI marks what Gemini set, and Gemini never sees result rows. Pasted text is not stored.
 
 ## Architecture
 
 ```
-Cala /v1/knowledge/query ──> crawl (pipeline/) ──> Aiven Postgres ──> Modal (FastAPI app) ──> browser
-                                   ▲                     │  snapshot, live_funds, rounds
-         live lookups from the app ┘                     │
+Cala /v1/knowledge/query  ┐
+Cala /v1/knowledge/search ├─> crawl + merge (pipeline/, app/merge.py) ─> Aiven Postgres ─> FastAPI on Modal ─> browser
+Cala /v1/entities         ┘                                                   ▲      │
+                                         live Cala lookups from the app ──────┘      └─ Gemini: parsing and filters only
 ```
 
-- **Cala**: investor-first and company-first round data, source documents, entity cross-check, live lookups.
-- **Aiven for PostgreSQL**: system of record. Stores every Cala answer looked up live (`live_funds`), the merged snapshot the app serves (`snapshot`), and the normalised rounds and investors (`companies`, `rounds`, `round_investors`, `investors`).
-- **Modal**: serves the app (`modal_app.py`, FastAPI) and runs the live Cala lookups in the background, under our own client limit of 10 requests a minute, with a per-session budget and a daily cap.
-- **Gemini**: reads messy pasted lines, nothing else.
-- **Browser**: reads the LinkedIn connections file and matches it locally.
+- **Cala**: the only data source. Rounds (investor-first and company-first), source documents, entity cross-check, M&A events, people edges, live lookups.
+- **Aiven for PostgreSQL**: system of record. The merged snapshot the apps serve (`snapshot`), normalised rounds and investors (`companies`, `rounds`, `round_investors`, `investors`), every live Cala answer (`live_funds`) and the daily spending cap.
+- **Modal**: two apps from one codebase. `recount` (`modal_app.py`, from `main`) and `recount-signal` (`modal_signal.py`, from `feat/signal`). Live Cala lookups run in the background under our own limit of 10 requests a minute, with a per-session budget and a daily cap.
+- **Browser**: reads the LinkedIn connections file and matches it locally. Nothing is uploaded.
 
 ```
 app/        main.py (API)  engine.py (verdicts, ties, conflicts, discovery)  merge.py (merging Cala rows)
-            dispute.py (rounds the source disputes)  parse.py (deterministic list parser)  gemini.py  live.py
-            graph.py  static/ (no build step; app.js parses the LinkedIn file in the browser)
-pipeline/   cala_client.py (cached, rate-limited)  fetch.py  fetch_more.py  fetch_funds.py  fetch_sources.py
-            fetch_graph.py  normalize.py  build_snapshot.py  load_db.py  validate.py
-modal_app.py
+            dispute.py  parse.py (deterministic list parser)  gemini.py  live.py  graph.py
+            receipt_pace.py  receipt_exits.py  receipt_intro.py  explore_api.py  explore_views.py  people.py
+            signal_*.py (feat/signal only)  static/ (no build step)
+pipeline/   cala_client.py (cached, rate-limited)  fetch*.py  normalize.py  build_snapshot.py  load_db.py  validate.py
+research/   need/  accuracy/  prediction/
 ```
 
-## Run it
+## Run it locally
 
 ```
 pip install fastapi uvicorn "psycopg[binary]" requests
-export CALA_API_KEY=… GEMINI_API_KEY=… RELAY_DATABASE_URL=… COOKIE_KEY=…
+export CALA_API_KEY=... GEMINI_API_KEY=... RELAY_DATABASE_URL=... COOKIE_KEY=...
 cd pipeline && python3 fetch.py && python3 fetch_funds.py 50 20 && python3 build_snapshot.py --store && python3 validate.py
 cd ../app && uvicorn main:app --port 8765
 ```
 
-`fetch.py` and `fetch_funds.py` spend Cala credits; every request is cached. To run the app from a local snapshot file instead of Postgres, set `RELAY_SNAPSHOT_PATH`. Deploy: `modal secret create relay-secrets …` then `modal deploy modal_app.py`.
+`fetch.py` and `fetch_funds.py` spend Cala credits; every request is cached. To run the app from a local snapshot file instead of Postgres, set `RELAY_SNAPSHOT_PATH`. Without `GEMINI_API_KEY` the app still runs; messy pasted lines show as not recognised and typed filters fall back to a keyword parser where one exists.
 
-## Limits
+Tests: `python3 app/test_<name>.py` runs a file without pytest (`app/minitest.py`); `python3 -m pytest app` works too.
+
+Deploy: `modal secret create relay-secrets ...`, then `modal deploy modal_app.py` (Recount) or, on `feat/signal`, `modal deploy modal_signal.py` (Signal).
+
+## Limits, stated plainly
 
 - Fund level, not partner level. A tie means two funds sat in the same round; ask your investor which partner was on it.
-- About a third of seed rounds in our data name no lead (Cala names the lead in 68% of 1,401 seed rounds). They are left out of the lead ratio, which pushes thinly covered funds toward "Too little data", so every row shows how many rounds had no named lead.
+- About a third of seed rounds in our data name no lead (Cala names the lead in 68% of 1,401 seed rounds). They are left out of the lead ratio and counted on every row, which pushes thinly covered funds toward "Too little data".
 - Answers to "which rounds did this fund invest in" name rounds a fund led more often than rounds it only joined, so the lead share is an upper bound.
-- Size verdicts need 5 or more sized led rounds; below that the range is shown in grey as "size unclear".
-- The disputed-round check is a text rule over the 209 rounds with cached source documents. Rounds without a cached source are not checked.
+- Size verdicts need 5 or more sized led rounds; below that the range is grey and marked "size unclear".
+- The disputed-round check is a text rule over the 209 rounds with cached source documents. Other rounds are not checked.
+- "No exit found in Cala" does not mean no exit. Deal value is not the fund's return.
+- Founder career data is thin (22 founders fetched, 2 with a dated role) and every page states its coverage.
+- Signal's one kept signal is weak (AUC 0.55 on held-out years). It orders a list; it does not predict success.
 - A LinkedIn match is a person at a company the fund backed, matched by company name. It is not proof of a relationship.
-- Coverage is what Cala returned to our questions: mostly European venture rounds from 2021 to 2026. A fund missing here is missing from our snapshot, not necessarily from Cala.
-- Company discovery started from startups that raised more than EUR 2m, so very small rounds are under-represented.
+- Coverage is what Cala returned to our questions: mostly European venture rounds from 2019 to 2026. A fund missing here is missing from our snapshot, not necessarily from Cala. Company discovery started from startups that raised more than EUR 2m, so very small rounds are under-represented.
 
 ## Licence and credits
 
