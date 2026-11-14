@@ -13,127 +13,124 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Lead Check","applicationCategory":"BusinessApplication","operatingSystem":"Web","description":"Checks whether venture capital funds actually lead funding rounds at a founder's stage and size or mostly follow, when they last led, whether they backed a competitor, and which of the founder's investors can introduce them. Deterministic counting over 5,200 funding rounds from Cala, with source records behind every number.","isAccessibleForFree":true,"creator":{"@type":"Organization","name":"Team Wicflow, Junction 2026"},"about":["venture capital","lead investor","fundraising","Cala"]}</script>
 <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
 <link rel="preload" href="/static/fonts/geist-variable.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/static/styles.css?v=4">
-<script src="/static/brand.js?v=4" defer></script>
-<script src="/static/app.js?v=4" defer></script>
+<link rel="stylesheet" href="/static/styles.css?v=5">
+<script src="/static/brand.js?v=5" defer></script>
+<script src="/static/app.js?v=5" defer></script>
 </head>
-<body>
-<header class="top">
-  <div class="top-in">
-    <a class="mark" href="/" data-app-label="{name} home"><span class="mark-glyph" aria-hidden="true"></span><span data-app-name></span></a>
-    <nav class="top-nav" aria-label="Main">
-      <a href="/" id="nav-check">Check funds</a>
-      <a href="/method" id="nav-method">Method and limits</a>
+<body data-screen="paste">
+<div class="app">
+  <aside class="side">
+    <a class="brand" href="/" data-app-label="{name} home"><span class="mark" aria-hidden="true"></span><span data-app-name></span></a>
+    <nav class="nav" aria-label="Main">
+      <a href="/" id="nav-check"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 4.5h10M3 8h10M3 11.5h6"/></svg>Check a list</a>
+      <button type="button" id="nav-find"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><path d="m10.5 10.5 3 3"/></svg>Find funds for me</button>
+      <a href="/method" id="nav-method"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 2.5h7.5L13 5v8.5H3z"/><path d="M5.5 7h5M5.5 9.5h5"/></svg>Method and limits</a>
     </nav>
-  </div>
-</header>
-
-<main id="view-check">
-  <section class="hero wrap">
-    <div class="flow" aria-hidden="true">
-      <span class="flow-line"></span>
-      <span class="chip-step"><span class="bolt"></span>Your list</span>
-      <span class="chip-step"><span class="bolt"></span>Cala query</span>
-      <span class="chip-step"><span class="bolt"></span>Round records</span>
-      <span class="chip-step chip-step-end"><span class="bolt"></span>Verdict</span>
+    <section class="side-round only-results" aria-labelledby="side-round-h">
+      <div class="side-h"><h2 id="side-round-h">Your round</h2><button type="button" id="side-edit">Edit</button></div>
+      <dl class="props" id="props"></dl>
+    </section>
+    <div class="side-foot">
+      <span class="live"><span class="dot" aria-hidden="true"></span>Cala round data</span>
+      <span class="num" id="side-stats"></span>
     </div>
-    <h1>Funds say they lead. <span class="h1-soft">See if they did.</span></h1>
-    <p class="lede">Paste the funds you plan to pitch. For each one we count, from Cala round records, whether it leads rounds like yours or mostly follows, and who in your network has sat in a round with it.</p>
-    <p class="data-line"><span class="mono-chip" id="data-chip">Cala round data, loading</span></p>
-  </section>
+  </aside>
 
-  <section class="wrap">
-    <form class="card form-card" id="check-form" autocomplete="off" novalidate>
-      <div class="form-main">
-        <div class="tabs" role="tablist" aria-label="Mode">
-          <button type="button" role="tab" id="tab-list" aria-selected="true" aria-controls="pane-list">Check my list</button>
-          <button type="button" role="tab" id="tab-find" aria-selected="false" aria-controls="pane-find">Find funds for me</button>
-        </div>
-        <div id="pane-list" role="tabpanel" aria-labelledby="tab-list">
-          <label for="funds" class="label">Funds you plan to pitch <span class="hint" id="line-count"></span></label>
-          <textarea class="textarea" id="funds" maxlength="8000" placeholder="Paste your investor meetings in any format, one per line.&#10;&#10;Tue 10:30  Maki.vc  Table 12&#10;Creandum, Partner: …&#10;Lifeline Ventures"></textarea>
+  <main class="work">
+    <div id="view-check">
+      <section class="compose only-paste" aria-labelledby="h-main">
+        <h1 id="h-main">Funds say they lead. <span>See if they did.</span></h1>
+        <p class="sub">Counted from Cala round data. Not AI.</p>
+
+        <form class="card card-pad" id="check-form" autocomplete="off" novalidate>
+          <div id="mode-list">
+            <label for="funds" class="flabel">Paste the funds you plan to pitch, one per line</label>
+            <textarea class="textarea" id="funds" maxlength="8000" aria-describedby="line-count" placeholder="Maki.vc&#10;Voima Ventures&#10;Creandum"></textarea>
+            <p class="hint" id="line-count">Any format works. Times, tables and notes are ignored.</p>
+          </div>
+          <div id="mode-find" class="hidden">
+            <p class="flabel">Find funds that led rounds like yours</p>
+            <p class="hint">We look at every round in our Cala data at your stage, close to your target raise and in your region from the last 30 months, and list the funds that led them.</p>
+            <label for="region" class="label" id="l-region">Region</label>
+            <select class="select" id="region">
+              <option value="nordics">Nordics</option>
+              <option value="baltics">Baltics</option>
+              <option value="dach">Germany, Austria, Switzerland</option>
+              <option value="uk-ie">UK and Ireland</option>
+              <option value="france-benelux">France and Benelux</option>
+              <option value="south">Southern Europe</option>
+              <option value="cee">Central and Eastern Europe</option>
+              <option value="">All of Europe</option>
+            </select>
+          </div>
+
+          <div class="round-fields">
+            <fieldset class="field">
+              <legend class="label">Stage you are raising</legend>
+              <div class="seg" id="stage-seg"></div>
+            </fieldset>
+            <div class="field">
+              <label for="target" class="label">Target raise, EUR million</label>
+              <div class="input-unit"><span aria-hidden="true">EUR</span><input class="input num" id="target" inputmode="decimal" placeholder="3"></div>
+            </div>
+          </div>
+
+          <details class="opt" id="opt">
+            <summary>Add your investors, competitors and network (optional)</summary>
+            <div class="opt-body">
+              <div class="row2">
+                <div class="field">
+                  <span class="label" id="l-inv">Your current investors</span>
+                  <div class="chips" id="inv-chips">
+                    <input id="inv-input" aria-labelledby="l-inv" aria-describedby="inv-hint" placeholder="Type a fund name" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="inv-suggest">
+                    <div class="suggest hidden" id="inv-suggest" role="listbox" aria-label="Matching funds"></div>
+                  </div>
+                  <p class="hint" id="inv-hint">Finds funds that sat in a small round with yours.</p>
+                </div>
+                <div class="field">
+                  <span class="label" id="l-comp">Competitors, up to 3</span>
+                  <div class="chips" id="comp-chips">
+                    <input id="comp-input" aria-labelledby="l-comp" aria-describedby="comp-hint" placeholder="Company name, then Enter">
+                  </div>
+                  <p class="hint" id="comp-hint">Flags funds that backed them.</p>
+                </div>
+              </div>
+              <div class="field">
+                <label for="company" class="label">Your company</label>
+                <input class="input" id="company" maxlength="120" placeholder="Acme Oy" aria-describedby="company-hint">
+                <p class="hint" id="company-hint">Your own rounds are left out of intro paths.</p>
+              </div>
+              <div class="field">
+                <span class="label" id="l-net">Your LinkedIn connections</span>
+                <div class="drop" id="drop">
+                  <input type="file" id="li-file" class="file-in" accept=".csv,text/csv" aria-labelledby="l-net li-btn" aria-describedby="li-how li-privacy">
+                  <label for="li-file" class="file-btn" id="li-btn">Choose Connections.csv</label>
+                  <span>or drop the file here</span>
+                  <button type="button" class="linkbtn" id="net-sample">Try with a sample network</button>
+                </div>
+                <p class="hint" id="li-how">On LinkedIn: Settings, Data privacy, Get a copy of your data, Connections.</p>
+                <p class="privacy" id="li-privacy"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3.5" y="7" width="9" height="6.5" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg>Read in your browser. Nothing is uploaded or stored.</p>
+                <p class="net-status" id="net-status" role="status" aria-live="polite"></p>
+              </div>
+            </div>
+          </details>
+
           <div class="actions">
-            <button class="btn btn-primary" type="submit" id="go">Check funds</button>
-            <button class="btn" type="button" id="sample">Try a sample list</button>
-            <span class="faint kbd-hint">or press <span class="kbd">⌘</span> <span class="kbd">Enter</span></span>
+            <button class="btn primary big" type="submit" id="go">Check funds</button>
+            <button class="btn line big" type="button" id="sample">Try a sample</button>
+            <span class="sp"></span>
+            <button class="linkbtn" type="button" id="to-find">No list yet? Find funds for me</button>
           </div>
-        </div>
-        <div id="pane-find" role="tabpanel" aria-labelledby="tab-find" class="hidden">
-          <p class="find-intro">No list yet? We look at every round in Cala's data at your stage, close to your target size and in your region over the last 30 months, and show the funds that led them.</p>
-          <label for="region" class="label">Region</label>
-          <select class="select" id="region">
-            <option value="nordics">Nordics</option>
-            <option value="baltics">Baltics</option>
-            <option value="dach">DACH</option>
-            <option value="uk-ie">UK and Ireland</option>
-            <option value="france-benelux">France and Benelux</option>
-            <option value="south">Southern Europe</option>
-            <option value="cee">Central and Eastern Europe</option>
-            <option value="">All of Europe</option>
-          </select>
-          <div class="actions">
-            <button class="btn btn-primary" type="button" id="find">Find funds</button>
-            <span class="faint">Uses your stage and target raise.</span>
-          </div>
-        </div>
-      </div>
+        </form>
+        <p class="datanote" id="data-chip">Loading Cala round data</p>
+      </section>
 
-      <aside class="form-side" aria-labelledby="h-round">
-        <h2 id="h-round" class="eyebrow-chip"><span class="bolt"></span>Your round</h2>
-        <div class="field">
-          <span class="label" id="l-stage">Stage you are raising</span>
-          <div class="seg" role="group" aria-labelledby="l-stage" id="stage-seg"></div>
-        </div>
-        <div class="row2">
-          <div class="field">
-            <label for="target" class="label">Target raise <span class="hint">EUR m</span></label>
-            <input class="input" id="target" inputmode="decimal" placeholder="e.g. 3">
-          </div>
-          <div class="field">
-            <label for="company" class="label">Your company <span class="hint">optional</span></label>
-            <input class="input" id="company" maxlength="120" placeholder="Acme Oy">
-          </div>
-        </div>
-        <div class="field">
-          <span class="label" id="l-inv">Your current investors <span class="hint">for intro paths</span></span>
-          <div class="chips" id="inv-chips" data-kind="investors">
-            <input id="inv-input" aria-labelledby="l-inv" placeholder="Type a fund name" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="inv-suggest">
-            <div class="suggest hidden" id="inv-suggest" role="listbox"></div>
-          </div>
-        </div>
-        <div class="field">
-          <span class="label" id="l-comp">Competitors to check <span class="hint">up to 3</span></span>
-          <div class="chips" id="comp-chips" data-kind="competitors">
-            <input id="comp-input" aria-labelledby="l-comp" placeholder="Company name, Enter to add">
-          </div>
-        </div>
-      </aside>
-    </form>
-  </section>
-
-  <section class="wrap results hidden" id="results" aria-busy="false" aria-label="Results"></section>
-  <div id="status" class="sr" role="status" aria-live="polite"></div>
-
-  <section class="band band-dark">
-    <div class="wrap band-in">
-      <h2 class="band-h">Counting, <span class="h1-soft">not AI.</span></h2>
-      <div class="band-text">
-        <p>Every verdict is a count of Cala round records. The same list always gives the same answer, and every number opens the record behind it: the query we asked, the raw row, the Cala entity IDs and the source documents.</p>
-        <p class="mono-chip mono-chip-dark">/v1/knowledge/query · /v1/knowledge/search · /v1/entities</p>
-      </div>
+      <section class="only-results" id="results" aria-busy="false" aria-label="Results"></section>
     </div>
-  </section>
-</main>
-
-<main class="hidden" id="view-method"></main>
-
-<footer class="foot">
-  <div class="wrap foot-in">
-    <span><span data-app-name></span> · built at Junction 2026 on Cala data · Modal · Aiven</span>
-    <span id="foot-version" class="mono"></span>
-  </div>
-</footer>
-
-<div id="sheet-root"></div>
+    <div class="hidden" id="view-method"></div>
+  </main>
+</div>
+<div id="pane-root"></div>
+<div id="status" class="sr" role="status" aria-live="polite"></div>
 </body>
 </html>

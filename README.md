@@ -108,4 +108,4 @@ Deploy: `modal secret create relay-secrets …` then `modal deploy modal_app.py`
 
 ## Licence and credits
 
-MIT, see `LICENSE`. Data from [Cala](https://cala.ai). Geist and IBM Plex fonts under the SIL Open Font License (`app/static/fonts/`). Built by team Wicflow at Junction 2026.
+MIT, see `LICENSE`. Data from [Cala](https://cala.ai). Geist and Geist Mono fonts under the SIL Open Font License (`app/static/fonts/`). Built by team Wicflow at Junction 2026.

@@ -1,13 +1,17 @@
 "use strict";
-/* Front end. The product name comes from brand.js (window.APP_NAME). Plain JS, no build step. Everything rendered from API data goes through esc(). */
+/* Front end. The product name comes from brand.js (window.APP_NAME). Plain JS, no build step.
+   Everything rendered from API data or from a file the founder picks goes through esc(). */
 
 const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
-const fmtM = (m) => m == null ? "" : (m >= 100 ? Math.round(m) : m >= 10 ? m.toFixed(0) : m.toFixed(1).replace(/\.0$/, ""));
+const fmtM = (m) => m == null ? "" : (m >= 100 ? String(Math.round(m)) : m >= 10 ? m.toFixed(0) : m.toFixed(1).replace(/\.0$/, ""));
 const plural = (n, a, b) => `${n} ${n === 1 ? a : b}`;
-
 const APP = () => window.APP_NAME || "";
-const state = {stage: "seed", investors: [], lead: null, competitors: [], meta: null, last: null, sortByVerdict: true};
+const reduceMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+const state = {stage: "seed", investors: [], lead: null, competitors: [], meta: null, mode: "list",
+  view: null, req: null, ranked: [], network: null, openIdx: null};
 
 const SAMPLE = [
   "Wed 10:30  Maki.vc  (Table 12)",
@@ -26,6 +30,23 @@ const SAMPLE = [
   "Thu 14:00 coffee w/ Anna from Kvanted?",
 ].join("\n");
 
+/* Made-up people. The companies are real portfolio companies of the sample funds in the Cala snapshot,
+   so the demo shows real matches; names and roles are invented and belong to no real person. */
+const SAMPLE_NETWORK = `Notes:
+"Made-up sample network for the demo. These people do not exist."
+
+First Name,Last Name,URL,Email Address,Company,Position,Connected On
+Demo Contact,A,,,Sono,Co-founder & CEO,04 Mar 2025
+Demo Contact,B,,,Aventix,Head of Product,18 Jun 2024
+Demo Contact,C,,,KineDB,CTO and co-founder,02 Feb 2026
+Demo Contact,D,,,TesterArmy,Software Engineer,11 Sep 2025
+Demo Contact,E,,,Causa Prima,Sales Lead,29 Jan 2026
+Demo Contact,F,,,Marble Cognition,Product Designer,07 Oct 2025
+Demo Contact,G,,,Metaktik,Founder,21 Apr 2026
+Demo Contact,H,,,Self-employed,Advisor,15 May 2023
+Demo Contact,I,,,Northwind Example Oy,Engineer,30 Aug 2022
+Demo Contact,J,,,Demo Bakery,Owner,12 Dec 2021`;
+
 async function api(path, opts = {}) {
   const res = await fetch(path, {headers: {"Content-Type": "application/json"}, ...opts});
   if (res.status === 401) { location.href = "/login"; throw new Error("auth"); }
@@ -34,56 +55,74 @@ async function api(path, opts = {}) {
   return body;
 }
 
+function announce(msg) { const st = $("#status"); st.textContent = ""; setTimeout(() => { st.textContent = msg; }, 50); }
+const setScreen = (s) => { document.body.dataset.screen = s; };
+
 /* ---------------- routing ---------------- */
 function route() {
   const isMethod = location.pathname === "/method";
   $("#view-check").classList.toggle("hidden", isMethod);
   $("#view-method").classList.toggle("hidden", !isMethod);
-  $("#nav-check").toggleAttribute("aria-current", !isMethod);
+  $("#nav-check").toggleAttribute("aria-current", !isMethod && state.mode === "list");
+  $("#nav-find").toggleAttribute("aria-current", !isMethod && state.mode === "find");
   $("#nav-method").toggleAttribute("aria-current", isMethod);
-  if (isMethod) $("#nav-method").setAttribute("aria-current", "page"); else $("#nav-check").setAttribute("aria-current", "page");
+  ["#nav-check", "#nav-find", "#nav-method"].forEach((id) => { if ($(id).hasAttribute("aria-current")) $(id).setAttribute("aria-current", "page"); });
   if (isMethod) renderMethod();
 }
+function go(path) { if (location.pathname !== path) history.pushState({}, "", path); route(); window.scrollTo(0, 0); }
 document.addEventListener("click", (e) => {
-  const a = e.target.closest("a[href^='/']");
-  if (!a || a.target || e.metaKey || e.ctrlKey) return;
-  if (a.getAttribute("href") === "/" || a.getAttribute("href") === "/method") {
-    e.preventDefault(); history.pushState({}, "", a.getAttribute("href")); route(); window.scrollTo(0, 0);
-  }
+  const a = e.target.closest("a[href='/'], a[href='/method']");
+  if (!a || e.metaKey || e.ctrlKey || e.shiftKey) return;
+  e.preventDefault();
+  if (a.getAttribute("href") === "/") { setMode("list"); setScreen("paste"); }
+  go(a.getAttribute("href"));
 });
 window.addEventListener("popstate", route);
 
-/* ---------------- meta + form ---------------- */
+/* ---------------- form ---------------- */
 async function init() {
   try {
     state.meta = await api("/api/meta");
     const m = state.meta;
-    $("#data-chip").textContent = `Cala round data · ${m.funds_queried} funds · ${m.companies.toLocaleString("en")} companies · ${m.rounds.toLocaleString("en")} rounds · ${m.retrieved}`;
-    $("#foot-version").textContent = `snapshot ${m.version}`;
+    $("#data-chip").innerHTML = `${m.rounds.toLocaleString("en")} funding rounds from Cala, ${m.companies.toLocaleString("en")} companies, retrieved ${esc(m.retrieved)}. <a href="/method">How we count</a>`;
+    $("#side-stats").innerHTML = `${m.rounds.toLocaleString("en")} rounds, ${m.funds_queried} funds<br>Retrieved ${esc(m.retrieved)}`;
     const seg = $("#stage-seg");
     seg.innerHTML = m.stages.slice(0, 6).map((s) => `<button type="button" data-stage="${esc(s.key)}" aria-pressed="${s.key === state.stage}">${esc(s.label)}</button>`).join("");
     seg.addEventListener("click", (e) => {
       const b = e.target.closest("button[data-stage]"); if (!b) return;
-      state.stage = b.dataset.stage;
-      seg.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", x === b));
-      if (activeTab() === "find") { if (state.findDone) runFind(); } else if (state.last) run();
+      setStage(b.dataset.stage);
     });
   } catch (err) {
-    if (err.message !== "auth") $("#data-chip").textContent = "Could not load data. Reload the page.";
+    if (err.message !== "auth") $("#data-chip").textContent = "Could not load the data. Reload the page.";
   }
+  route();
+}
+function setStage(key) {
+  state.stage = key;
+  $$("#stage-seg button").forEach((x) => x.setAttribute("aria-pressed", x.dataset.stage === key));
+}
+
+function setMode(mode) {
+  state.mode = mode;
+  const find = mode === "find";
+  $("#mode-list").classList.toggle("hidden", find);
+  $("#mode-find").classList.toggle("hidden", !find);
+  $("#sample").classList.toggle("hidden", find);
+  $("#go").textContent = find ? "Find funds" : "Check funds";
+  $("#to-find").textContent = find ? "Have a list? Check it instead" : "No list yet? Find funds for me";
   route();
 }
 
 function renderChips(kind) {
   const box = kind === "investors" ? $("#inv-chips") : $("#comp-chips");
-  box.querySelectorAll(".tag").forEach((t) => t.remove());
+  $$(".tag", box).forEach((t) => t.remove());
   const input = box.querySelector("input");
   const items = kind === "investors" ? state.investors : state.competitors;
   items.forEach((name, i) => {
     const tag = document.createElement("span");
     const isLead = kind === "investors" && state.lead === name;
     tag.className = "tag" + (isLead ? " is-lead" : "");
-    tag.innerHTML = `${esc(name)}${kind === "investors" ? `<button type="button" class="lead-toggle" data-lead="${i}" aria-pressed="${isLead}" title="Mark as your current lead">${isLead ? "lead" : "set lead"}</button>` : ""}<button type="button" data-rm="${i}" aria-label="Remove ${esc(name)}">×</button>`;
+    tag.innerHTML = `${esc(name)}${kind === "investors" ? `<button type="button" class="lead-toggle" data-lead="${i}" aria-pressed="${isLead}" aria-label="${esc(name)} is your current lead">${isLead ? "your lead" : "mark lead"}</button>` : ""}<button type="button" data-rm="${i}" aria-label="Remove ${esc(name)}">×</button>`;
     box.insertBefore(tag, input);
   });
 }
@@ -103,23 +142,23 @@ function setupChips(kind) {
     if (kind === "investors" && list.length === 1 && !state.lead) state.lead = name;
     input.value = ""; hide(); renderChips(kind);
   };
-  const hide = () => { if (sug && kind === "investors") { sug.classList.add("hidden"); input.setAttribute("aria-expanded", "false"); } active = -1; };
+  const hide = () => { if (kind === "investors") { sug.classList.add("hidden"); input.setAttribute("aria-expanded", "false"); input.removeAttribute("aria-activedescendant"); } active = -1; };
   const show = (rows) => {
     items = rows;
     if (!rows.length) return hide();
-    sug.innerHTML = rows.map((r, i) => `<button type="button" tabindex="-1" role="option" id="opt-${i}" data-i="${i}" aria-selected="${i === active}"><span>${esc(r.name)}</span><span class="faint mono">${r.rounds} rounds</span></button>`).join("");
+    sug.innerHTML = rows.map((r, i) => `<button type="button" tabindex="-1" role="option" id="opt-${i}" data-i="${i}" aria-selected="${i === active}"><span>${esc(r.name)}</span><span>${plural(r.rounds, "round", "rounds")}</span></button>`).join("");
     sug.classList.remove("hidden"); input.setAttribute("aria-expanded", "true");
     if (active >= 0) input.setAttribute("aria-activedescendant", `opt-${active}`); else input.removeAttribute("aria-activedescendant");
   };
 
   box.addEventListener("click", (e) => {
     const rm = e.target.closest("[data-rm]");
-    if (rm) { const name = list[+rm.dataset.rm]; list.splice(+rm.dataset.rm, 1); if (state.lead === name) state.lead = null; renderChips(kind); return; }
+    if (rm) { const name = list[+rm.dataset.rm]; list.splice(+rm.dataset.rm, 1); if (state.lead === name) state.lead = null; renderChips(kind); input.focus(); return; }
     const ld = e.target.closest("[data-lead]");
     if (ld) { const name = list[+ld.dataset.lead]; state.lead = state.lead === name ? null : name; renderChips(kind); return; }
     const opt = e.target.closest("[data-i]");
     if (opt) { add(items[+opt.dataset.i].name); input.focus(); return; }
-    input.focus();
+    if (e.target === box) input.focus();
   });
   input.addEventListener("keydown", (e) => {
     if (e.key === "Enter" || (e.key === "," && kind === "competitors")) {
@@ -142,150 +181,377 @@ function setupChips(kind) {
   }
 }
 
-/* ---------------- check ---------------- */
-const activeTab = () => ($("#tab-find").getAttribute("aria-selected") === "true" ? "find" : "list");
-function announce(msg) { const st = $("#status"); if (st) { st.textContent = ""; setTimeout(() => { st.textContent = msg; }, 50); } }
 function lineCount() {
   const n = $("#funds").value.split(/\n|;/).filter((l) => l.trim().length > 1).length;
-  $("#line-count").textContent = n ? plural(n, "line", "lines") : "";
-  $("#go").textContent = n ? `Check ${plural(n, "line", "lines")}` : "Check funds";
+  $("#line-count").textContent = n ? `${plural(n, "line", "lines")}. Times, tables and notes are ignored.` : "Any format works. Times, tables and notes are ignored.";
+}
+const targetValue = () => { const t = parseFloat(($("#target").value || "").replace(",", ".")); return isFinite(t) && t > 0 ? t : null; };
+
+/* ---------------- LinkedIn network (read in the browser, never uploaded) ---------------- */
+/* Same rule as merge.company_key on the server, so a connection's company and a portfolio company meet on one key. */
+function companyKey(name) {
+  let s = String(name ?? "").toLowerCase().replace(/\(.*?\)/g, "");
+  s = s.replace(/(?<![\p{L}\p{N}\p{M}_])(oy|ab|as|gmbh|ltd|inc|sa|bv|aps|oyj|plc)(?![\p{L}\p{N}\p{M}_])/gu, "");
+  return s.replace(/[^a-z0-9]/g, "");
+}
+/* Company names that are too generic to say two people work at the same place. */
+const STOP_KEYS = new Set(["selfemployed", "freelance", "freelancer", "stealth", "stealthstartup", "stealthmode", "confidential",
+  "independent", "consultant", "consulting", "none", "retired", "student", "various", "unemployed", "private", "startup",
+  "ever", "garage", "home", "studio", "labs", "group", "capital", "ventures", "partners", "digital", "media", "solutions",
+  "technologies", "global", "international", "company", "business", "university"]);
+const usableKey = (k) => k.length >= 4 && !STOP_KEYS.has(k);
+const FOUNDER_RE = /\b(co-?founder|founder|ceo|cto|chief executive|chief technology|managing director|partner)\b/i;
+
+function parseCsv(text) {
+  const rows = []; let row = [], f = "", q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) {
+      if (c === '"') { if (text[i + 1] === '"') { f += '"'; i++; } else q = false; } else f += c;
+    } else if (c === '"' && f === "") q = true;
+    else if (c === ",") { row.push(f); f = ""; }
+    else if (c === "\n" || c === "\r") { if (c === "\r" && text[i + 1] === "\n") i++; row.push(f); rows.push(row); row = []; f = ""; }
+    else f += c;
+  }
+  if (f || row.length) { row.push(f); rows.push(row); }
+  return rows;
+}
+
+/* Keeps first name, last name, company and position only. URL and email columns are never read. */
+function parseConnections(text) {
+  const rows = parseCsv(String(text).replace(/^﻿/, ""));
+  const h = rows.findIndex((r) => (r[0] || "").trim().toLowerCase() === "first name");
+  if (h < 0) return null;
+  const head = rows[h].map((x) => x.trim().toLowerCase());
+  const col = (name) => head.indexOf(name);
+  const [cF, cL, cC, cP] = [col("first name"), col("last name"), col("company"), col("position")];
+  if (cC < 0) return null;
+  const clip = (v) => String(v || "").trim().slice(0, 120);
+  return rows.slice(h + 1).filter((r) => r.length > 1 && (r[cC] || "").trim()).map((r) => {
+    const company = clip(r[cC]), position = clip(cP >= 0 ? r[cP] : "");
+    return {first: clip(cF >= 0 ? r[cF] : ""), last: clip(cL >= 0 ? r[cL] : ""), company, position,
+      ckey: companyKey(company), founder: FOUNDER_RE.test(position)};
+  });
+}
+
+function setNetwork(people, label, sample) {
+  const byKey = new Map();
+  people.forEach((p) => { if (!usableKey(p.ckey)) return; if (!byKey.has(p.ckey)) byKey.set(p.ckey, []); byKey.get(p.ckey).push(p); });
+  state.network = {people, byKey, label, sample};
+  paintNetStatus();
+  if (state.view) renderResults();
+}
+function clearNetwork() { state.network = null; paintNetStatus(); if (state.view) renderResults(); }
+
+function paintNetStatus(msg, isErr) {
+  const st = $("#net-status");
+  st.classList.toggle("err", !!isErr);
+  if (msg) { st.textContent = msg; return; }
+  const n = state.network;
+  st.innerHTML = n ? `${n.sample ? "Made-up sample network loaded" : `Read ${esc(n.label)}`}: ${plural(n.people.length, "connection", "connections")}. <button type="button" class="linkbtn" data-net-clear>Remove</button>` : "";
+}
+
+async function readNetworkFile(file) {
+  if (!file) return;
+  if (!/\.csv$/i.test(file.name) && file.type !== "text/csv") return paintNetStatus("Choose the Connections.csv file from your LinkedIn export.", true);
+  if (file.size > 8 * 1024 * 1024) return paintNetStatus("That file is too large for a connections export.", true);
+  try {
+    const people = parseConnections(await file.text());
+    if (!people || !people.length) return paintNetStatus("No connections found. Use Connections.csv from the LinkedIn export.", true);
+    setNetwork(people, file.name, false);
+    announce(`${plural(people.length, "connection", "connections")} read in your browser.`);
+  } catch {
+    paintNetStatus("Could not read that file.", true);
+  }
+}
+
+function setupDrop(el) {
+  el.addEventListener("dragover", (e) => { e.preventDefault(); el.classList.add("over"); });
+  el.addEventListener("dragleave", () => el.classList.remove("over"));
+  el.addEventListener("drop", (e) => { e.preventDefault(); el.classList.remove("over"); readNetworkFile(e.dataTransfer?.files?.[0]); });
+}
+
+/* ---------------- ranking ---------------- */
+const GROUPS = ["pitch", "size", "avoid"];
+const groupOf = (r) => (r.verdict === "leads" ? "pitch" : r.verdict === "leads_size" ? "size" : "avoid");
+
+/* People in the founder's network at companies this fund led or joined, strongest first. */
+function networkMatches(r) {
+  const net = state.network;
+  if (!net) return [];
+  const out = [];
+  for (const p of r.portfolio || []) {
+    for (const person of net.byKey.get(p.ckey) || []) {
+      out.push({person, round: p, strength: p.led ? (person.founder ? 4 : 3) : 2});
+    }
+  }
+  return out.sort((a, b) => b.strength - a.strength || b.round.t - a.round.t);
+}
+
+const shortFund = (name) => String(name).replace(/\s+(ventures|venture capital|capital|partners|vc|fund|invest)$/i, "");
+
+function wayIn(r) {
+  const m = networkMatches(r);
+  if (m.length) {
+    const best = m[0];
+    return {strength: best.strength, matches: m,
+      text: best.strength === 4 ? `You know a founder at ${best.round.company}` : `You know someone at ${best.round.company}`};
+  }
+  if (r.tie) return {strength: 1, matches: [], text: `Ask ${shortFund(r.tie.investor)}`};
+  return {strength: 0, matches: [], text: ""};
+}
+
+const hasConflict = (r) => (r.conflicts || []).length > 0;
+const ratio = (r) => (r.known ? r.led / r.known : -1);
+
+/* Group by verdict; competitor conflicts sink to the bottom of their group; then stronger way in; then lead ratio. */
+function rankRows(rows) {
+  return rows.map((r, idx) => ({...r, group: groupOf(r), way: wayIn(r), idx}))
+    .sort((a, b) => GROUPS.indexOf(a.group) - GROUPS.indexOf(b.group)
+      || hasConflict(a) - hasConflict(b)
+      || b.way.strength - a.way.strength
+      || ratio(b) - ratio(a)
+      || a.idx - b.idx);
+}
+
+/* ---------------- check + find ---------------- */
+function skeleton() {
+  return `<div class="skel skel-lg"></div><div class="skel skel-md"></div>${'<div class="skel"></div>'.repeat(6)}`;
 }
 
 async function run() {
   const text = $("#funds").value;
-  if (!text.trim()) { $("#funds").focus(); return; }
+  if (!text.trim()) { $("#funds").focus(); $("#line-count").textContent = "Paste at least one fund name first."; return; }
+  const body = {funds_text: text, stage: state.stage, target_eur_m: targetValue(), investors: state.investors,
+    lead: state.lead, company: $("#company").value.trim() || null, competitors: state.competitors};
+  await load(() => api("/api/check", {method: "POST", body: JSON.stringify(body)}), (data) => ({...data, mode: "check"}), body);
+}
+
+const REGION_LABEL = {nordics: "the Nordics", baltics: "the Baltics", dach: "Germany, Austria and Switzerland", "uk-ie": "the UK and Ireland",
+  "france-benelux": "France and Benelux", south: "Southern Europe", cee: "Central and Eastern Europe", "": "Europe"};
+
+async function runFind() {
+  const req = {stage: state.stage, target_eur_m: targetValue(), region: $("#region").value || null,
+    investors: state.investors, competitors: state.competitors};
+  await load(() => api("/api/discover", {method: "POST", body: JSON.stringify(req)}), (d) => {
+    const sz = d.filters.size ? ` of EUR ${fmtM(d.filters.size[0])} to ${fmtM(d.filters.size[1])}m` : "";
+    const where = esc(REGION_LABEL[req.region || ""]);
+    return {mode: "discover", stage: d.filters.stage, rows: d.funds, unmatched: [], competitors: {},
+      headline: d.funds.length
+        ? `These <b>${d.funds.length}</b> funds led the most of the <b>${d.rounds_matched}</b> ${esc(d.filters.stage)} rounds${sz} in ${where} from the last 30 months.`
+        : `No ${esc(d.filters.stage)} rounds${sz} in ${where} from the last 30 months in our data. Try a wider region or clear the target raise.`};
+  }, req);
+}
+
+async function load(fetcher, toView, req) {
+  closePane();
+  setScreen("results");
   const out = $("#results");
-  out.classList.remove("hidden");
   out.setAttribute("aria-busy", "true");
   out.innerHTML = skeleton();
+  window.scrollTo(0, 0);
   $("#go").disabled = true;
   try {
-    const t = parseFloat(($("#target").value || "").replace(",", "."));
-    const body = {
-      funds_text: text, stage: state.stage, target_eur_m: isFinite(t) ? t : null,
-      investors: state.investors, lead: state.lead, company: $("#company").value.trim() || null,
-      competitors: state.competitors,
-    };
-    const data = await api("/api/check", {method: "POST", body: JSON.stringify(body)});
-    state.last = data;
-    renderResults(data, body);
+    state.view = toView(await fetcher());
+    state.req = req;
+    renderResults();
+    $("#results h1")?.focus();
   } catch (err) {
-    if (err.message !== "auth") out.innerHTML = `<div class="alert" role="alert"><h3>Could not check the list</h3>${esc(err.message)}. Try again in a moment.</div>`;
+    if (err.message !== "auth") out.innerHTML = `<div class="alert" role="alert"><h3>Could not check the list</h3>${esc(err.message)}. Try again in a moment.</div><div class="after"><button class="btn line" type="button" data-edit>Back to the list</button></div>`;
   } finally {
     $("#go").disabled = false;
     out.setAttribute("aria-busy", "false");
   }
 }
 
-function skeleton() {
-  const card = `<div class="fund"><div class="skel skel-lg"></div><div class="skel skel-md"></div><div class="skel"></div></div>`;
-  return `<div class="skel skel-lg"></div><div class="fund-list">${card.repeat(4)}</div>`;
+/* ---------------- results ---------------- */
+const ICON = {
+  back: `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3.5 5.5 8l4.5 4.5"/></svg>`,
+  copy: `<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="5" y="5" width="8.5" height="8.5" rx="1.5"/><path d="M11 5V3.5a1 1 0 0 0-1-1H3.5a1 1 0 0 0-1 1V10a1 1 0 0 0 1 1H5"/></svg>`,
+  print: `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 6V2.5h7V6M4.5 11.5h-2v-5h11v5h-2"/><rect x="4.5" y="9.5" width="7" height="4"/></svg>`,
+  link: `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6.5 9.5 9.5 6.5M7 4.5l1-1a2.5 2.5 0 0 1 3.5 3.5l-1 1M9 11.5l-1 1A2.5 2.5 0 0 1 4.5 9l1-1"/></svg>`,
+  flag: `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 14V2.5M3.5 3h8l-1.5 3 1.5 3h-8"/></svg>`,
+  x: `<svg viewBox="0 0 16 16" aria-hidden="true"><path d="m4 4 8 8M12 4l-8 8"/></svg>`,
+};
+
+function verdictText(r) {
+  switch (r.verdict) {
+    case "leads": return r.verdict_label;
+    case "leads_size": return /smaller/.test(r.verdict_label) ? "Leads smaller rounds" : "Leads larger rounds";
+    case "mixed": return "Sometimes leads";
+    case "follows": return "Mostly follows";
+    case "few": return "Too little data";
+    case "public": return "Public funder, not a lead";
+    default: return r.verdict_label;
+  }
+}
+const verdictPill = (r) => `<span class="pill v-${esc(r.verdict)}"><span class="g" aria-hidden="true"></span>${esc(verdictText(r))}</span>`;
+
+/* One shared log scale (EUR 0.2m to 50m) so every row's size strip reads the same way. */
+function sx(v) {
+  const lo = Math.log(0.2), hi = Math.log(50);
+  return Math.max(0, Math.min(1, (Math.log(Math.max(v, 0.2)) - lo) / (hi - lo))) * 56;
+}
+function sizeCell(r, target) {
+  if (!r.size) return `<span class="muted">Not stated</span>`;
+  const s = r.size, a = sx(s.lo), b = sx(s.hi);
+  const fits = s.fit === "fits";
+  const you = target ? `<rect class="you" x="${(sx(target) - 1).toFixed(1)}" y="0" width="2" height="14" rx="1"/>` : "";
+  const fitWord = {fits: "fits your raise", larger: "smaller than your raise", smaller: "larger than your raise"}[s.fit] || "";
+  return `<span class="size"><svg class="strip${fits ? " fit" : ""}" viewBox="0 0 56 14" aria-hidden="true"><rect class="trk" x="0" y="6" width="56" height="2" rx="1"/><rect class="rng" x="${a.toFixed(1)}" y="4" width="${Math.max(4, b - a).toFixed(1)}" height="6" rx="3"/>${you}</svg><span>EUR ${fmtM(s.lo)}${s.hi !== s.lo ? ` to ${fmtM(s.hi)}` : ""}m</span>${fitWord ? `<span class="sr">, ${fitWord}</span>` : ""}</span>`;
+}
+function ledCell(r) {
+  if (!r.known) return `<span class="muted">No named leads</span>`;
+  const w = Math.max(r.led ? 3 : 0, (r.led / r.known) * 34);
+  return `<span class="ratio"><svg class="bar${r.verdict === "leads" ? " lead" : ""}" viewBox="0 0 34 6" aria-hidden="true"><rect width="${w.toFixed(1)}" height="6" rx="3"/></svg><span>Led <b>${r.led}</b> of ${r.known}</span></span>`;
+}
+function lastCell(r) {
+  if (r.verdict === "public") return `<span class="last muted">Not counted</span>`;
+  return r.last_lead ? `<span class="last">${esc(r.last_lead.company)} <span class="d">${esc(r.last_lead.date)}</span></span>` : `<span class="last muted">Never led</span>`;
+}
+const askedForPaths = () => state.investors.length > 0 || !!state.network;
+function wayCell(r) {
+  if (r.way.strength) return `<span class="way yes">${ICON.link}${esc(r.way.text)}</span>`;
+  return `<span class="way">${askedForPaths() ? "None found" : "Not checked"}</span>`;
+}
+function conflictFlag(r) {
+  const c = (r.conflicts || [])[0];
+  if (!c) return "";
+  return `<span class="flag">${ICON.flag}${c.level === "led" ? "Led" : "Backed"} ${esc(c.competitor)}</span>`;
 }
 
-const VERDICT_ORDER = {leads: 0, leads_size: 1, mixed: 2, stale: 3, follows: 4, few: 5, public: 6};
+function rowHtml(r, i) {
+  return `<li class="row" data-i="${i}">
+    <div class="cell c-fund"><button type="button" class="nm" data-open="${i}" aria-haspopup="dialog">${esc(r.name)}</button>${conflictFlag(r)}</div>
+    <div class="cell c-verdict">${verdictPill(r)}</div>
+    <div class="cell c-led"><span class="lbl">Lead record</span>${ledCell(r)}</div>
+    <div class="cell c-size"><span class="lbl">Round size it leads</span>${sizeCell(r, state.req?.target_eur_m)}</div>
+    <div class="cell c-last"><span class="lbl">Last lead</span>${lastCell(r)}</div>
+    <div class="cell c-way"><span class="lbl">Way in</span>${wayCell(r)}</div>
+  </li>`;
+}
 
-const REGION_LABEL = {nordics: "the Nordics", baltics: "the Baltics", dach: "DACH", "uk-ie": "the UK and Ireland",
-  "france-benelux": "France and Benelux", south: "Southern Europe", cee: "Central and Eastern Europe", "": "Europe"};
+function groupHead(key, n, d, req) {
+  const t = req.target_eur_m;
+  const meta = {
+    pitch: ["Pitch first", `They lead ${d.stage} rounds${t ? ` near your EUR ${fmtM(t)}m` : ""}`],
+    size: ["Leads, but a different size", "They lead, but rounds bigger or smaller than yours"],
+    avoid: ["Mostly follows or avoid", "Ask them to join a round, not to lead it"],
+  }[key];
+  return `<h2 class="grp" id="g-${key}">${meta[0]} <span class="n">${n}</span><span class="cap">${esc(meta[1])}</span></h2>`;
+}
 
-async function runFind() {
+function summaryLine(d, ranked, req) {
+  if (d.headline) return d.headline;
+  const n = ranked.length;
+  if (!n) return "None of the pasted lines matched a fund in our Cala data.";
+  const by = (g) => ranked.filter((r) => r.group === g).length;
+  const conf = ranked.filter(hasConflict).length;
+  const ways = ranked.filter((r) => r.way.strength > 0).length;
+  const parts = [`<b class="acc">${by("pitch")} of ${n}</b> lead ${esc(d.stage)} rounds${req.target_eur_m ? ` near your EUR ${fmtM(req.target_eur_m)}m` : ""}`];
+  if (by("size")) parts.push(`<b>${by("size")}</b> ${by("size") === 1 ? "leads" : "lead"}, but a different size`);
+  if (conf) parts.push(`<b class="wrn">${conf}</b> backed ${esc(state.req.competitors.join(" or "))}`);
+  if (askedForPaths()) parts.push(`you have a way in to <b>${ways}</b>`);
+  return parts.join(". ").replace(/\. you/, ". You") + ".";
+}
+
+function roundLine(req) {
+  const bits = [esc(state.view.stage)];
+  if (req.target_eur_m) bits.push(`EUR ${fmtM(req.target_eur_m)}m`);
+  if (state.investors.length) bits.push(`with ${esc(state.investors.join(", "))}`);
+  if (state.competitors.length) bits.push(`vs ${esc(state.competitors.join(", "))}`);
+  return bits.join(" · ");
+}
+
+function netbarHtml() {
+  const n = state.network;
+  const privacy = `<p class="privacy"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3.5" y="7" width="9" height="6.5" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg>Read in your browser. Nothing is uploaded or stored.</p>`;
+  if (n) {
+    return `<div class="netbar on" id="netbar"><div class="t"><b>Matched against ${plural(n.people.length, "connection", "connections")}</b> ${n.sample ? "from a made-up sample network." : "from your LinkedIn file."}${privacy}</div><button type="button" class="btn line" data-net-clear>Remove network</button></div>`;
+  }
+  return `<div class="netbar" id="netbar"><div class="t"><b>See who can introduce you.</b> Add your LinkedIn connections and we match them to the companies each fund backed.${privacy}</div>
+    <input type="file" id="li-file-2" class="file-in" accept=".csv,text/csv" aria-label="Add LinkedIn connections, Connections.csv">
+    <label for="li-file-2" class="btn line">Add LinkedIn connections</label>
+    <button type="button" class="linkbtn" data-net-sample>Try with a sample network</button></div>`;
+}
+
+function renderSide(req) {
+  const dd = (v, empty) => v ? `<dd>${esc(v)}</dd>` : `<dd class="unset">${empty}</dd>`;
+  const n = state.network;
+  $("#props").innerHTML = `
+    <div class="prop"><dt>Stage</dt>${dd(state.view.stage)}</div>
+    <div class="prop"><dt>Raising</dt>${dd(req.target_eur_m ? `EUR ${fmtM(req.target_eur_m)}m` : "", "Not set")}</div>
+    <div class="prop"><dt>Investors</dt>${dd(state.investors.join(", "), "None added")}</div>
+    <div class="prop"><dt>Competitors</dt>${dd(state.competitors.join(", "), "None added")}</div>
+    <div class="prop"><dt>Network</dt>${dd(n ? plural(n.people.length, "connection", "connections") : "", "Not added")}</div>`;
+}
+
+function renderResults() {
+  const d = state.view, req = state.req;
   const out = $("#results");
-  out.classList.remove("hidden");
-  out.setAttribute("aria-busy", "true");
-  out.innerHTML = skeleton();
-  const t = parseFloat(($("#target").value || "").replace(",", "."));
-  const req = {stage: state.stage, target_eur_m: isFinite(t) ? t : null, region: $("#region").value || null,
-               investors: state.investors, competitors: state.competitors};
-  try {
-    const d = await api("/api/discover", {method: "POST", body: JSON.stringify(req)});
-    state.findDone = true;
-    const counts = {};
-    d.funds.forEach((f) => { counts[f.verdict] = (counts[f.verdict] || 0) + 1; });
-    const sz = d.filters.size ? ` of EUR ${fmtM(d.filters.size[0])} to ${fmtM(d.filters.size[1])}m` : "";
-    const view = {mode: "discover", stage: d.filters.stage, rows: d.funds, counts, unmatched: [], competitors: {},
-      conflict_count: d.funds.filter((f) => f.conflicts.some((c) => c.level === "led")).length,
-      headline: d.funds.length
-        ? `In the <b>${d.rounds_matched}</b> ${esc(d.filters.stage)} rounds${sz} in ${esc(REGION_LABEL[req.region || ""])} from the last 30 months that we pulled from Cala, these <b>${d.funds.length}</b> funds led most often.`
-        : `No ${esc(d.filters.stage)} rounds${sz} in ${esc(REGION_LABEL[req.region || ""])} over the last 30 months in our data. Widen the region or clear the target raise.`};
-    state.last = null;
-    renderResults(view, req);
-  } catch (err) {
-    if (err.message !== "auth") out.innerHTML = `<div class="alert" role="alert"><h3>Could not search</h3>${esc(err.message)}.</div>`;
-  } finally { out.setAttribute("aria-busy", "false"); }
+  const ranked = rankRows(d.rows || []);
+  state.ranked = ranked;
+  renderSide(req);
+  const groups = GROUPS.map((g) => [g, ranked.map((r, i) => [r, i]).filter(([r]) => r.group === g)]).filter(([, rs]) => rs.length);
+  const list = groups.map(([g, rs]) => `<section aria-labelledby="g-${g}">${groupHead(g, rs.length, d, req)}<ul class="grp-list">${rs.map(([r, i]) => rowHtml(r, i)).join("")}</ul></section>`).join("");
+  const isFind = d.mode === "discover";
+  out.innerHTML = `
+    <div class="topbar">
+      <button class="btn" type="button" data-edit>${ICON.back}${isFind ? "Change search" : "Edit list"}</button>
+      <span class="sp"></span>
+      <button class="btn" type="button" id="csv">${ICON.copy}Copy as CSV</button>
+      <button class="btn" type="button" id="print">${ICON.print}Print sheet</button>
+    </div>
+    <p class="print-head"><b>${esc(APP())}</b> · ${roundLine(req)} · Cala round data, retrieved ${esc(state.meta?.retrieved || "")}</p>
+    <div class="head">
+      <h1 tabindex="-1">${isFind ? "Funds that led rounds like yours" : "Your shortlist"} <span class="meta">${plural(ranked.length, "fund", "funds")}${isFind ? " found" : " checked"}</span></h1>
+      <p class="round-line">${roundLine(req)}</p>
+      <p class="summary">${summaryLine(d, ranked, req)}</p>
+    </div>
+    ${ranked.length ? netbarHtml() : ""}
+    ${ranked.length ? `<div class="cols" aria-hidden="true"><span>Fund</span><span>Verdict</span><span>Lead record</span><span>Round size${req.target_eur_m ? ` vs your ${fmtM(req.target_eur_m)}m` : " it leads"}</span><span class="c-last">Last lead</span><span>Way in</span></div>${list}` : `<p class="empty">None of the pasted lines matched a fund in our Cala data.</p>`}
+    <div class="after">${afterHtml(d)}</div>`;
+  $("#csv").onclick = () => copyCsv(ranked);
+  $("#print").onclick = () => window.print();
+  $("#ask-live")?.addEventListener("click", () => startLookup(d.lookup_candidates));
+  const f2 = $("#li-file-2");
+  if (f2) { f2.addEventListener("change", () => { readNetworkFile(f2.files[0]); }); setupDrop($("#netbar")); }
+  $$(".row", out).forEach((row) => row.addEventListener("click", (e) => { if (!e.target.closest("button, a")) openFund(+row.dataset.i, row.querySelector(".nm")); }));
+  $$("[data-open]", out).forEach((b) => b.addEventListener("click", () => openFund(+b.dataset.open, b)));
+  announce(`${plural(ranked.length, "fund", "funds")}. ${out.querySelector(".summary")?.textContent || ""}`);
 }
 
-function summaryLine(d, target) {
-  if (d.headline) return d.headline + (d.conflict_count ? ` <b class="conf-led">${d.conflict_count}</b> already led a competitor.` : "");
-  const c = d.counts, n = d.rows.length;
-  const parts = [];
-  const leaders = (c.leads || 0) + (c.leads_size || 0);
-  const fits = d.rows.filter((r) => r.verdict === "leads" && r.size?.fit === "fits").length;
-  parts.push(`<b>${leaders} of your ${n}</b> ${n === 1 ? "fund" : "funds"} lead ${esc(d.stage)} rounds in Cala's data${target ? `, and <b>${fits}</b> of those lead rounds your size` : ""}`);
-  if (c.follows) parts.push(`<b>${c.follows}</b> mostly ${c.follows === 1 ? "follows" : "follow"}`);
-  if (c.stale) parts.push(`<b>${c.stale}</b> ${c.stale === 1 ? "has" : "have"} not led in the last two years`);
-  if (d.conflict_count) parts.push(`<b class="conf-led">${d.conflict_count}</b> already led a competitor`);
-  return parts.join(". ") + ".";
-}
-
-function renderResults(d, req) {
-  const out = $("#results");
-  const sorted = [...d.rows];
-  const ranked = d.mode === "discover";  // find mode keeps the server's ranking by lead count
-  if (state.sortByVerdict && !ranked) sorted.sort((a, b) => VERDICT_ORDER[a.verdict] - VERDICT_ORDER[b.verdict]);
-  const cards = [];
+function afterHtml(d) {
+  const notes = [];
   if (d.lead_back) {
     const l = d.lead_back;
-    cards.push(`<div class="note note-accent"><h3>Will your lead come back?</h3>In Cala's data, <b>${esc(l.lead)}</b> led ${plural(l.cases, "round", "rounds")} whose company raised again. It came back in the next round in <b>${l.came_back} of ${l.cases}</b> and led it in <b>${l.led_again}</b>.</div>`);
+    notes.push(`<div class="note"><h3>Will your lead come back?</h3>In the data, <b>${esc(l.lead)}</b> led ${plural(l.cases, "round", "rounds")} whose company raised again. It joined the next round in <b>${l.came_back} of ${l.cases}</b> and led it in <b>${l.led_again}</b>.</div>`);
   }
   if (d.timing) {
     const t = d.timing;
-    cards.push(`<div class="note"><h3>Timing, from peers</h3>Companies in the data raised their ${esc(t.to)} a median <b>${t.median} months</b> after their ${esc(t.from)} (middle half ${t.p25} to ${t.p75}, n=${t.n}).</div>`);
+    notes.push(`<div class="note"><h3>Timing from peers</h3>Companies here raised their ${esc(t.to)} a median <b>${t.median} months</b> after their ${esc(t.from)}. Middle half: ${t.p25} to ${t.p75} months, ${t.n} companies.</div>`);
   }
-  if (Object.keys(d.competitors || {}).length) {
-    const miss = Object.entries(d.competitors).filter(([, n]) => !n).map(([c]) => c);
-    if (miss.length) cards.push(`<div class="note note-thin"><h3>Competitor not in our data</h3>${miss.map(esc).join(", ")}: no rounds found in our Cala snapshot, so no conflict can be shown for ${miss.length === 1 ? "it" : "them"}.</div>`);
-  }
-  const list = sorted.map((r, i) => cardHtml(r, i)).join("");
-  out.innerHTML = `
-    <div class="print-head"><b>${esc(APP())}</b> · ${esc(d.stage)}${req.target_eur_m ? ` · target EUR ${esc(req.target_eur_m)}m` : ""} · data: Cala, retrieved ${esc(state.meta?.retrieved || "")}</div>
-    <div class="summary">
-      <div><span class="mono-chip"><span class="bolt" aria-hidden="true"></span>Counting, not AI</span>
-      <p class="summary-big">${summaryLine(d, req.target_eur_m)}</p></div>
-      <div class="actions">
-        <button class="btn btn-sm${ranked ? " hidden" : ""}" type="button" id="sort">${state.sortByVerdict ? "Show in my order" : "Best first"}</button>
-        <button class="btn btn-sm" type="button" id="print">Print sheet</button>
-        <button class="btn btn-sm btn-ghost" type="button" id="csv">Copy as CSV</button>
-      </div>
-    </div>
-    ${cards.length ? `<div class="cards-top">${cards.join("")}</div>` : ""}
-    <div class="fund-list">${list || `<div class="card empty">None of the pasted lines matched a fund in our Cala data.</div>`}</div>
-    ${geminiNote(d.read_by_gemini)}
-    ${d.lookup_candidates?.length ? lookupPanel(d.lookup_candidates) : ""}
-    ${d.unmatched.length ? `<div class="unmatched"><b>Not recognised:</b> ${d.unmatched.map((u) => `<span class="mono">${esc(u)}</span>`).join(" · ")}</div>` : ""}`;
-  const ask = $("#ask-live");
-  if (ask) ask.onclick = () => startLookup(d.lookup_candidates);
-  $("#sort").onclick = () => { state.sortByVerdict = !state.sortByVerdict; renderResults(d, req); };
-  $("#print").onclick = () => window.print();
-  $("#csv").onclick = () => copyCsv(sorted);
-  out.querySelectorAll("article.fund [data-toggle]").forEach((b) => {
-    const card = b.closest("article.fund");
-    b.addEventListener("click", () => toggleCard(card, sorted[+card.dataset.i]));
-  });
-  out.querySelectorAll("[data-rid]").forEach((a) => a.addEventListener("click", openRecord));
-  out.scrollIntoView({behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start"});
-  announce(`${plural(d.rows.length, "fund", "funds")} checked. ${out.querySelector(".summary-big")?.textContent || ""}`);
+  const miss = Object.entries(d.competitors || {}).filter(([, n]) => !n).map(([c]) => c);
+  if (miss.length) notes.push(`<div class="note thin"><h3>Competitor not in our data</h3>No rounds found for ${miss.map(esc).join(", ")}, so no conflict can be shown for ${miss.length === 1 ? "it" : "them"}.</div>`);
+  return [
+    notes.length ? `<div class="notes">${notes.join("")}</div>` : "",
+    geminiNote(d.read_by_gemini),
+    d.lookup_candidates?.length ? lookupPanel(d.lookup_candidates) : "",
+    d.unmatched?.length ? `<div class="unmatched"><b>Not recognised:</b> ${d.unmatched.map((u) => `<span class="mono">${esc(u)}</span>`).join(" · ")}</div>` : "",
+  ].join("");
 }
 
 function geminiNote(g) {
   if (!g) return "";
-  if (g.error) return `<div class="unmatched"><b>Some lines were not recognised.</b> ${esc(g.error)}.</div>`;
+  if (g.error) return "";
   const notFound = g.funds.filter((f) => !g.matched.includes(f));
-  return `<div class="ai-note"><span class="pill pill-ai">Read by Gemini</span> ${plural(g.lines, "line", "lines")} our parser could not match went to ${esc(g.model)} (${(g.ms / 1000).toFixed(1)} s). ${g.matched.length ? `Matched to our data: ${g.matched.map((f) => `<b>${esc(f)}</b>`).join(", ")}.` : "No fund names matched our data."}${notFound.length ? ` Not in our data: ${notFound.map(esc).join(", ")}.` : ""} Gemini only reads the list; every verdict is counted.</div>`;
+  return `<p class="plain">${plural(g.lines, "line", "lines")} our parser could not read went to ${esc(g.model)}, which only picks out fund names. ${g.matched.length ? `Found: ${g.matched.map((f) => `<b>${esc(f)}</b>`).join(", ")}.` : "No fund names matched our data."}${notFound.length ? ` Not in our data: ${notFound.map(esc).join(", ")}.` : ""} Every verdict is still counted.</p>`;
 }
 
 function lookupPanel(names) {
-  return `<div class="live card" id="live">
-    <div class="live-head"><div><h3>Ask Cala directly about these funds</h3><p class="muted">Not in our snapshot, or only seen from the company side with too few rounds: ${names.map((n) => `<span class="mono">${esc(n)}</span>`).join(" · ")}. One live Cala query per fund, about a minute each.</p></div>
-    <button class="btn btn-primary" type="button" id="ask-live">Ask Cala live about ${plural(names.length, "fund", "funds")}</button></div>
+  return `<div class="lookup" id="live">
+    <div class="lookup-head"><div><h3>Not in our data yet</h3><p>${names.map((n) => `<b>${esc(n)}</b>`).join(", ")}. We can ask Cala now, about a minute per fund.</p></div>
+    <button class="btn line" type="button" id="ask-live">Look up ${plural(names.length, "fund", "funds")} in Cala</button></div>
     <ol class="ledger hidden" id="ledger" role="status" aria-live="polite"></ol></div>`;
 }
 
@@ -297,9 +563,9 @@ async function startLookup(names) {
   catch (err) { btn.textContent = err.message; return; }
   const ledger = $("#ledger");
   ledger.classList.remove("hidden");
-  const label = {queued: "queued", asking: "asking Cala /v1/knowledge/query", done: "rounds landed", empty: "Cala has no rounds for this fund", error: "Cala did not answer", budget: "live lookups used up"};
+  const label = {queued: "waiting", asking: "asking Cala", done: "rounds found", empty: "Cala has no rounds for this fund", error: "Cala did not answer", budget: "live lookups used up"};
   const paint = (j) => {
-    ledger.innerHTML = j.items.map((i) => `<li class="led-${esc(i.status)}"><span class="dot" aria-hidden="true"></span><b>${esc(i.name)}</b><span class="mono">${esc(label[i.status] || i.status)}${i.status === "done" ? ` · ${i.rows} rounds` : ""}${i.seconds != null ? ` · ${i.seconds} s` : ""}</span></li>`).join("");
+    ledger.innerHTML = j.items.map((i) => `<li class="led-${esc(i.status)}"><span class="dot" aria-hidden="true"></span><b>${esc(i.name)}</b><span class="st">${esc(label[i.status] || i.status)}${i.status === "done" ? `, ${plural(i.rows, "round", "rounds")}` : ""}${i.seconds != null ? `, ${i.seconds} s` : ""}</span></li>`).join("");
   };
   paint(job);
   const t0 = Date.now();
@@ -317,121 +583,34 @@ async function startLookup(names) {
   }
 }
 
-const sizeText = (s) => `EUR ${fmtM(s.lo)}${s.hi !== s.lo ? ` to ${fmtM(s.hi)}` : ""}m`;
-const FIT_LABEL = {fits: "Fits your raise", larger: "Smaller than yours", smaller: "Larger than yours"};
-const year = (date) => esc(String(date || "").split(" ").pop());
-
-function introHtml(r) {
-  if (r.tie) {
-    const x = r.tie.round;
-    return `<div class="intro intro-yes"><span class="intro-l">Intro path</span><span>Your investor <b>${esc(r.tie.investor)}</b> sat with them in <a href="#" data-rid="${x.id}">${esc(x.company)}</a>'s ${x.n_investors}-investor ${esc(String(x.stage).toLowerCase())} round, ${year(x.date)}.</span></div>`;
-  }
-  const msg = state.investors.length ? "No shared round found with your investors." : "Add your current investors to see intro paths.";
-  return `<div class="intro"><span class="intro-l">Intro path</span><span class="muted">${msg}</span></div>`;
-}
-
-function cardHtml(r, i) {
-  const led = r.conflicts.filter((c) => c.level === "led");
-  const flags = [
-    led.length ? `<span class="warn-flag"><span class="tri" aria-hidden="true"></span>Led a competitor</span>` : "",
-    r.via === "gemini" ? `<span class="pill pill-ai">name read by Gemini</span>` : "",
-  ].join("");
-  const s1 = r.known
-    ? `<div class="stat-v">Led ${r.led} <span class="of">of ${r.known}</span></div><div class="stat-s">new investments near your stage, ${r.led_at_stage} at your exact stage</div>`
-    : `<div class="stat-v of">No data</div><div class="stat-s">No rounds with a named lead near your stage</div>`;
-  const s2 = r.size
-    ? `<div class="stat-v">${sizeText(r.size)}</div>${r.size.fit ? `<span class="fit fit-${r.size.fit}">${FIT_LABEL[r.size.fit] || ""}</span>` : `<div class="stat-s">from ${plural(r.size.n, "led round", "led rounds")}</div>`}`
-    : `<div class="stat-v of">Not stated</div><div class="stat-s">No round sizes in the data</div>`;
-  const s3 = r.last_lead
-    ? `<div class="stat-v"><a href="#" data-rid="${r.last_lead.id}">${esc(r.last_lead.company)}</a></div><div class="stat-s">${esc(r.last_lead.stage)} · ${esc(r.last_lead.date)}</div>`
-    : `<div class="stat-v of">Never</div><div class="stat-s">No led round in our data</div>`;
-  const conf = r.conflicts.length
-    ? `<div class="conflicts">${r.conflicts.slice(0, 2).map((c) => `<div class="conf conf-${c.level}"><span class="tri" aria-hidden="true"></span><span>${c.level === "led" ? "Led" : "Joined"} <a href="#" data-rid="${c.round.id}">${esc(c.competitor)}</a>'s ${esc(c.round.stage)} round, ${year(c.round.date)}</span></div>`).join("")}</div>`
-    : "";
-  return `<article class="fund" data-i="${i}" data-open="false" aria-labelledby="fn-${i}">
-    <div class="fund-head">
-      <div><h3 class="fund-name" id="fn-${i}">${esc(r.name)}</h3>${r.pasted !== r.name ? `<div class="fund-sub">${esc(r.pasted)}</div>` : ""}</div>
-      <div class="fund-flags">${flags}</div>
-    </div>
-    <div class="verdict-big v-${esc(r.verdict)}"><span class="v-icon" aria-hidden="true"></span>${esc(r.verdict_label)}</div>
-    <div class="stats">
-      <div class="stat"><div class="stat-l">Lead record</div>${s1}</div>
-      <div class="stat"><div class="stat-l">Round size it leads</div>${s2}</div>
-      <div class="stat"><div class="stat-l">Last lead</div>${s3}</div>
-    </div>
-    ${introHtml(r)}
-    ${conf}
-    <div class="fund-foot">
-      <button type="button" class="rounds-btn" data-toggle aria-expanded="false" aria-controls="det-${i}"><span class="chev" aria-hidden="true"></span><span>Show the record</span></button>
-      <div class="prov-chips"><span class="pill pill-q" title="Rounds come from Cala /v1/knowledge/query">${r.queried ? "asked Cala about this fund" : "seen in company rounds"}</span></div>
-    </div>
-  </article>`;
-}
-
-function roundList(rounds, empty, limit = 6) {
-  if (!rounds.length) return `<p class="none">${empty}</p>`;
-  const li = (r) => `<li><span class="rl-name"><a href="#" data-rid="${r.id}">${esc(r.company)}</a>${r.sourced ? ` <span class="pill pill-src" title="Cala search found a source document for this round">sourced</span>` : ""}</span><span class="when">${esc(r.stage)} · ${esc(r.date)}${r.amount_eur_m ? ` · ${fmtM(r.amount_eur_m)}m` : ""}</span></li>`;
-  const head = rounds.slice(0, limit).map(li).join("");
-  const rest = rounds.slice(limit);
-  return `<ul class="rlist">${head}</ul>${rest.length ? `<button type="button" class="more" data-more>Show ${rest.length} more</button><ul class="rlist hidden" data-rest>${rest.map(li).join("")}</ul>` : ""}`;
-}
-
-function toggleCard(card, r) {
-  const btn = card.querySelector("[data-toggle]");
-  const open = card.dataset.open === "true";
-  const existing = card.querySelector(".detail-in");
-  if (open) {
-    card.dataset.open = "false"; btn.setAttribute("aria-expanded", "false"); btn.lastChild.textContent = "Show the record";
-    existing?.remove(); return;
-  }
-  card.dataset.open = "true"; btn.setAttribute("aria-expanded", "true"); btn.lastChild.textContent = "Hide the record";
-  const det = document.createElement("div");
-  det.className = "detail-in";
-  det.id = `det-${card.dataset.i}`;
-  const counts = [
-    r.unknown ? `${plural(r.unknown, "round", "rounds")} with no named lead` : "",
-    r.follow_ons ? `${plural(r.follow_ons, "follow-on", "follow-ons")} in its own companies not counted` : "",
-    `${r.total_rounds} rounds in total for this fund in our Cala data`,
-  ].filter(Boolean).join(" · ");
-  det.innerHTML = `
-    <div><h3>Led <span class="faint">${r.rounds_led.length}</span></h3>${roundList(r.rounds_led, "No led rounds at this stage in the last four years.")}</div>
-    <div><h3>Joined, did not lead <span class="faint">${r.rounds_joined.length}</span></h3>${roundList(r.rounds_joined, "None.")}</div>
-    <div><h3>Lead not named <span class="faint">${r.rounds_unknown.length}</span></h3>${roundList(r.rounds_unknown, "None.")}</div>
-    ${r.like_you?.length ? `<div class="detail-note"><span class="pill pill-q">like yours</span><span>Led <b>${r.like_you.length}</b> ${r.like_you.length === 1 ? "round" : "rounds"} like yours: ${r.like_you.slice(0, 5).map((x) => `<a href="#" data-rid="${x.id}">${esc(x.company)}</a>`).join(", ")}${r.like_you.length > 5 ? " and more" : ""}</span></div>` : ""}
-    ${r.tie ? `<div class="detail-note"><span class="pill">tie</span><span>Your investor <b>${esc(r.tie.investor)}</b> and ${esc(r.name)} were both in <a href="#" data-rid="${r.tie.round.id}">${esc(r.tie.round.company)}</a> (${esc(r.tie.round.stage)}, ${esc(r.tie.round.date)}, ${r.tie.round.n_investors} investors). Fund-level tie: ask your investor which partner was on that deal.</span></div>` : ""}
-    <div class="detail-note">Window: last four years, your stage and the stages next to it. ${esc(counts)}.</div>`;
-  card.querySelector(".fund-foot").after(det);
-  det.querySelectorAll("[data-rid]").forEach((a) => a.addEventListener("click", openRecord));
-  det.querySelectorAll("[data-more]").forEach((b) => b.addEventListener("click", () => { b.nextElementSibling.classList.remove("hidden"); b.remove(); }));
-}
-
 function copyCsv(rows) {
   const q = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
-  const lines = [["Fund", "Verdict", "Led", "Known rounds", "Lead unknown", "Size it leads (EUR m)", "Last lead", "Conflict"].map(q).join(",")];
-  rows.forEach((r) => lines.push([r.name, r.verdict_label, r.led, r.known, r.unknown,
-    r.size ? `${fmtM(r.size.lo)}-${fmtM(r.size.hi)}` : "", r.last_lead ? `${r.last_lead.company} ${r.last_lead.date}` : "",
-    r.conflicts.map((c) => `${c.level} ${c.competitor}`).join("; ")].map(q).join(",")));
-  navigator.clipboard?.writeText(lines.join("\n")).then(() => { $("#csv").textContent = "Copied"; setTimeout(() => ($("#csv").textContent = "Copy as CSV"), 1500); });
+  const head = ["Group", "Fund", "Verdict", "Led", "Known rounds", "Lead not named", "Size it leads (EUR m)", "Size vs your raise", "Last lead", "Way in", "Conflict"];
+  const gname = {pitch: "Pitch first", size: "Leads, but a different size", avoid: "Mostly follows or avoid"};
+  const lines = [head.map(q).join(",")];
+  rows.forEach((r) => lines.push([gname[r.group], r.name, verdictText(r), r.led, r.known, r.unknown,
+    r.size ? `${fmtM(r.size.lo)}-${fmtM(r.size.hi)}` : "", r.size?.fit || "", r.last_lead ? `${r.last_lead.company} ${r.last_lead.date}` : "",
+    r.way.text, (r.conflicts || []).map((c) => `${c.level} ${c.competitor}`).join("; ")].map(q).join(",")));
+  const btn = $("#csv");
+  const done = (msg) => { btn.lastChild.textContent = msg; setTimeout(() => { btn.lastChild.textContent = "Copy as CSV"; }, 1600); };
+  if (!navigator.clipboard) return done("Copy not available");
+  navigator.clipboard.writeText(lines.join("\n")).then(() => done("Copied"), () => done("Copy blocked"));
 }
 
-/* ---------------- record sheet ---------------- */
-async function openRecord(e) {
-  e.preventDefault();
-  const rid = e.currentTarget.dataset.rid;
-  const root = $("#sheet-root");
-  const prev = document.activeElement;
-  root.innerHTML = `<div class="sheet-backdrop" data-close></div><aside class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-h"><header><div><div class="eyebrow">Cala round record</div><h2 id="sheet-h">Loading</h2></div><button class="x" data-close aria-label="Close">×</button></header><div class="body"><div class="skel"></div></div></aside>`;
-  const bg = [...document.querySelectorAll("body > header, body > main, body > footer")];
+/* ---------------- evidence pane ---------------- */
+let paneCleanup = null;
+
+function openPane(returnFocus) {
+  if ($("#pane-root .pane")) return;
+  const root = $("#pane-root");
+  root.innerHTML = `<div class="pane-back" data-close></div><aside class="pane" role="dialog" aria-modal="true" aria-labelledby="pane-h"><div class="ph" id="ph"></div><div class="pb" id="pb"></div></aside>`;
+  const bg = [$(".app")];
   bg.forEach((el) => el.setAttribute("inert", ""));
   document.body.classList.add("no-scroll");
-  const close = () => {
-    root.innerHTML = ""; document.removeEventListener("keydown", onKey);
-    bg.forEach((el) => el.removeAttribute("inert")); document.body.classList.remove("no-scroll"); prev?.focus();
-  };
   const onKey = (ev) => {
-    if (ev.key === "Escape") return close();
+    if (ev.key === "Escape") return closePane();
     if (ev.key === "Tab") {
-      const f = [...root.querySelectorAll("button, a[href], summary, [tabindex='0']")].filter((x) => x.offsetParent !== null);
+      const f = $$("button, a[href], summary, input, [tabindex='0']", root).filter((x) => x.offsetParent !== null && !x.disabled);
       if (!f.length) return;
       const first = f[0], last = f[f.length - 1];
       if (ev.shiftKey && document.activeElement === first) { ev.preventDefault(); last.focus(); }
@@ -439,85 +618,186 @@ async function openRecord(e) {
     }
   };
   document.addEventListener("keydown", onKey);
-  root.querySelectorAll("[data-close]").forEach((x) => x.addEventListener("click", close));
-  $(".sheet .x").focus();
+  root.addEventListener("click", (e) => {
+    if (e.target.closest("[data-close]")) return closePane();
+    const rid = e.target.closest("[data-rid]");
+    if (rid) { e.preventDefault(); openRound(+rid.dataset.rid); return; }
+    if (e.target.closest("[data-backfund]")) { e.preventDefault(); showFund(state.openIdx); }
+    const more = e.target.closest("[data-more]");
+    if (more) { more.previousElementSibling.querySelectorAll(".hidden").forEach((x) => x.classList.remove("hidden")); more.remove(); }
+  });
+  paneCleanup = () => {
+    document.removeEventListener("keydown", onKey);
+    bg.forEach((el) => el.removeAttribute("inert"));
+    document.body.classList.remove("no-scroll");
+    $$(".row.sel").forEach((x) => x.classList.remove("sel"));
+    returnFocus?.focus();
+  };
+}
+function closePane() {
+  $("#pane-root").innerHTML = "";
+  const c = paneCleanup; paneCleanup = null; c?.();
+  state.openIdx = null;
+}
+
+function openFund(i, from) {
+  openPane(from);
+  $$(".row.sel").forEach((x) => x.classList.remove("sel"));
+  $(`.row[data-i="${i}"]`)?.classList.add("sel");
+  showFund(i);
+}
+
+const closeBtn = `<span class="sp"></span><button class="x" type="button" data-close aria-label="Close">${ICON.x}</button>`;
+
+function roundTable(rounds, limit = 8) {
+  if (!rounds.length) return "";
+  const li = (r, i) => `<div class="rr${i >= limit ? " hidden" : ""}"><span class="co"><a href="#" data-rid="${r.id}">${esc(r.company)}</a></span><span class="st">${esc(r.stage)}</span><span class="am num">${r.amount_eur_m ? `${fmtM(r.amount_eur_m)}m` : ""}</span><span class="dt">${esc(r.date)}</span></div>`;
+  return `<div class="rt"><div class="rr hd"><span>Company</span><span>Stage</span><span class="am">EUR</span><span>Date</span></div><div>${rounds.map(li).join("")}</div>${rounds.length > limit ? `<button type="button" class="more" data-more>Show ${rounds.length - limit} more</button>` : ""}</div>`;
+}
+
+const personName = (p) => [p.first, p.last.length === 1 ? p.last : p.last ? `${p.last[0]}.` : ""].filter(Boolean).join(" ");
+
+function waysHtml(r) {
+  const parts = [];
+  const m = r.way.matches;
+  if (m.length) {
+    const shown = m.slice(0, 8);
+    parts.push(`<div class="introcard"><div class="l1">${ICON.link}You know ${plural(m.length, "person", "people")} at companies it backed</div>
+      <ul class="people">${shown.map(({person, round}) => `<li><span><span class="who">${esc(personName(person))}</span> <span class="role">${esc(person.position || "Role not given")}</span></span>${person.founder ? `<span class="tagx">Founder level</span>` : ""}<span class="via">Works at <a href="#" data-rid="${round.rid}">${esc(round.company)}</a>, whose ${esc(round.stage)} round in ${esc(round.date)} ${esc(r.name)} ${round.led ? "led" : "joined"}.</span></li>`).join("")}</ul>
+      ${m.length > shown.length ? `<p>And ${m.length - shown.length} more.</p>` : ""}</div>`);
+  }
+  if (r.tie) {
+    const x = r.tie.round;
+    parts.push(`<div class="introcard"><div class="l1">${ICON.link}Ask ${esc(r.tie.investor)}</div><p>Your investor <b>${esc(r.tie.investor)}</b> and ${esc(r.name)} were both in <a href="#" data-rid="${x.id}">${esc(x.company)}</a>'s ${esc(String(x.stage).toLowerCase())} round, ${esc(x.date)}, with ${x.n_investors} investors in total. Ask which partner was on that deal.</p></div>`);
+  }
+  if (!parts.length) {
+    parts.push(`<div class="okline">${askedForPaths() ? "No one in your network or among your investors connects to this fund yet." : "Add your investors or LinkedIn connections to find a way in."}</div>`);
+  }
+  return parts.join("");
+}
+
+function showFund(i) {
+  const r = state.ranked[i];
+  if (!r) return;
+  state.openIdx = i;
+  const req = state.req;
+  $("#ph").innerHTML = `<span class="muted">${i + 1} of ${state.ranked.length}</span>${closeBtn}`;
+  const s1 = r.known
+    ? `<div class="v">${r.led} <span class="of">of ${r.known}</span></div><div class="s">rounds with a named lead near your stage${r.unknown ? `. ${r.unknown} more had no named lead` : ""}</div>`
+    : `<div class="v of">No data</div><div class="s">No rounds with a named lead near your stage</div>`;
+  const fit = r.size?.fit;
+  const s2 = r.size
+    ? `<div class="v">EUR ${fmtM(r.size.lo)}${r.size.hi !== r.size.lo ? ` to ${fmtM(r.size.hi)}` : ""}m</div><div class="s">${fit === "fits" ? `<span class="acc">Your ${fmtM(req.target_eur_m)}m fits</span>` : fit ? `<span class="wrn">Your ${fmtM(req.target_eur_m)}m is ${fit === "larger" ? "larger" : "smaller"}</span>` : `From ${plural(r.size.n, "led round", "led rounds")}`}</div>`
+    : `<div class="v of">Not stated</div><div class="s">No round sizes in the data</div>`;
+  const s3 = r.last_lead
+    ? `<div class="v"><a href="#" data-rid="${r.last_lead.id}">${esc(r.last_lead.company)}</a></div><div class="s">${esc(r.last_lead.stage)}, ${esc(r.last_lead.date)}</div>`
+    : `<div class="v of">Never</div><div class="s">No led round in our data</div>`;
+  const comps = state.req.competitors || [];
+  const conflicts = (r.conflicts || []).map((c) => `<div class="conf${c.level === "led" ? "" : " joined"}"><span>${c.level === "led" ? "Led" : "Joined"} <a href="#" data-rid="${c.round.id}">${esc(c.competitor)}</a>'s ${esc(c.round.stage)} round, ${esc(c.round.date)}</span></div>`).join("");
+  const counts = [
+    r.follow_ons ? `${plural(r.follow_ons, "follow-on round", "follow-on rounds")} in its own companies not counted` : "",
+    `${r.total_rounds} rounds in total for this fund in our data`,
+  ].filter(Boolean).join(". ");
+  $("#pb").innerHTML = `
+    <div class="ptitle"><h2 id="pane-h">${esc(r.name)}</h2>${verdictPill(r)}</div>
+    ${r.pasted && r.pasted !== r.name ? `<div class="pasted">You pasted <q>${esc(r.pasted)}</q>${r.via === "gemini" ? ". Name read by Gemini" : ""}</div>` : ""}
+    <div class="stats">
+      <div class="stat"><div class="k">Led</div>${s1}</div>
+      <div class="stat"><div class="k">Round size it leads</div>${s2}</div>
+      <div class="stat"><div class="k">Last lead</div>${s3}</div>
+    </div>
+    <div class="sec"><h3 class="sech">How to get in</h3>${waysHtml(r)}</div>
+    ${comps.length ? `<div class="sec"><h3 class="sech">Competitors</h3>${conflicts || `<div class="okline">No round with ${esc(comps.join(" or "))} in the data.</div>`}</div>` : ""}
+    ${r.like_you?.length ? `<div class="sec"><h3 class="sech">Rounds like yours it led <span class="n">${r.like_you.length}</span></h3>${roundTable(r.like_you, 5)}</div>` : ""}
+    <div class="sec"><h3 class="sech">Rounds it led <span class="n">${r.rounds_led.length}, newest first</span></h3>${roundTable(r.rounds_led) || `<div class="okline">No led rounds near your stage in the last four years.</div>`}</div>
+    ${r.rounds_joined.length ? `<details class="fold"><summary>Joined, did not lead (${r.rounds_joined.length})</summary>${roundTable(r.rounds_joined)}</details>` : ""}
+    ${r.rounds_unknown.length ? `<details class="fold"><summary>Lead not named (${r.rounds_unknown.length})</summary>${roundTable(r.rounds_unknown)}</details>` : ""}
+    <p class="pnote">Counted over the last four years, at your stage and the stages next to it. ${esc(counts)}. Click any company to see the Cala record behind it.</p>`;
+  $(".pane .x").focus();
+}
+
+async function openRound(rid) {
+  const fund = state.ranked[state.openIdx];
+  $("#ph").innerHTML = `${fund ? `<button class="back" type="button" data-backfund>${ICON.back}Back to ${esc(fund.name)}</button>` : ""}${closeBtn}`;
+  $("#pb").innerHTML = `<h2 id="pane-h">Loading the round</h2><div class="skel"></div>`;
+  ($(".pane .back") || $(".pane .x")).focus();
   try {
     const r = await api(`/api/record/${encodeURIComponent(rid)}`);
-    $("#sheet-h").textContent = `${r.company} · ${r.stage}`;
-    $(".sheet .body").innerHTML = `
+    $("#pb").innerHTML = `
+      <div class="ptitle"><h2 id="pane-h">${esc(r.company)}, ${esc(r.stage)}</h2></div>
       <dl class="kv">
         <dt>Date</dt><dd>${esc(r.date)}</dd>
         <dt>Round</dt><dd>${esc(r.type || r.stage)}</dd>
-        <dt>Amount</dt><dd class="num">${r.amount_raw ? esc(r.amount_raw) : "not stated"}${r.amount_eur_m ? ` <span class="faint">≈ EUR ${fmtM(r.amount_eur_m)}m</span>` : ""}</dd>
+        <dt>Amount</dt><dd>${r.amount_raw ? esc(r.amount_raw) : `<span class="none">not stated</span>`}${r.amount_eur_m ? ` <span class="muted">about EUR ${fmtM(r.amount_eur_m)}m</span>` : ""}</dd>
         <dt>Lead</dt><dd>${r.leads.length ? r.leads.map(esc).join(", ") : `<span class="none">not named</span>`}</dd>
-        <dt>Participants</dt><dd>${r.participants.length ? r.participants.map(esc).join(", ") : `<span class="none">none named</span>`}</dd>
-        <dt>Cala entities</dt><dd>${entityHtml(r)}</dd>
-        <dt>Found via</dt><dd>${r.path === "both" ? "Both query paths agree on this round" : r.path === "investor_first" ? "Investor-first query" : "Company-first query"}</dd>
+        <dt>Also in</dt><dd>${r.participants.length ? r.participants.map(esc).join(", ") : `<span class="none">none named</span>`}</dd>
+        <dt>Found by</dt><dd>${r.path === "both" ? "Asking about the fund and about the company, both agree" : r.path === "investor_first" ? "Asking Cala about the fund" : "Asking Cala about the company"}</dd>
+        <dt>Cala ids</dt><dd>${entityHtml(r)}</dd>
       </dl>
-      <h3>Source documents</h3>
-      <div id="src-box">${sourceHtml(r.source)}</div>
-      <h3>Cala entity graph</h3>
-      <div id="graph-box">${graphHtml(r.graph)}</div>
-      <h3>Provenance</h3>
-      ${r.sources.map((s) => `<div class="prov"><span class="pill pill-q">POST /v1/knowledge/query</span> <span class="pill">${esc(s.path.replace("_", "-"))}</span><div class="q">"${esc(s.query)}"</div><details class="raw"><summary>Raw Cala row</summary><pre>${esc(JSON.stringify(s.row, null, 2))}</pre></details></div>`).join("")}
-      <p class="faint">${esc(APP())} only counts and merges these Cala rows. Source documents come from Cala's /v1/knowledge/search.</p>`;
+      <div class="sec"><h3 class="sech">Source documents</h3><div id="src-box">${sourceHtml(r.source)}</div></div>
+      <div class="sec"><h3 class="sech">Cala company graph</h3><div id="graph-box">${graphHtml(r.graph)}</div></div>
+      <details class="fold"><summary>Raw Cala rows (${r.sources.length})</summary>
+        ${r.sources.map((s) => `<div class="prov"><div>POST /v1/knowledge/query, ${esc(s.path.replace("_", " "))}</div><div class="q">"${esc(s.query)}"</div><pre>${esc(JSON.stringify(s.row, null, 2))}</pre></div>`).join("")}
+      </details>
+      <p class="pnote">${esc(APP())} only counts and merges these Cala rows. Source documents come from Cala search.</p>`;
     const askG = $("#ask-graph");
     if (askG) askG.onclick = async () => {
-      askG.disabled = true; askG.textContent = "Asking Cala /v1/entities";
+      askG.disabled = true; askG.textContent = "Asking Cala";
       try { const g = await api(`/api/graph/${encodeURIComponent(rid)}`, {method: "POST", body: "{}"}); $("#graph-box").innerHTML = graphHtml(g, true); }
       catch (err) { askG.disabled = false; askG.textContent = err.message; }
     };
     const ask = $("#ask-src");
     if (ask) ask.onclick = async () => {
-      ask.disabled = true; ask.textContent = "Asking Cala /v1/knowledge/search";
+      ask.disabled = true; ask.textContent = "Asking Cala";
       try { const src = await api(`/api/source/${encodeURIComponent(rid)}`, {method: "POST", body: "{}"}); $("#src-box").innerHTML = sourceHtml(src, true); }
       catch (err) { ask.disabled = false; ask.textContent = err.message; }
     };
   } catch (err) {
-    if (err.message !== "auth") $(".sheet .body").innerHTML = `<p role="alert">Could not load this record: ${esc(err.message)}</p>`;
+    if (err.message !== "auth") $("#pb").innerHTML = `<h2 id="pane-h">Could not load this round</h2><p role="alert">${esc(err.message)}</p>`;
   }
 }
 
 function entityHtml(r) {
   const e = r.entity_ids || {};
   const one = (name, id) => `<span class="ent">${esc(name)} <code title="${esc(id || "")}">${id ? esc(id.slice(0, 8)) : "no id"}</code></span>`;
-  const parts = [one(r.company, e.company), ...(e.leads || []).map((l) => one(l.name, l.id))];
-  return parts.join(" ");
+  return [one(r.company, e.company), ...(e.leads || []).map((l) => one(l.name, l.id))].join(" ");
 }
 
 const GRAPH_VERDICT = {
-  agrees: ["g-ok", "The graph marks the same lead"],
-  differs: ["g-diff", "The graph marks a different lead"],
-  graph_no_lead: ["g-none", "The graph has this round but marks no lead"],
+  agrees: ["g-ok", "The graph names the same lead"],
+  differs: ["g-diff", "The graph names a different lead"],
+  graph_no_lead: ["g-none", "The graph has this round but names no lead"],
 };
 
 function graphHtml(g, fresh) {
-  if (!g) return `<p class="muted">Not checked against Cala's entity graph yet.</p><button class="btn" type="button" id="ask-graph">Check in Cala's entity graph</button> <span class="faint">2 to 4 entity calls, a few seconds</span>`;
-  const pill = `<span class="pill pill-q">POST /v1/entities/{id}</span>${fresh ? ` <span class="pill">just now</span>` : ""}`;
-  if (g.status === "no_rounds_in_graph") return `<div class="graph">${pill}<p class="muted">Cala's entity graph has no funding round entities for this company yet. The round above comes from Cala's query layer.</p></div>`;
-  if (g.status === "round_not_in_graph") return `<div class="graph">${pill}<p class="muted">The graph has ${esc((g.graph_rounds || []).join(", ") || "other rounds")} for this company, but not this stage.</p></div>`;
+  if (!g) return `<div class="ask"><button class="btn line" type="button" id="ask-graph">Check in Cala's company graph</button><span class="muted">Not checked yet. Takes a few seconds.</span></div>`;
+  const when = fresh ? `<span class="src-k">Checked just now</span>` : `<span class="src-k">From Cala's company graph</span>`;
+  if (g.status === "no_rounds_in_graph") return `<div class="src">${when}<p>The graph has no funding rounds for this company yet. The round above comes from Cala's answers.</p></div>`;
+  if (g.status === "round_not_in_graph") return `<div class="src">${when}<p>The graph has ${esc((g.graph_rounds || []).join(", ") || "other rounds")} for this company, but not this stage.</p></div>`;
   const x = g.round || {};
-  if (g.agreement === "not_in_graph") return `<div class="graph">${pill}<p class="muted">The graph's ${esc(x.label || "")} round is dated ${esc(x.announced || x.event_date || "")}, more than a year from this one, so it is a different round.</p></div>`;
+  if (g.agreement === "not_in_graph") return `<div class="src">${when}<p>The graph's ${esc(x.label || "")} round is dated ${esc(x.announced || x.event_date || "")}, more than a year from this one, so it is a different round.</p></div>`;
   const [cls, text] = GRAPH_VERDICT[g.agreement] || ["g-none", ""];
   const amount = x.amount ? `${esc(x.currency || "")} ${fmtM(x.amount / 1e6)}m` : "amount not stated";
   const srcs = (x.sources || []).filter((d) => /^https:\/\//.test(d.url));
-  return `<div class="graph">${pill}
+  return `<div class="src">${when}
     <p class="g-verdict ${cls}">${esc(text)}</p>
     <dl class="kv">
-      <dt>Round entity</dt><dd>${esc(x.label || "")} <code title="${esc(x.round_id || "")}">${esc((x.round_id || "").slice(0, 8))}</code></dd>
-      <dt>Announced</dt><dd>${esc(x.announced || x.event_date || "not stated")} · ${amount}</dd>
-      <dt>is_lead</dt><dd>${x.leads?.length ? x.leads.map((l) => esc(l.name)).join(", ") : `<span class="none">none marked</span>`} <span class="faint">of ${x.n_investors || 0} participants</span></dd>
+      <dt>Round</dt><dd>${esc(x.label || "")} <code title="${esc(x.round_id || "")}">${esc((x.round_id || "").slice(0, 8))}</code></dd>
+      <dt>Announced</dt><dd>${esc(x.announced || x.event_date || "not stated")}, ${amount}</dd>
+      <dt>Marked lead</dt><dd>${x.leads?.length ? x.leads.map((l) => esc(l.name)).join(", ") : `<span class="none">none marked</span>`} <span class="muted">of ${x.n_investors || 0} investors</span></dd>
     </dl>
-    ${srcs.length ? `<ol class="src-docs">${srcs.map((d) => `<li><a href="${esc(d.url)}" target="_blank" rel="noopener noreferrer">${esc(d.name)}</a> <span class="pill">${esc(d.rank || "")}</span>${d.date ? `<span class="faint"> · ${esc(d.date)}</span>` : ""}</li>`).join("")}</ol>` : ""}
+    ${srcs.length ? `<ol class="src-docs">${srcs.map((d) => `<li><a href="${esc(d.url)}" target="_blank" rel="noopener noreferrer">${esc(d.name)}</a>${d.date ? `<span class="muted">, ${esc(d.date)}</span>` : ""}</li>`).join("")}</ol>` : ""}
   </div>`;
 }
 
 function sourceHtml(src, fresh) {
-  if (!src) return `<p class="muted">No source document cached for this round yet.</p><button class="btn" type="button" id="ask-src">Ask Cala for a source</button> <span class="faint">one live Cala search, about 30 seconds</span>`;
+  if (!src) return `<div class="ask"><button class="btn line" type="button" id="ask-src">Ask Cala for a source</button><span class="muted">None saved yet. One live search, about 30 seconds.</span></div>`;
   const docs = (src.docs || []).filter((d) => /^https:\/\//.test(d.url));
+  const host = (u) => { try { return new URL(u).hostname; } catch { return ""; } };
   return `<div class="src">
-    <div class="src-answer"><span class="pill pill-q">POST /v1/knowledge/search</span>${fresh ? ` <span class="pill">just now</span>` : ""}<p>${esc(String(src.answer || "").replace(/^#+\s*/gm, "").replace(/\*\*/g, ""))}</p></div>
-    ${docs.length ? `<ol class="src-docs">${docs.map((d) => `<li><a href="${esc(d.url)}" target="_blank" rel="noopener noreferrer">${esc(d.name)}</a><span class="faint"> · ${esc(d.site || new URL(d.url).hostname)}</span>${d.passage ? `<blockquote>${esc(d.passage.slice(0, 260))}${d.passage.length > 260 ? "…" : ""}</blockquote>` : ""}</li>`).join("")}</ol>` : `<p class="muted">Cala answered without a linked document.</p>`}
+    <span class="src-k">${fresh ? "Cala search, just now" : "Cala search"}</span>
+    <p>${esc(String(src.answer || "").replace(/^#+\s*/gm, "").replace(/\*\*/g, ""))}</p>
+    ${docs.length ? `<ol class="src-docs">${docs.map((d) => `<li><a href="${esc(d.url)}" target="_blank" rel="noopener noreferrer">${esc(d.name)}</a><span class="muted">, ${esc(d.site || host(d.url))}</span>${d.passage ? `<blockquote>${esc(d.passage.slice(0, 260))}${d.passage.length > 260 ? "…" : ""}</blockquote>` : ""}</li>`).join("")}</ol>` : `<p class="muted">Cala answered without a linked document.</p>`}
   </div>`;
 }
 
@@ -525,61 +805,49 @@ function sourceHtml(src, fresh) {
 function renderMethod() {
   const m = state.meta || {};
   const v = m.validation;
-  $("#view-method").innerHTML = `
-  <section class="wrap method-hero"><h1>Method <span class="h1-soft">and limits.</span></h1><p class="lede">How ${esc(APP())} turns Cala round records into a verdict per fund, what we tested, and where it can be wrong.</p></section>
-  <div class="wrap method">
-    <div>
-      <section class="card ai-box"><h2>Where AI is used, and where it is not</h2>
-        <p>Verdicts, counts, ties and conflicts are plain counting over Cala round records. The same input always gives the same table, and every number opens the rounds behind it. No language model ranks or judges a fund.</p>
-        <p>Cala answers our questions about funds and companies. ${esc(APP())} stores those answers in Postgres, merges rounds seen from both sides, and counts. Where Cala's entity graph has the round, the record sheet shows which investor the graph marks as lead, with its ranked sources, so you can see both layers side by side.</p>
-      </section>
-      <section class="card"><h2>Verdict rules</h2>
-        <p class="muted">Counted over the last four years, at your stage and the stages next to it. A round counts as "known" when Cala names its lead.</p>
-        <ul class="rules">
-          <li><span class="verdict v-leads"><span class="v-icon"></span>Leads rounds like yours</span><span>Led 2 or more rounds at your stage, and led at least 30% of its new investments where Cala names the lead (follow-on rounds in its own portfolio companies are not counted), and your target raise sits inside the range of rounds it led (the middle half of its led round sizes, from 0.8x the low end to 1.25x the high end).</span></li>
-          <li><span class="verdict v-leads_size"><span class="v-icon"></span>Leads, but larger or smaller rounds</span><span>Leads at your stage, but your target is outside that size range. Sizes come from its leads at your exact stage when there are at least 2, otherwise from the stages next to it (the row says which).</span></li>
-          <li><span class="verdict v-follows"><span class="v-icon"></span>Mostly follows</span><span>5 or more new investments with a named lead, and led fewer than 15% of them.</span></li>
-          <li><span class="verdict v-stale"><span class="v-icon"></span>No lead since …</span><span>Has led before, but not in the last 24 months.</span></li>
-          <li><span class="verdict v-mixed"><span class="v-icon"></span>Mixed</span><span>Everything in between.</span></li>
-          <li><span class="verdict v-few"><span class="v-icon"></span>Too few rounds</span><span>Fewer than 3 known rounds in the window. We show the rounds, not a verdict.</span></li>
-          <li><span class="verdict v-public"><span class="v-icon"></span>Public body or programme</span><span>Grant bodies, public funds and accelerators. Shown, never judged as a lead.</span></li>
-        </ul>
-      </section>
-      <section class="card"><h2>What we tested</h2>
-        ${v ? `<table class="simple"><thead><tr><th>Test</th><th>Result</th><th>n</th></tr></thead><tbody>${v.rows.map((r) => `<tr><td>${esc(r.test)}</td><td>${esc(r.result)}</td><td class="num">${esc(r.n)}</td></tr>`).join("")}</tbody></table><p class="muted">${esc(v.note || "")}</p>` : `<p class="muted">Validation numbers are being recomputed on the full data.</p>`}
-        ${v?.accuracy?.length ? `<details class="raw"><summary>Every hand check, with its source (${v.accuracy.length})</summary><table class="simple"><thead><tr><th>Round</th><th>Lead in Cala</th><th>Check</th></tr></thead><tbody>${v.accuracy.map((a) => `<tr><td>${esc(a.company)} <span class="faint mono">${esc(a.date)} ${esc(a.stage || "")}</span></td><td>${esc((a.cala_leads || []).join(", "))}</td><td>${esc(a.verdict)}${a.source_url && /^https:\/\//.test(a.source_url) ? ` · <a href="${esc(a.source_url)}" target="_blank" rel="noopener noreferrer">source</a>` : ""}</td></tr>`).join("")}</tbody></table></details>` : ""}
-        <p class="muted"><a href="/static/cala-data-quality.json" download>Data-quality findings we prepared for Cala</a> (JSON).</p>
-      </section>
-      <section class="card"><h2>Limits</h2>
-        <ul>
-          <li>Fund level, not partner level. A tie means two funds sat in the same round; ask which partner was on it.</li>
-          <li>About a third of seed rounds in our data name no lead. Those rounds are left out of the lead ratio, so thinly covered funds show "Too few rounds"; every row shows how many rounds had no named lead.</li>
-          <li>Coverage is what Cala returned to our queries: European venture rounds, mostly 2021 to 2026. A fund missing here is missing from our snapshot, not necessarily from Cala.</li>
-          <li>Company discovery started from startups that raised over EUR 2m, so very small rounds are under-represented.</li>
-          <li>Two query paths can label the same round differently. The record view shows both rows when that happens.</li>
-        </ul>
-      </section>
-    </div>
-    <aside>
-      <section class="card"><h2>Coverage</h2>
-        <dl class="kv">
-          <dt>Funds asked</dt><dd class="num">${esc(m.funds_queried ?? "")}</dd>
-          <dt>Companies</dt><dd class="num">${esc(m.companies ?? "")}</dd>
-          <dt>Rounds</dt><dd class="num">${esc(m.rounds ?? "")}</dd>
-          <dt>Investors</dt><dd class="num">${esc(m.investors ?? "")}</dd>
-          <dt>Retrieved</dt><dd class="num">${esc(m.retrieved ?? "")}</dd>
-        </dl>
-        <p class="muted">Endpoints:</p>
-        <ul class="muted endpoints">
-          <li><span class="pill pill-q">/v1/knowledge/query</span> round data, asked investor-first and company-first</li>
-          <li><span class="pill pill-q">/v1/knowledge/search</span> source documents for a round</li>
-          <li><span class="pill pill-q">/v1/entities</span> entity IDs, and the cross-check against Cala's FundingRound graph (is_lead)</li>
-        </ul>
-      </section>
-      <section class="card"><h2>Stack</h2>
-        <p class="muted">Cala for the data. Aiven Postgres stores the snapshot, the normalised rounds and every live Cala answer. Modal serves this app and runs the live Cala lookups. Gemini only reads pasted lines our parser cannot match.</p>
-      </section>
-    </aside>
+  const rule = (verdict, label, text) => `<li>${verdictPill({verdict, verdict_label: label})}<span>${text}</span></li>`;
+  $("#view-method").innerHTML = `<div class="method">
+    <h1>Method and limits</h1>
+    <p class="lede">How ${esc(APP())} turns Cala round records into a verdict per fund, what we tested, and where it can be wrong.</p>
+    <section class="ai-box"><h2>Counting, not AI</h2>
+      <p>Verdicts, counts, intro paths and conflicts are plain counting over Cala round records. The same input always gives the same list, and every number opens the rounds behind it. No language model ranks or judges a fund. Gemini only reads pasted lines our parser cannot match, and only picks out fund names.</p></section>
+    <section><h2>Verdict rules</h2>
+      <p>Counted over the last four years, at your stage and the stages next to it. A round counts as known when Cala names its lead. Follow-on rounds in a fund's own companies are not counted as new investments.</p>
+      <ul class="rules">
+        ${rule("leads", "Leads rounds like yours", "Led 2 or more rounds at your stage, led at least 30% of its new investments where the lead is named, and your target raise sits inside the range it leads (the middle half of its led round sizes, from 0.8x the low end to 1.25x the high end).")}
+        ${rule("leads_size", "Leads larger rounds", "Leads at your stage, but your target is outside that size range. Sizes come from its leads at your exact stage when there are at least 2, otherwise from the stages next to it.")}
+        ${rule("follows", "Mostly follows", "5 or more new investments with a named lead, and led fewer than 15% of them.")}
+        ${rule("stale", "No lead since a date", "Has led before, but not in the last 24 months.")}
+        ${rule("mixed", "Sometimes leads", "Everything in between.")}
+        ${rule("few", "Too little data", "Fewer than 3 known rounds in the window. We show the rounds, not a verdict.")}
+        ${rule("public", "Public funder, not a lead", "Grant bodies, public funds and accelerators. Shown, never judged as a lead.")}
+      </ul></section>
+    <section><h2>How the list is ordered</h2>
+      <p>Funds are grouped by verdict (leads rounds like yours first, then leads a different size, then everything else), a fund that led or joined a competitor's round sinks to the bottom of its group, and inside a group a stronger way in comes first (a founder at a company the fund led, then anyone at a company it led, then anyone at a company it joined, then one of your investors in a small round with it), then the higher share of rounds led.</p></section>
+    <section><h2>Your network</h2>
+      <p>Your LinkedIn connections file is read in your browser. Only first name, last name, company and position are kept, in memory, for this page; URLs and emails are never read, and nothing is uploaded or stored. Each connection's company is matched by name to the companies a fund led or joined in our data. Very short or generic company names are skipped to avoid false matches. A match is a person at a company, not a promise they know the partner.</p></section>
+    <section><h2>What we tested</h2>
+      ${v ? `<table class="simple"><thead><tr><th>Test</th><th>Result</th><th>n</th></tr></thead><tbody>${v.rows.map((r) => `<tr><td>${esc(r.test)}</td><td>${esc(r.result)}</td><td class="num">${esc(r.n)}</td></tr>`).join("")}</tbody></table><p class="muted">${esc(v.note || "")}</p>` : `<p class="muted">Validation numbers are being recomputed on the full data.</p>`}
+      ${v?.accuracy?.length ? `<details class="fold-raw"><summary>Every hand check, with its source (${v.accuracy.length})</summary><table class="simple"><thead><tr><th>Round</th><th>Lead in Cala</th><th>Check</th></tr></thead><tbody>${v.accuracy.map((a) => `<tr><td>${esc(a.company)} <span class="muted">${esc(a.date)} ${esc(a.stage || "")}</span></td><td>${esc((a.cala_leads || []).join(", "))}</td><td>${esc(a.verdict)}${a.source_url && /^https:\/\//.test(a.source_url) ? `, <a href="${esc(a.source_url)}" target="_blank" rel="noopener noreferrer">source</a>` : ""}</td></tr>`).join("")}</tbody></table></details>` : ""}
+      <p><a href="/static/cala-data-quality.json" download>Data quality findings we prepared for Cala</a> (JSON).</p></section>
+    <section><h2>Limits</h2>
+      <ul>
+        <li>Fund level, not partner level. An intro path means two funds sat in the same round; ask which partner was on it.</li>
+        <li>About a third of seed rounds in our data name no lead. Those rounds are left out of the lead ratio, so thinly covered funds show "Too little data"; every fund shows how many rounds had no named lead.</li>
+        <li>Coverage is what Cala returned to our questions: European venture rounds, mostly 2021 to 2026. A fund missing here is missing from our snapshot, not necessarily from Cala.</li>
+        <li>Company discovery started from startups that raised over EUR 2m, so very small rounds are under-represented.</li>
+        <li>Two ways of asking can label the same round differently. The round record shows both raw rows when that happens.</li>
+      </ul></section>
+    <section><h2>Coverage</h2>
+      <dl class="cover">
+        <div><dt>Funds asked</dt><dd class="num">${esc(m.funds_queried ?? "")}</dd></div>
+        <div><dt>Companies</dt><dd class="num">${esc(m.companies?.toLocaleString("en") ?? "")}</dd></div>
+        <div><dt>Rounds</dt><dd class="num">${esc(m.rounds?.toLocaleString("en") ?? "")}</dd></div>
+        <div><dt>Investors</dt><dd class="num">${esc(m.investors?.toLocaleString("en") ?? "")}</dd></div>
+        <div><dt>Retrieved</dt><dd class="num">${esc(m.retrieved ?? "")}</dd></div>
+      </dl>
+      <p>Cala endpoints used: /v1/knowledge/query for round data (asked about each fund and about each company), /v1/knowledge/search for source documents, /v1/entities for ids and the cross-check against Cala's company graph.</p>
+      <p>Aiven Postgres stores the snapshot, the rounds and every live Cala answer. Modal serves this app and runs the live Cala lookups. Snapshot ${esc(m.version || "")}.</p></section>
   </div>`;
 }
 
@@ -589,28 +857,23 @@ document.addEventListener("DOMContentLoaded", () => {
   $("#funds").addEventListener("input", lineCount);
   $("#sample").addEventListener("click", () => {
     $("#funds").value = SAMPLE; lineCount();
+    setStage("seed");
     if (!state.investors.length) { state.investors.push("Lifeline Ventures"); state.lead = "Lifeline Ventures"; renderChips("investors"); }
     if (!state.competitors.length) { state.competitors.push("Lovable"); renderChips("competitors"); }
     if (!$("#target").value) $("#target").value = "3";
     run();
   });
-  $("#check-form").addEventListener("submit", (e) => { e.preventDefault(); run(); });
-  $("#find").addEventListener("click", runFind);
-  const tabs = [$("#tab-list"), $("#tab-find")];
-  const select = (tab) => {
-    tabs.forEach((x) => { x.setAttribute("aria-selected", x === tab); x.tabIndex = x === tab ? 0 : -1; });
-    $("#pane-list").classList.toggle("hidden", tab.id !== "tab-list");
-    $("#pane-find").classList.toggle("hidden", tab.id !== "tab-find");
-  };
-  select(tabs[0]);
-  tabs.forEach((tab, i) => {
-    tab.addEventListener("click", () => select(tab));
-    tab.addEventListener("keydown", (e) => {
-      const k = {ArrowRight: 1, ArrowLeft: -1}[e.key];
-      if (k) { e.preventDefault(); const t = tabs[(i + k + tabs.length) % tabs.length]; select(t); t.focus(); }
-      if (e.key === "Home" || e.key === "End") { e.preventDefault(); const t = tabs[e.key === "Home" ? 0 : tabs.length - 1]; select(t); t.focus(); }
-    });
+  $("#check-form").addEventListener("submit", (e) => { e.preventDefault(); (state.mode === "find" ? runFind : run)(); });
+  $("#to-find").addEventListener("click", () => setMode(state.mode === "find" ? "list" : "find"));
+  $("#nav-find").addEventListener("click", () => { setMode("find"); setScreen("paste"); go("/"); $("#region").focus(); });
+  $("#side-edit").addEventListener("click", () => { setScreen("paste"); $("#opt").open = true; window.scrollTo(0, 0); $("#funds").focus(); });
+  document.addEventListener("click", (e) => {
+    if (e.target.closest("[data-edit]")) { closePane(); setScreen("paste"); window.scrollTo(0, 0); (state.mode === "find" ? $("#region") : $("#funds")).focus(); }
+    if (e.target.closest("[data-net-sample]")) { setNetwork(parseConnections(SAMPLE_NETWORK), "sample", true); announce("Made-up sample network loaded."); }
+    if (e.target.closest("[data-net-clear]")) clearNetwork();
   });
-  document.addEventListener("keydown", (e) => { if ((e.metaKey || e.ctrlKey) && e.key === "Enter") (activeTab() === "find" ? runFind : run)(); });
+  $("#net-sample").addEventListener("click", () => { setNetwork(parseConnections(SAMPLE_NETWORK), "sample", true); });
+  $("#li-file").addEventListener("change", (e) => { readNetworkFile(e.target.files[0]); e.target.value = ""; });
+  setupDrop($("#drop"));
   init().then(() => { if (location.hash === "#demo") $("#sample").click(); });
 });

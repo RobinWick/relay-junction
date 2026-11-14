@@ -8,6 +8,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
 from typing import Optional
 
@@ -19,14 +20,15 @@ import time
 import auth
 import gemini
 import live
-from engine import (STAGE_LABEL, STAGES, Snapshot, competitor_coverage, conflicts, discover, fund_profile, lead_comes_back,
-                    record, tie, timing)
+from engine import (STAGE_LABEL, STAGES, Snapshot, competitor_coverage, conflicts, discover, fund_portfolio, fund_profile,
+                    lead_comes_back, record, tie, timing)
 from merge import Builder, canon
 from parse import parse_list
 
 HERE = Path(__file__).parent
 STATIC = HERE / "static"
 app = FastAPI(title="Lead Check", docs_url=None, redoc_url=None, openapi_url=None)
+app.add_middleware(GZipMiddleware, minimum_size=2000)  # check responses carry each fund's portfolio
 SNAP: Optional[Snapshot] = None
 SNAP_DICT: Optional[dict] = None
 _merge_lock = threading.Lock()
@@ -234,7 +236,8 @@ def check(body: Check, request: Request):
         prof = fund_profile(s, m["key"], stage, body.target_eur_m)
         rows.append({"pasted": m["pasted"], "via": m.get("via", "parser"), **prof,
                      "conflicts": conflicts(s, m["key"], comps) if comps else [],
-                     "tie": tie(s, m["key"], my_inv, body.company)})
+                     "tie": tie(s, m["key"], my_inv, body.company),
+                     "portfolio": fund_portfolio(s, m["key"])})
     counts = {}
     for r in rows:
         counts[r["verdict"]] = counts.get(r["verdict"], 0) + 1
@@ -274,6 +277,7 @@ def discover_funds(body: Discover):
         f["conflicts"] = conflicts(s, f["key"], comps) if comps else []
         f["tie"] = tie(s, f["key"], my_inv, None)
         f["pasted"] = f["name"]
+        f["portfolio"] = fund_portfolio(s, f["key"])
     return out
 
 

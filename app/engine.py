@@ -200,6 +200,32 @@ def fund_profile(snap: Snapshot, key: str, stage: str, target_m: float | None) -
     }
 
 
+PORTFOLIO_CAP = 300
+
+
+def portfolio(rounds: list[dict], key: str, cap: int = PORTFOLIO_CAP) -> list[dict]:
+    """Companies a fund backed, for matching a founder's own network in the browser.
+
+    One entry per company (merge.company_key): the most recent round the fund led there, else the most recent
+    round it joined. Newest first, capped. Pure: takes the fund's rounds, so tests need no snapshot.
+    """
+    best: dict[str, dict] = {}
+    for r in rounds:
+        led = key in r["leads"]
+        if not led and key not in r["participants"]:
+            continue
+        ckey = r.get("ckey") or company_key(r["company"])
+        cur = best.get(ckey)
+        if cur is None or (led, r["t"]) > (cur["led"], cur["t"]):
+            best[ckey] = {"company": r["company"], "ckey": ckey, "stage": STAGE_LABEL.get(r.get("stage") or "", "Stage not stated"),
+                          "date": month_label(r), "t": r["t"], "led": led, "rid": r["id"]}
+    return sorted(best.values(), key=lambda p: -p["t"])[:cap]
+
+
+def fund_portfolio(snap: Snapshot, key: str) -> list[dict]:
+    return portfolio([snap.rounds[i] for i in snap.by_investor.get(key, [])], key)
+
+
 def conflicts(snap: Snapshot, key: str, competitors: list[str]) -> list[dict]:
     out = []
     for comp in competitors:
