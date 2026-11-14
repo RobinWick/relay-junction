@@ -11,6 +11,7 @@ HERE = Path(__file__).parent
 image = (
     modal.Image.debian_slim(python_version="3.12")
     .pip_install("fastapi>=0.120", "starlette>=0.49.1", "psycopg[binary]==3.2.13", "requests>=2.32.4")
+    .add_local_file(HERE / "llms.txt", remote_path="/root/llms.txt")
     .add_local_dir(HERE / "app", remote_path="/root/app")
 )
 app = modal.App("lead-check", image=image)

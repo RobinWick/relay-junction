@@ -85,7 +85,7 @@ def merge_live(record_: dict) -> None:
 
 
 GATE_ON = os.environ.get("RELAY_GATE", "off") == "on"  # passcode gate; off by default since 14.11 (Robin)
-OPEN_PATHS = {"/login", "/api/login", "/static/styles.css", "/static/login.js", "/static/brand.js",
+OPEN_PATHS = {"/llms.txt", "/login", "/api/login", "/static/styles.css", "/static/login.js", "/static/brand.js",
               "/static/favicon.svg"}
 
 
@@ -144,6 +144,15 @@ def login(body: Login, request: Request):
     resp.set_cookie(auth.COOKIE, auth.make_cookie(), httponly=True, secure=request.url.scheme == "https",
                     samesite="strict", max_age=auth.SESSION_S)
     return resp
+
+
+LLMS = HERE.parent / "llms.txt"  # repo root locally, /root/llms.txt on Modal
+
+
+@app.get("/llms.txt")
+def llms_txt():
+    """Plain-text summary for AI readers (llmstxt.org format)."""
+    return FileResponse(LLMS, media_type="text/plain; charset=utf-8")
 
 
 @app.get("/login", response_class=HTMLResponse)
