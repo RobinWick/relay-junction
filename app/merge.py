@@ -374,3 +374,25 @@ class Builder:
         }
 
 
+
+
+def round_key(r: dict) -> str:
+    return f"{r['ckey']}|{r['year']}|{r['month']}|{r['stage'] or ''}"
+
+
+def summarize_search(res: dict) -> dict:
+    """Keep what the record view needs from a /v1/knowledge/search answer: the answer, its reasoning, and the
+    documents it cites (https only), each with a short passage."""
+    docs, seen = [], set()
+    for ctx in res.get("context", []) or []:
+        for o in ctx.get("origins", []) or []:
+            doc = (o.get("document") or {})
+            url = doc.get("url") or (o.get("source") or {}).get("url") or ""
+            if not url.startswith("https://") or url in seen:
+                continue
+            seen.add(url)
+            docs.append({"name": (doc.get("name") or (o.get("source") or {}).get("name") or url)[:160],
+                         "site": ((o.get("source") or {}).get("name") or "")[:80], "url": url[:500],
+                         "passage": (ctx.get("content") or "")[:420]})
+    points = [e.get("content", "")[:300] for e in (res.get("explainability") or [])][:4]
+    return {"answer": (res.get("content") or "")[:700], "points": points, "docs": docs[:5]}

@@ -162,3 +162,25 @@ def view(job_id: str) -> dict | None:
     items = [{"name": i["name"], "status": i["status"], "rows": i["rows"], "error": i.get("error"),
               "seconds": round(((i.get("t1") or now) - i["t0"])) if i.get("t0") else None} for i in job["items"]]
     return {"id": job["id"], "items": items, "done": all(i["status"] not in ("queued", "asking") for i in items)}
+
+
+SEARCH = "https://api.cala.ai/v1/knowledge/search"
+MONTH_NAMES = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October",
+               "November", "December"]
+
+
+def source_question(r: dict) -> str:
+    stage = (r.get("stage") or "funding").replace("series", "Series")
+    return (f"Who led {r['company']}'s {stage} round announced around {MONTH_NAMES[r['month'] - 1]} {r['year']}, "
+            f"how much was raised, and which investors took part?")
+
+
+def search_round(r: dict, session: str) -> dict:
+    """One live Cala search for a round's sources. Raises RuntimeError when the budget is used up."""
+    if not _spend_session(session, 1) or not _charge(1):
+        raise RuntimeError("budget")
+    _slot()
+    resp = requests.post(SEARCH, json={"input": source_question(r)}, timeout=150,
+                         headers={"X-API-KEY": os.environ["CALA_API_KEY"], "Content-Type": "application/json"})
+    resp.raise_for_status()
+    return resp.json()

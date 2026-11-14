@@ -327,7 +327,7 @@ function rowHtml(r, i) {
     ? `<div class="num">EUR ${fmtM(r.size.lo)}${r.size.hi !== r.size.lo ? `–${fmtM(r.size.hi)}` : ""}m${r.size.fit ? ` <span class="fit fit-${r.size.fit}">${r.size.fit === "fits" ? "fits your raise" : r.size.fit === "larger" ? "smaller than yours" : "larger than yours"}</span>` : ""}</div><div class="cell-sub">from ${plural(r.size.n, "led round", "led rounds")}${r.size.basis === "exact" ? ` at ${esc(state.last?.stage || "your stage")}` : " near your stage"}</div>`
     : `<span class="none">No sizes</span>`;
   const last = r.last_lead
-    ? `<a href="#" data-rid="${r.last_lead.id}">${esc(r.last_lead.company)}</a><div class="cell-sub">${esc(r.last_lead.stage)} · ${esc(r.last_lead.date)}</div>`
+    ? `<a href="#" data-rid="${r.last_lead.id}">${esc(r.last_lead.company)}</a>${r.last_lead.sourced ? ` <span class="pill pill-src" title="Cala search found a source document for this round">sourced</span>` : ""}<div class="cell-sub">${esc(r.last_lead.stage)} · ${esc(r.last_lead.date)}</div>`
     : `<span class="none">Never led in our data</span>`;
   const conf = r.conflicts.length
     ? r.conflicts.slice(0, 2).map((c) => `<div class="conf conf-${c.level}"><span class="tri" aria-hidden="true"></span><span>${c.level === "led" ? "Led" : "Joined"} <a href="#" data-rid="${c.round.id}">${esc(c.competitor)}</a> ${esc(c.round.stage)} · ${esc(c.round.date.split(" ")[1])}</span></div>`).join("")
@@ -422,12 +422,29 @@ async function openRecord(e) {
         <dt>Participants</dt><dd>${r.participants.length ? r.participants.map(esc).join(", ") : `<span class="none">none named</span>`}</dd>
         <dt>Found via</dt><dd>${r.path === "both" ? "Both query paths agree on this round" : r.path === "investor_first" ? "Investor-first query" : "Company-first query"}</dd>
       </dl>
+      <h3>Source documents</h3>
+      <div id="src-box">${sourceHtml(r.source)}</div>
       <h3>Provenance</h3>
       ${r.sources.map((s) => `<div class="prov"><span class="pill pill-q">POST /v1/knowledge/query</span> <span class="pill">${esc(s.path.replace("_", "-"))}</span><div class="q">"${esc(s.query)}"</div><details class="raw"><summary>Raw Cala row</summary><pre>${esc(JSON.stringify(s.row, null, 2))}</pre></details></div>`).join("")}
-      <p class="faint">Cala query row; no source document is attached to this row. Lead Check only counts and merges these rows.</p>`;
+      <p class="faint">Lead Check only counts and merges these Cala rows. Source documents come from Cala's /v1/knowledge/search.</p>`;
+    const ask = $("#ask-src");
+    if (ask) ask.onclick = async () => {
+      ask.disabled = true; ask.textContent = "Asking Cala /v1/knowledge/search";
+      try { const src = await api(`/api/source/${encodeURIComponent(rid)}`, {method: "POST", body: "{}"}); $("#src-box").innerHTML = sourceHtml(src, true); }
+      catch (err) { ask.disabled = false; ask.textContent = err.message; }
+    };
   } catch (err) {
     if (err.message !== "auth") $(".sheet .body").innerHTML = `<p role="alert">Could not load this record: ${esc(err.message)}</p>`;
   }
+}
+
+function sourceHtml(src, fresh) {
+  if (!src) return `<p class="muted">No source document cached for this round yet.</p><button class="btn" type="button" id="ask-src">Ask Cala for a source</button> <span class="faint">one live Cala search, about 30 seconds</span>`;
+  const docs = (src.docs || []).filter((d) => /^https:\/\//.test(d.url));
+  return `<div class="src">
+    <div class="src-answer"><span class="pill pill-q">POST /v1/knowledge/search</span>${fresh ? ` <span class="pill">just now</span>` : ""}<p>${esc(src.answer)}</p></div>
+    ${docs.length ? `<ol class="src-docs">${docs.map((d) => `<li><a href="${esc(d.url)}" target="_blank" rel="noopener noreferrer">${esc(d.name)}</a><span class="faint"> · ${esc(d.site || new URL(d.url).hostname)}</span>${d.passage ? `<blockquote>${esc(d.passage.slice(0, 260))}${d.passage.length > 260 ? "…" : ""}</blockquote>` : ""}</li>`).join("")}</ol>` : `<p class="muted">Cala answered without a linked document.</p>`}
+  </div>`;
 }
 
 /* ---------------- method ---------------- */

@@ -118,7 +118,7 @@ def round_brief(snap: Snapshot, r: dict) -> dict:
             "stage": STAGE_LABEL.get(r["stage"] or "", "Stage not stated"),
             "amount_eur_m": r["amount_eur_m"], "amount_raw": r.get("amount_raw"),
             "n_investors": len(r["leads"]) + len(r["participants"]),
-            "leads": [snap.name(k) for k in r["leads"]], "path": r.get("query_path")}
+            "leads": [snap.name(k) for k in r["leads"]], "path": r.get("query_path"), "sourced": bool(r.get("source"))}
 
 
 def fund_profile(snap: Snapshot, key: str, stage: str, target_m: float | None) -> dict:
@@ -336,4 +336,5 @@ def record(snap: Snapshot, rid: int) -> dict | None:
     r = snap.rounds[rid]
     return {**round_brief(snap, r), "type": r.get("type"), "country": r.get("country"),
             "participants": [snap.name(k) for k in r["participants"]],
-            "sources": [{"path": s["path"], "query": s["query"], "row": s["row"]} for s in r["sources"]]}
+            "sources": [{"path": s["path"], "query": s["query"], "row": s["row"]} for s in r["sources"]],
+            "source": r.get("source")}

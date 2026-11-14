@@ -13,7 +13,7 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "app"))
-from merge import Builder, canon  # noqa: E402
+from merge import Builder, canon, round_key, summarize_search  # noqa: E402
 
 DATA = Path(os.environ.get("RELAY_DATA_DIR", Path(__file__).resolve().parents[2] / "cala" / "data"))
 
@@ -30,6 +30,34 @@ def live_records() -> list[dict]:
         return [row[0] for row in conn.execute("select data from live_funds order by id")]
 
 
+def db_sources() -> dict:
+    url = os.environ.get("RELAY_DATABASE_URL")
+    if not url:
+        return {}
+    import psycopg
+    with psycopg.connect(url, connect_timeout=20) as conn:
+        if not conn.execute("select to_regclass('round_sources')").fetchone()[0]:
+            return {}
+        return {k: v for k, v in conn.execute("select key, data from round_sources")}
+
+
+def attach_sources(snap: dict) -> int:
+    found = {}
+    path = DATA / "sources.jsonl"
+    if path.exists():
+        for line in path.open():
+            rec = json.loads(line)
+            found[rec["key"]] = {**summarize_search(rec["response"]), "question": rec["question"]}
+    found.update(db_sources())
+    n = 0
+    for r in snap["rounds"]:
+        src = found.get(round_key(r))
+        if src and (src.get("docs") or src.get("answer")):
+            r["source"] = src
+            n += 1
+    return n
+
+
 def build() -> dict:
     b = Builder()
     b.company_first(DATA)
@@ -40,7 +68,9 @@ def build() -> dict:
     for rec in live_records():
         b.add_fund_record(rec)
         fund_keys.add(canon(rec["name"]))
-    return b.snapshot(fund_keys)
+    snap = b.snapshot(fund_keys)
+    snap["stats"]["sourced_rounds"] = attach_sources(snap)
+    return snap
 
 
 def store(snap: dict) -> None:

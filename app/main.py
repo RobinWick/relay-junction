@@ -303,6 +303,38 @@ def get_record(rid: int):
     return rec
 
 
+@app.post("/api/source/{rid}")
+def get_source(rid: int, request: Request):
+    """Sourced answer for one round from Cala /v1/knowledge/search (cached per round, stored in Aiven)."""
+    from merge import round_key, summarize_search
+    s = snap()
+    if not 0 <= rid < len(s.rounds):
+        raise HTTPException(404, "No such round.")
+    r = s.rounds[rid]
+    if r.get("source"):
+        return r["source"]
+    try:
+        res = live.search_round(r, _session(request))
+    except RuntimeError:
+        raise HTTPException(429, "Live Cala lookups for this demo are used up for now.")
+    except Exception as err:
+        raise HTTPException(502, f"Cala did not answer ({type(err).__name__}). Try again.")
+    src = {**summarize_search(res), "question": live.source_question(r)}
+    r["source"] = src
+    if not os.environ.get("RELAY_SNAPSHOT_PATH"):
+        try:
+            from psycopg.types.json import Jsonb
+            with _db() as conn:
+                conn.execute("create table if not exists round_sources (key text primary key, data jsonb not null, "
+                             "created_at timestamptz default now())")
+                conn.execute("insert into round_sources(key, data) values (%s, %s) on conflict (key) do update set data = excluded.data",
+                             (round_key(r), Jsonb(src)))
+                conn.commit()
+        except Exception as err:
+            print(f"persist source failed: {type(err).__name__}")
+    return src
+
+
 @app.get("/api/fund/{key}")
 def get_fund(key: str, stage: str = "seed", target: Optional[float] = None):
     s = snap()
