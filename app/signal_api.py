@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import threading
 import time
 from collections import Counter, OrderedDict
@@ -821,6 +822,9 @@ def chat(body: Chat, request: Request):
     cur = body.current or Current()
     cur_w = {k: v for k, v in (cur.weights or {}).items() if k in ss.KEYS}
     v = sc.validate(st, body.view, proposal, cur_w)
+    if body.view == "founders" and re.search(r"\b(best|top|good|great|strongest|rank)", msg.lower()):
+        v["unmatched"].append({"phrase": "best", "reason": "there is no founder quality score; founders are sorted by "
+                                                           "how many of 4 track-record facts Cala documents"})
     if truncated:
         v["unmatched"].append({"phrase": "(message)", "reason": f"only the first {sc.MAX_MESSAGE} characters were read"})
     try:

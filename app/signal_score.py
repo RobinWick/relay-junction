@@ -727,11 +727,16 @@ def founder_evidence(founder: dict, cohort_rows: Optional[list[dict]] = None) ->
 
     founder: load.load_founders() shape (roles[].since, founded[].org/org_id, prior_exits, ckeys, name).
     cohort_rows: cohorts.json rows for the founder's companies (their 'founder' text is matched by name)."""
-    own = set(founder.get("ckeys") or [])
+    own = {DUP_SUFFIX.sub("", c) or c for c in founder.get("ckeys") or []}
+
+    def is_own(org: str) -> bool:  # 'IPRally' is the same company as ckey 'iprallytechnologies'
+        k = company_key(org)
+        return not k or (DUP_SUFFIX.sub("", k) or k) in own
+
     facts = []
     if any(r.get("since") for r in founder.get("roles") or []):
         facts.append("dated role")
-    if any(f.get("org_id") and company_key(f.get("org") or "") not in own for f in founder.get("founded") or []):
+    if any(f.get("org_id") and not is_own(f.get("org") or "") for f in founder.get("founded") or []):
         facts.append("earlier Cala company")
     if founder.get("prior_exits"):
         facts.append("prior exit")

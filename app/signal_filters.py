@@ -290,6 +290,10 @@ FUND_SPECS = [
     Spec("fund_lead_share_min", "Lead share at least (0 to 1)", "Funds", "slider", F, "Cala round data",
          lambda st, f, r: (f["lead_share"]["led"] / f["lead_share"]["of"])
          if f.get("lead_share") and f["lead_share"]["of"] >= 5 else None, "num"),
+    Spec("fund_led_in_downturn", "Led rounds in the 2022 to 2023 downturn, at least n", "Funds", "range", F,
+         "Cala round data (leads)",
+         lambda st, f, r: (f.get("downturn_lead_share") or {}).get("led", 0) if f.get("queried") else None, "num",
+         note="counts lead-known equity rounds dated 2022 or 2023; Cala names no lead in about a third of seed rounds"),
     Spec("fund_exit_receipts_min", "Exit receipts at least n (checked funds only)", "Funds", "range", F,
          "exit receipts", lambda st, f, r: f["exit_receipts"]["count"] if f.get("exit_receipts") else None, "num"),
     Spec("fund_country", "Fund main portfolio country", "Funds", "multi_select", F, "derived",
@@ -430,6 +434,8 @@ EVID_RANK = {"thin": 0, "some": 1, "solid": 2}
 
 def evaluate(st: Store, view: str, flt: dict, facts: dict, row: Optional[dict]) -> Optional[bool]:
     spec = SPECS[view][flt["key"]]
+    if spec.default and flt["op"] == "is_false":
+        return True  # switching off a default exclusion keeps everyone; it never inverts into "only the excluded"
     got = spec.get(st, facts, row)
     if got is None:
         return None
@@ -486,7 +492,7 @@ def coverage(st: Store, view: str, key: str, rows: Optional[dict] = None) -> dic
     n = 0
     for f, r in items:
         try:
-            if spec.get(st, f, r) is not None:
+            if spec.get(st, f, r) not in (None, "needs_2_rounds"):  # "needs 2 rounds" is a state, not data
                 n += 1
         except (KeyError, TypeError):
             pass

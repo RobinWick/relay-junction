@@ -295,6 +295,19 @@ def test_filter_catalogue_is_consistent():
     assert len(sf.SPECS["companies"]) >= 50
 
 
+
+def test_switching_off_a_default_exclusion_keeps_everyone():
+    base = _get("/companies", limit="1").json()["meta"]["matched"]
+    for key in ("hide_duplicates", "exclude_acquired", "exclude_disputed", "exclude_public_bodies"):
+        off = _get("/companies", limit="1", filters=[{"key": key, "op": "is_false"}]).json()["meta"]["matched"]
+        assert off >= base, key  # never inverts into "only the excluded ones"
+
+
+def test_fund_led_in_downturn_filter():
+    d = _get("/funds", filters=[{"key": "fund_led_in_downturn", "op": "gte", "value": 1}]).json()
+    assert d["meta"]["matched"] <= _get("/funds").json()["meta"]["matched"]
+    assert all((r.get("downturn_lead_share") or {}).get("led", 0) >= 1 for r in d["rows"] if "downturn_lead_share" in r)
+
 if __name__ == "__main__":
     import minitest
     minitest.main(globals())

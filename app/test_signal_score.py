@@ -240,6 +240,13 @@ def test_founder_not_enough_data_below_two_facts():
     assert e2["k"] == 3 and e2["score"] == 75 and e2["missing"] == ["prior exit"]
 
 
+def test_founder_own_company_with_suffix_is_not_an_earlier_company():
+    f = {"name": "S Arvela", "ckeys": ["iprallytechnologies"], "roles": [{"since": "2024-05-21"}],
+         "founded": [{"org": "IPRally", "org_id": "u-1"}], "prior_exits": []}
+    e = founder_evidence(f)
+    assert "earlier Cala company" not in e["facts"] and e["score"] is None
+
+
 # ---------------------------------------------------------------- honesty
 def _strings(o):
     if isinstance(o, str):

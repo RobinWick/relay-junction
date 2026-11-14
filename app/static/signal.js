@@ -433,13 +433,14 @@
     if (!S.list[v]) due = `<div class="due-card"><div class="due-card__eyebrow"><span>TOP ${kind} FOR YOUR QUERY</span></div><p class="due-card__empty">${S.listErr[v] ? "No data yet." : "Ranking"}</p></div>`;
     else if (!top) due = `<div class="due-card"><div class="due-card__eyebrow"><span>TOP ${kind} FOR YOUR QUERY</span><span>${fmtInt(lm.matched || 0)} match</span></div><p class="due-card__empty">${v === "founders" ? "No founder in this set has enough data for a score. Their companies are scored instead." : "Nothing in this set can be ranked. Loosen a filter."}</p></div>`;
     else {
-      const why = v === "companies" ? ((top.why && top.why[0] && top.why[0].text) || "") : v === "funds" ? (top.score_label || "How actively this fund leads, not how well it picks.") : "";
+      const fe = v === "founders" ? (top.founder_evidence || {}) : null;
+      const why = v === "companies" ? ((top.why && top.why[0] && top.why[0].text) || "") : v === "funds" ? (top.score_label || "How actively this fund leads, not how well it picks.") : `Documented: ${(fe.facts || []).join(", ")}. Counts facts, not a judgment of the founder.`;
       due = `<div class="due-card">
         <div class="due-card__eyebrow"><span>TOP ${kind} FOR YOUR QUERY</span><span>${fmtInt(lm.matched != null ? lm.matched : rows.length)} match</span></div>
-        <div class="due-card__big"><span class="due-card__num">${top.score}</span><span class="due-card__of">of 100</span></div>
+        <div class="due-card__big">${fe ? `<span class="due-card__num">${fe.k}</span><span class="due-card__of">of ${fe.of || 4} facts</span>` : `<span class="due-card__num">${top.score}</span><span class="due-card__of">of 100</span>`}</div>
         <a class="due-card__name" href="${entHref(v, top.id)}">${cc(top.country)}<span>${esc(top.name)}</span></a>
         <p class="due-card__why">${esc(noDash(why))}</p>
-        <ul class="due-card__list">${scored.slice(1, 4).map((r, i) => `<li><a href="${entHref(v, r.id)}"><span class="due-card__rank">${String(r.rank || i + 2).padStart(2, "0")}</span><span class="due-card__lname">${esc(r.name)}</span><span class="due-card__score">${r.score}</span></a></li>`).join("")}</ul>
+        <ul class="due-card__list">${scored.slice(1, 4).map((r, i) => `<li><a href="${entHref(v, r.id)}"><span class="due-card__rank">${String(r.rank || i + 2).padStart(2, "0")}</span><span class="due-card__lname">${esc(r.name)}</span><span class="due-card__score">${fe ? `${(r.founder_evidence || {}).k} of 4` : r.score}</span></a></li>`).join("")}</ul>
       </div>`;
     }
     host.innerHTML = due + sonarPanel(v, scored) + coveragePanel(v);

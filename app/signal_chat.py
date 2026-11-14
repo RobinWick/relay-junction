@@ -287,6 +287,10 @@ def keyword_proposal(st: Store, view: str, message: str) -> dict:
             filters.append({"key": key, "op": "in", "value": [k], "reason": f"{m.group(1)} by {st.names[k]}"})
         else:
             unmatched.append({"phrase": m.group(2).strip(), "reason": "fund not found in Cala data here"})
+    if view == "funds" and any(_has(t, w) for w in ("downturn", "kept leading", "still leading", "2022", "2023")):
+        filters.append({"key": "fund_led_in_downturn", "op": "gte", "value": 1,
+                        "reason": "led at least one round in 2022 to 2023"})
+        why.append("led in the downturn")
     for w, reason in UNMATCHABLE.items():
         if _has(t, w):
             unmatched.append({"phrase": w, "reason": reason})
