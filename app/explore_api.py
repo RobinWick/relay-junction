@@ -783,7 +783,8 @@ def keyword_filters(s: Snapshot, text: str, role: str, countries: list[str], tar
         if f" {st.replace('-', ' ')} " in low or f" {st.replace(' ', '').replace('-', '')} " in low:
             raw["stage"] = st
             break
-    if re.search(r"2022|2023|downturn", low):
+    # "since 2023" or "after 2022" asks for recent activity, not the 2022-23 downturn filter.
+    if "downturn" in low or re.search(r"(?<!since )(?<!after )(?<!from )\b202[23]\b", low):
         raw["led_downturn"] = "yes"
     if re.search(r"\blead(s|er|ing)?\b", low):
         raw["lead_share_min"] = "0.5"

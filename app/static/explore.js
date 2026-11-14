@@ -425,7 +425,9 @@
       if (d.free) {
         const dl = `${id}-list`;
         const inp = h("input", { class: "fin", id, list: dl, placeholder: d.ph || "Type to add", autocomplete: "off" });
-        const add = () => { const val = inp.value.trim(); if (val && !list.includes(val)) commit([...list, val]); };
+        // Enter commits and re-renders the rail, which blurs this input and fires "change": add only once.
+        let added = false;
+        const add = () => { const val = inp.value.trim(); if (added || !val || list.includes(val)) return; added = true; commit([...list, val]); };
         inp.addEventListener("change", add);
         inp.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); add(); } });
         g.append(inp, h("datalist", { id: dl }, all.slice(0, 1500).map((o) => h("option", { value: o }))));

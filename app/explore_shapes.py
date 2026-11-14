@@ -1,7 +1,6 @@
 """Response shapes for the Explore page (static/explore.html), built from the Cala snapshot and people.json.
 
-Pure functions, no web framework, so pipeline/build_explore_fixtures.py writes the same shapes to fixtures that
-explore_views.py serves live. The contract is static/explore-fixtures/API.md.
+Pure functions, no web framework; explore_views.py serves them live. The contract is docs/explore-api.md.
 
 People rules: career data is shown as facts, timelines and filterable metrics with neutral labels. Nothing here
 scores, ranks or predicts a person, and every person carries its source and fetch date.

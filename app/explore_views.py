@@ -1,4 +1,4 @@
-"""Explore page endpoints in the shapes static/explore.js reads (contract: static/explore-fixtures/API.md).
+"""Explore page endpoints in the shapes static/explore.js reads (contract: docs/explore-api.md).
 
 The page filters and sorts in the browser, so list endpoints return every item. Shapes are built by
 explore_shapes.py from the live snapshot (main.snap() through explore_api), app/exits.json and app/people.json,
@@ -69,8 +69,9 @@ def views() -> dict:
         for p in founders:
             if p["company_key"]:
                 by_company.setdefault(p["company_key"], []).append(p)
-        funds, fund_details = xs.build_funds(s.rounds, s.names, s.fund_keys, asof, src, xa.exits_by_fund(), caveat)
-        companies, company_details = xs.build_companies(s.rounds, s.names, asof, src, by_company)
+        names = _page_names(s.names)
+        funds, fund_details = xs.build_funds(s.rounds, names, s.fund_keys, asof, src, xa.exits_by_fund(), caveat)
+        companies, company_details = xs.build_companies(s.rounds, names, asof, src, by_company)
         coverage = xs.people_coverage(people_json)
         people_src = {"name": (people_json.get("source") or {}).get("graph") or "Cala entity graph",
                       "retrieved": people_json.get("generated") or "",
@@ -91,6 +92,12 @@ def views() -> dict:
 def _get(request: Request) -> dict:
     xa._limit(request, "explore", xa.GET_PER_MIN)
     return views()
+
+
+def _page_names(names: dict) -> dict:
+    """Cala fund names like 'NPIF II \u2013 Mercia Equity Finance' carry dashes; the page shows none. The AI filter
+    answer is mapped through the same no_dash in to_ui, so its names still match these."""
+    return {k: xs.no_dash(v) for k, v in names.items()}
 
 
 @router.get("/meta")
@@ -121,7 +128,8 @@ def _any_fund(key: str) -> dict | None:
         return None
     rounds = [s.rounds[i] for i in s.by_investor[key]]
     asof = date.fromisoformat(s.retrieved[:10])
-    _, details = xs.build_funds(rounds, s.names, {key}, asof, xs.source_block(s.retrieved[:10]), xa.exits_by_fund())
+    _, details = xs.build_funds(rounds, _page_names(s.names), {key}, asof, xs.source_block(s.retrieved[:10]),
+                                xa.exits_by_fund())
     return details.get(key)
 
 
@@ -233,7 +241,7 @@ def to_ui(out: dict, known_countries: list[str], text: str = "") -> dict:
         if f.get("has_exits") == "yes":
             ui["exits"] = True
         if f.get("co_invested_with"):
-            ui["co_investor"] = [f["co_invested_with"]]
+            ui["co_investor"] = [xs.no_dash(f["co_invested_with"])]
         return {"view": "funds", "filters": ui, "unmatched": unmatched}
     if t == "companies":
         if f.get("last_from"):
@@ -243,9 +251,9 @@ def to_ui(out: dict, known_countries: list[str], text: str = "") -> dict:
         if _range(f.get("months_since_min"), f.get("months_since_max")):
             ui["months_since"] = _range(f.get("months_since_min"), f.get("months_since_max"))
         if f.get("investor"):
-            ui["investor"] = [f["investor"]]
+            ui["investor"] = [xs.no_dash(f["investor"])]
         if f.get("lead"):
-            ui["lead"] = [f["lead"]]
+            ui["lead"] = [xs.no_dash(f["lead"])]
         if f.get("tags") and about_founders:
             ui["founder_tags"] = [TAG_LABELS[x] for x in f["tags"]]
         if f.get("repeat_founder") == "yes" and about_founders:
