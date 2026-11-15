@@ -1,4 +1,4 @@
-/* Recount Signal. Look and feel copied from BlueWatch (Wicflow demo, copy approved): tokens, sheet table,
+/* Recount Signal. Clean data-table look: tokens, sheet table,
    chips, meters, drawer, palette, seg nav, dark hero card. Vanilla CSS, CSP 'self' only, fonts self-hosted. */
 
 @font-face{font-family:"Instrument Sans";font-style:normal;font-weight:400 700;font-stretch:75% 100%;font-display:swap;src:url(/static/fonts/instrument-sans-variable.woff2) format("woff2")}
