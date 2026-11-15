@@ -81,9 +81,9 @@ NOT_FETCHED = {
 
 
 def _key() -> str:
-    key = os.environ.get("CALA_API_KEY_WICFLOW")
+    key = os.environ.get("CALA_API_KEY")
     if not key:
-        sys.exit("CALA_API_KEY_WICFLOW missing: set -a; source ~/.claude/secrets/api_keys.env; set +a")
+        sys.exit("CALA_API_KEY missing: export it before running")
     return key
 
 

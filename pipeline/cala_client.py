@@ -34,9 +34,9 @@ def _reserve_slot() -> None:
 
 
 def _key() -> str:
-    key = os.environ.get("CALA_API_KEY_WICFLOW")
+    key = os.environ.get("CALA_API_KEY")
     if not key:
-        sys.exit("CALA_API_KEY_WICFLOW missing: source ~/.claude/secrets/api_keys.env")
+        sys.exit("CALA_API_KEY missing: export it before running")
     return key
 
 
