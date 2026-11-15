@@ -1,0 +1,189 @@
+1
+00:00:00,000 --> 00:00:02,750
+I'm Felix, and together with
+my team at Moonshot,
+
+2
+00:00:02,810 --> 00:00:05,650
+we built Recount on top of Cala.
+
+3
+00:00:05,710 --> 00:00:08,290
+Cala knows who founded
+which company,
+
+4
+00:00:08,350 --> 00:00:11,880
+who led each round
+and where founders worked before.
+
+5
+00:00:12,070 --> 00:00:14,470
+Recount turns all of that into signals
+
+6
+00:00:14,530 --> 00:00:17,440
+that you can use in order
+to make decisions.
+
+7
+00:00:17,610 --> 00:00:20,880
+Investors use the signals
+to find great companies early.
+
+8
+00:00:21,010 --> 00:00:23,310
+Founders use them
+to find the right investors.
+
+9
+00:00:23,370 --> 00:00:26,230
+Recount has
+more than 30 signals.
+
+10
+00:00:26,290 --> 00:00:30,090
+Did the company raise money
+in the 2022 downturn?
+
+11
+00:00:30,150 --> 00:00:32,550
+Did the old investors
+put in more money?
+
+12
+00:00:32,610 --> 00:00:35,050
+Has the founder built
+a company before?
+
+13
+00:00:35,110 --> 00:00:38,540
+How long did they stay
+at their last job?
+
+14
+00:00:38,610 --> 00:00:42,950
+Just type what you want,
+like a good fintech company.
+
+15
+00:00:43,010 --> 00:00:44,910
+Recount picks the filter for you.
+
+16
+00:00:44,970 --> 00:00:48,170
+We tested every signal
+in a fair way.
+
+17
+00:00:48,230 --> 00:00:50,530
+We hid the last few years of data
+
+18
+00:00:50,590 --> 00:00:52,990
+and checked which signals
+really worked.
+
+19
+00:00:53,050 --> 00:00:56,190
+Most tools just give you a score.
+We tested ours.
+
+20
+00:00:56,250 --> 00:01:00,510
+We checked 35 signals on years
+of data they had never seen.
+
+21
+00:01:00,570 --> 00:01:03,630
+Now you know which signal
+really works.
+
+22
+00:01:03,690 --> 00:01:04,770
+Here's an example.
+
+23
+00:01:04,830 --> 00:01:08,550
+An investor wants founders
+who built a company before
+
+24
+00:01:08,610 --> 00:01:10,720
+and come from research.
+
+25
+00:01:10,810 --> 00:01:13,250
+Recount finds Anton Osika.
+
+26
+00:01:13,310 --> 00:01:16,890
+He worked at CERN, was the first
+engineer at Sana Labs
+
+27
+00:01:16,950 --> 00:01:18,870
+and founded Depict.
+
+28
+00:01:18,930 --> 00:01:21,890
+In late 2023,
+he started Lovable.
+
+29
+00:01:21,950 --> 00:01:24,930
+Less than a year later,
+top investors backed it.
+
+30
+00:01:25,170 --> 00:01:28,480
+And today, Lovable is worth
+over 10 billion dollars.
+
+31
+00:01:28,750 --> 00:01:30,520
+Founders can use it too.
+
+32
+00:01:30,630 --> 00:01:32,830
+Paste the investor you want to meet.
+
+33
+00:01:32,890 --> 00:01:35,410
+Recount sorts them
+into three groups.
+
+34
+00:01:35,470 --> 00:01:38,310
+Who to pitch first,
+who backs a different round size,
+
+35
+00:01:38,370 --> 00:01:41,110
+and who mostly just follows.
+
+36
+00:01:41,170 --> 00:01:45,090
+For each fund, you see how often
+it led rounds like yours,
+
+37
+00:01:45,150 --> 00:01:46,510
+who bought the companies it backed,
+
+38
+00:01:46,570 --> 00:01:49,720
+and who in your network
+can introduce you.
+
+39
+00:01:49,830 --> 00:01:51,430
+Recount, powered by Cala.
+
+40
+00:01:51,490 --> 00:01:53,350
+The right companies for investors,
+
+41
+00:01:53,450 --> 00:01:54,600
+the right investors for founders.
