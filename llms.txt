@@ -1,8 +1,8 @@
 # Recount
 
-> The right investors for founders, the right companies for investors, all from Cala. Recount counts Cala's funding-round, M&A and people records: which funds actually lead rounds like yours, how each fund led year by year, who bought the companies it backed, and a way in. Every number opens the Cala record behind it.
+> The right investors for founders, the right companies for investors, all from Cala. Recount counts Cala's funding-round, M&A and people records: which funds actually lead rounds like yours, how each fund led year by year, who bought the companies it backed, and a way in. Every round and receipt opens the Cala record behind it.
 
-Built at Junction 2026 (Espoo, 13 to 15 November 2026) for Cala's "Make Unicorns Real" challenge by team Wicflow. Pitch video and deck: in the Junction submission.
+Built at Junction 2026 (Espoo, 13 to 15 November 2026) for Cala's "Make Unicorns Real" challenge by Team Moonshot. Pitch video and deck: in the Junction submission.
 
 ## Links
 - [Recount](https://robin-81988--recount.us-east.modal.run): fund check, receipts, Explore. No login; click "Try a sample" or add #demo.
@@ -17,7 +17,7 @@ Built at Junction 2026 (Espoo, 13 to 15 November 2026) for Cala's "Make Unicorns
 - Where both query paths name a lead for the same round, they agree in 176 of 192 rounds. 9 of 209 sourced rounds have source text naming a different lead; they are marked disputed and left out of every count.
 - Accuracy: 80 random Cala lead calls checked against press. Where a source names the lead: right lead fund 66 of 74 (89%), exactly right 55 of 74 (74%). Most misses are a missing or extra co-lead.
 - Need: of the 47 most active Nordic pre-seed and seed investors we could judge (2023 to 2026), 24 led under half their rounds; 308 of 1,042 named investor seats (30%) were leads. A round's lead came back in the next round 60% of the time but led it only 15% (1,405 cases), so most founders need a new lead each round.
-- Receipts: lead pace per fund and year 2019 to 2026 (led, joined, lead unknown); completed acquisitions of companies a fund backed, 20 across 13 funds, with buyer, deal value (labelled "deal value, not return"), date and source, for example Zettle bought by PayPal for 2.2B USD in 2018; intro path through one of your investors who sat with the fund in a small round (2 to 6 investors, at most EUR 50m, last 4 years).
+- Receipts: lead pace per fund and year 2019 to 2026 (led, joined, lead unknown); completed acquisitions of companies a fund backed, 20 exit receipts across 13 funds (14 distinct deals), with buyer, deal value (labelled "deal value, not return"), date and source, for example Zettle bought by PayPal for 2.2B USD in 2018; intro path through one of your investors who sat with the fund in a small round (2 to 6 investors, at most EUR 50m, last 4 years).
 - Founder pages: careers from Cala people data with coverage on screen: 22 founders fetched, 2 with a dated role, 1 with a role outside their own company.
 - Signal Lab: 35 signals tested (including a learned model) on held-out years 2021 to 2023 with multiple-test correction. 1 kept (round size for stage, AUC 0.55, 90% CI 0.505 to 0.598, n = 571), 26 noise, 8 not testable. Signal therefore ranks companies on size for stage only; 2,662 of 3,390 companies have a sized, staged round and are ranked.
 - Prediction test: on 558 held-out rounds with 8 methods and a leakage audit, a current investor leads about 1 in 4 next rounds. A new outside lead is in the top 5 only 4 to 5% of the time (random 0.15%, 462 rounds), so Recount shows evidence, not odds.
@@ -37,7 +37,7 @@ Q: Does "Led 8 of 11" tell me who will lead my next round?
 A: No, and we measured that. A new outside lead lands in the top 5 only 4 to 5% of the time (462 held-out rounds), against 0.15% random. Recount shows which funds have led at your stage and size, and how to get in, not odds.
 
 Q: Why is this more than one Cala chat query?
-A: A denominator. One answer about one fund has none. We asked Cala about 194 funds investor-first and 410 companies company-first, merged 5,146 rounds, and where both paths name a lead they agree in 176 of 192. That merge makes "led X of Y at your stage" possible for a whole list, with every number opening the Cala rows behind it.
+A: A denominator. One answer about one fund has none. We asked Cala about 194 funds investor-first and 410 companies company-first, merged 5,146 rounds, and where both paths name a lead they agree in 176 of 192. That merge makes "led X of Y at your stage" possible for a whole list, with every count opening the Cala rows behind it.
 
 Q: Cala names no lead in about a third of seed rounds, and some lead calls are wrong. Why trust it?
 A: Use it to reorder a list, not to drop a fund. Hand check: right lead fund 66 of 74 (89%). Rounds with no named lead stay out of the ratio and are counted on every row. Below 3 known rounds the verdict is "Too little data"; below 5 sized led rounds the size range says "size unclear". Rounds whose own source names a different lead are left out.

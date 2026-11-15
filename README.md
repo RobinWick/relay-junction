@@ -2,9 +2,9 @@
 
 **The right investors for founders, the right companies for investors, all from Cala.**
 
-Recount counts Cala's funding-round, M&A and people records. Founders see which funds actually lead rounds like theirs, how each fund led year by year, who bought the companies it backed, and a way in. Investors get a quick, sourced background check on any fund, company or founder. Every number opens the Cala record behind it.
+Recount counts Cala's funding-round, M&A and people records. Founders see which funds actually lead rounds like theirs, how each fund led year by year, who bought the companies it backed, and a way in. Investors get a quick, sourced background check on any fund, company or founder. Every round and receipt opens the Cala record behind it.
 
-Built at Junction 2026 (Espoo, 13 to 15 November 2026) for Cala's "Make Unicorns Real" challenge, by team Wicflow.
+Built at Junction 2026 (Espoo, 13 to 15 November 2026) for Cala's "Make Unicorns Real" challenge, by Team Moonshot.
 
 ## Links
 
@@ -23,7 +23,7 @@ Built at Junction 2026 (Espoo, 13 to 15 November 2026) for Cala's "Make Unicorns
 | Criterion | What we did | Numbers (each traceable to a file in this repo) |
 |---|---|---|
 | **Real need** | Every priced round needs a lead, and a fund's name does not say whether it leads. Fund sites list portfolios, not who led, and not how a fund behaved in the downturn. The question comes back before every raise. | Of the 47 most active Nordic pre-seed/seed investors we could judge (2023 to 2026), 24 led under half their rounds; 308 of 1,042 named seats (30%) were leads (`research/need/SCARCITY.md`). A round's lead came back in the next round 60% of the time but led it only 15% (1,405 cases, `app/validation.json`). |
-| **Execution** | Deployed end to end: Cala crawl, merge, Aiven Postgres, FastAPI on Modal, live Cala lookups with spending caps. Fund check, three receipts (lead pace, who bought its companies, intro path), Explore, founder pages, and Signal with its Lab. Tests run before every deploy. | 5,146 rounds, 3,390 companies, 194 funds asked investor-first. 20 acquisitions across 13 funds (17 with a disclosed value). Hand check of 80 random Cala lead calls against press: right lead fund 66 of 74 (89%), exactly right 55 of 74 (74%) (`research/accuracy/`). |
+| **Execution** | Deployed end to end: Cala crawl, merge, Aiven Postgres, FastAPI on Modal, live Cala lookups with spending caps. Fund check, three receipts (lead pace, who bought its companies, intro path), Explore, founder pages, and Signal with its Lab. Tests run before every deploy. | 5,146 rounds, 3,390 companies, 194 funds asked investor-first. 20 exit receipts across 13 funds (14 distinct deals, 17 receipts with a disclosed value). Hand check of 80 random Cala lead calls against press: right lead fund 66 of 74 (89%), exactly right 55 of 74 (74%) (`research/accuracy/`). |
 | **Originality** | We tried to build a "magic score" and tested it on years the model never saw. One signal held up, so Signal ranks on that one only and the Lab tab shows every signal that failed. Everything else is a receipt you can open: lead share at your stage year by year, acquisitions with their source, founder careers with their coverage stated. | 35 signals tested, 1 kept (round size for stage), 26 noise, 8 not testable (`app/signal_lab.json`, on `feat/signal`). Next outside lead in the top 5: 4 to 5% vs 0.15% random (462 rounds), so Recount shows evidence, not odds (`research/prediction/RESULTS.md`). |
 | **Use of Cala as the core** | Cala is the only data source: `/v1/knowledge/query` (investor-first and company-first), `/v1/knowledge/search` (source documents), `/v1/entities` (INVESTED_IN, CorporateEvent MNA_COMPLETED, FOUNDED/WORKS_AT/IS_CEO_OF/IS_CTO_OF). We wrote up data-quality findings for Cala. | Where both query paths name a lead they agree in 176 of 192 rounds. Source documents for 209 rounds; 9 disputed rounds left out of every count. 19 data-quality findings (`data_quality/cala-data-quality.json`). |
 
@@ -39,7 +39,7 @@ Built at Junction 2026 (Espoo, 13 to 15 November 2026) for Cala's "Make Unicorns
 ## Receipts, Explore and founder pages
 
 - **Receipt 1, lead pace.** Per fund and year, 2019 to 2026: led, joined under another lead, lead unknown. Unknowns are shown, never hidden. (`app/receipt_pace.py`)
-- **Receipt 2, who bought its companies.** Completed acquisitions of companies the fund backed (Cala `INVESTED_IN` edge, then `CorporateEvent` `MNA_COMPLETED` with role `TARGET`): buyer, deal value, date and source. Example: Zettle, bought by PayPal for 2.2B USD in 2018. Values are labelled "deal value, not return". 20 acquisitions across 13 funds in this build. (`app/receipt_exits.py`, `app/exits.json`)
+- **Receipt 2, who bought its companies.** Completed acquisitions of companies the fund backed (Cala `INVESTED_IN` edge, then `CorporateEvent` `MNA_COMPLETED` with role `TARGET`): buyer, deal value, date and source. Example: Zettle, bought by PayPal for 2.2B USD in 2018. Values are labelled "deal value, not return". 20 exit receipts across 13 funds in this build (14 distinct deals; one deal can appear for several funds). (`app/receipt_exits.py`, `app/exits.json`)
 - **Receipt 3, intro path.** A fund that leads at your next stage and sat with one of your investors in a small round (2 to 6 investors, at most EUR 50m, last 4 years). Here is the round; ask your investor. (`app/receipt_intro.py`)
 - **Explore.** Filters for funds, companies and founders. Type a sentence and Gemini sets filters from fixed lists; each filter it set is marked and editable. A request to rank or score people gets a plain refusal line. (`app/explore_api.py`, `app/explore_views.py`)
 - **Founder pages.** Careers from Cala people data with the coverage stated on screen: 22 founders fetched, 2 with a dated role, 1 with a role outside their own company. Thin, and the page says so. (`app/people.py`, `app/people.json`)
@@ -192,4 +192,4 @@ Deploy: `modal secret create relay-secrets ...`, then `modal deploy modal_app.py
 
 ## Licence and credits
 
-MIT, see `LICENSE`. Data from [Cala](https://cala.ai). Geist and Geist Mono fonts under the SIL Open Font License (`app/static/fonts/`). Built by team Wicflow at Junction 2026.
+MIT, see `LICENSE`. Data from [Cala](https://cala.ai). Geist and Geist Mono fonts under the SIL Open Font License (`app/static/fonts/`). Built by Team Moonshot at Junction 2026.
