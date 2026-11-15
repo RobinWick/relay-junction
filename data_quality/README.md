@@ -1,4 +1,4 @@
-# Cala data-quality notes from Team Wicflow
+# Cala data-quality notes from Team Moonshot
 
 A thank-you from Recount (Junction 2026). Recount counts, for each fund a founder plans to pitch, how often it actually led rounds like theirs. To count leads we asked Cala's `/v1/knowledge/query` two ways and compared the answers. These are the issues we had to clean up, with checkable examples. Some field drift comes from our own free-form prompts; we list it because a fixed schema would help every Cala user.
 
@@ -27,4 +27,4 @@ A thank-you from Recount (Junction 2026). Recount counts, for each fund a founde
 
 **Method:** plain Python over the raw JSON answers, no LLM judging. Dates parsed to year and month; labels mapped to pre-seed, seed, Series A to F, growth; a cross-path match is the same company name with dates within 2 months. Spelling counts come from pattern matches on the comma-split investor fields, so they are lower bounds.
 
-Files: `cala-data-quality.json` (19 findings: findings[] with type, description, count, examples[]), this README. The table above lists the main ones; the JSON has all 19. Contact: Team Wicflow, Junction 2026, Cala challenge.
+Files: `cala-data-quality.json` (19 findings: findings[] with type, description, count, examples[]), this README. The table above lists the main ones; the JSON has all 19. Contact: Team Moonshot, Junction 2026, Cala challenge.
